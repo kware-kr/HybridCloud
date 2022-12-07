@@ -16,3 +16,6 @@ fi
 if [[ $(kubectl get ns) =~ "monitoring" ]]; then
   kubectl delete namespace monitoring
 fi
+
+chmod +x delete_gpu.sh
+./delete_gpu.sh
