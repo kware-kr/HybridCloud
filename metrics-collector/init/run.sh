@@ -1,4 +1,6 @@
 #!/bin/bash
 
+ip_addr=$1
+
 sudo ./common.sh
-sudo ./master.sh 172.30.1.123
+sudo ./master.sh $ip_addr
