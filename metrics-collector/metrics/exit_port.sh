@@ -4,7 +4,7 @@ ECHO=$2
 # sudo netstat -tnlp | grep kubectl
 
 if [[ -f ".$NAME" ]]; then
-  PID=$(cat .NAME)
+  PID=$(cat .$NAME)
 
   if [[ ! -z ".$NAME" ]]; then
     echo "kill $PID"

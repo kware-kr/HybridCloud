@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# cd metallb
-# chmod +x create.sh
-# ./create.sh
+ip_addr=$1
 
 cd testgres
 chmod +x create.sh

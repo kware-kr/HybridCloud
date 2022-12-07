@@ -4,10 +4,6 @@ cd metrics
 chmod +x delete.sh
 ./delete.sh
 
-# cd ../metallb
-# chmod +x delete.sh
-# ./delete.sh
-
 cd ../testgres
 chmod +x delete.sh
 ./delete.sh
