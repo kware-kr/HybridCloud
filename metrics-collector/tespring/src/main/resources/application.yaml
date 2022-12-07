@@ -4,3 +4,7 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: true
+  datasource:
+    url: jdbc:postgresql://172.30.1.123:30033/postgres
+    username: lect
+    password: 1234

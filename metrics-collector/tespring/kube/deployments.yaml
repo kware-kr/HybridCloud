@@ -17,9 +17,9 @@ spec:
       containers:
       - name: tespring
         image: lectinua/tespring:latest
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: dev
+        envFrom:
+        - configMapRef:
+            name: cm-tespring
         ports:
         - containerPort: 8080
       imagePullSecrets:
