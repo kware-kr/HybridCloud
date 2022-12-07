@@ -4,7 +4,7 @@
 sudo swapoff -a && sudo sed -i '/swap/s/^/#/' /etc/fstab
 
 sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl net-tools
+sudo apt-get install -y apt-transport-https ca-certificates curl net-tools nfs-common
 
 # kubernetes
 

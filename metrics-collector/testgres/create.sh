@@ -3,8 +3,8 @@
 ip_addr=$1
 
 if [ ! -d /nfs_shared ]; then
-  mkdir /nfs_shared
-  bash -c "echo \"/nfs_shared $ip_addr/24(rw,sync,no_root_squash)\" >> /etc/exports"
+  sudo mkdir /nfs_shared
+  sudo bash -c "echo \"/nfs_shared $ip_addr/24(rw,sync,no_root_squash)\" >> /etc/exports"
 fi
 
 echo "restart nfs-kernel-server"
