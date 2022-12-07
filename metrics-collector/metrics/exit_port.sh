@@ -1,0 +1,22 @@
+NAME=$1
+ECHO=$2
+
+# sudo netstat -tnlp | grep kubectl
+
+if [[ -f ".$NAME" ]]; then
+  PID=$(cat .NAME)
+
+  if [[ ! -z ".$NAME" ]]; then
+    echo "kill $PID"
+    if [[ -d "/proc/$NAME" ]]; then
+      kill -15 $PID
+    fi
+    if [[ -d "/proc/$NAME" ]]; then
+      kill -9 $PID
+    fi
+  fi
+
+  echo "remove .$NAME"
+  rm .$NAME
+  echo $2
+fi

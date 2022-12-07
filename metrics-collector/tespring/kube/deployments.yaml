@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: deploy-tespring
+  name: deploy-tespring
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: po-tespring
+  template:
+    metadata:
+      labels:
+        app: po-tespring
+    spec:
+      containers:
+      - name: tespring
+        image: lectinua/tespring:latest
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: dev
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+        - name: docker-config

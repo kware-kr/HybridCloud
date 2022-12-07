@@ -1,0 +1,10 @@
+admin:
+  user: "admin"
+  password: "1234"
+persistence:
+  storageClass: nfs-client
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
