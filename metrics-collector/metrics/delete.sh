@@ -7,7 +7,6 @@ chmod +x exit_port.sh
 
 if [[ $(helm list --namespace monitoring) =~ "grafana" ]]; then
   helm delete grafana --namespace monitoring
-  sudo ./storage.sh delete
 fi
 
 if [[ $(helm list --namespace monitoring) =~ "kube-prometheus" ]]; then

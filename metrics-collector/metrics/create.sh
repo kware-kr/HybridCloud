@@ -32,8 +32,6 @@ if [[ ! $(helm list) =~ "grafana" ]]; then
   if [[ ! $(kubectl get ns) =~ "monitoring" ]]; then
     kubectl create namespace monitoring
   fi
-  chmod +x storage.sh
-  sudo ./storage.sh create $1
   helm install grafana bitnami/grafana -f values.yaml --namespace monitoring
 fi
 
