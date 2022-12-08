@@ -1,7 +1,6 @@
-NAME=$1
-ECHO=$2
+#!/bin/bash
 
-# sudo netstat -tnlp | grep kubectl
+NAME="PID_DIFFSN"
 
 if [[ -f ".$NAME" ]]; then
   PID=$(cat .$NAME)
@@ -13,5 +12,5 @@ if [[ -f ".$NAME" ]]; then
 
   echo "remove .$NAME"
   rm .$NAME
-  echo $2
+  echo "stable diffusion 8080 stopped"
 fi
