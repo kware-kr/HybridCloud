@@ -47,6 +47,7 @@ if [[ ! $(helm list) =~ "grafana" ]]; then
   echo ""
   echo ">> wait for grafana starting"
 
+  kubectl apply -f pvc.yaml
   helm install --wait grafana bitnami/grafana -f grafana.yaml --namespace monitoring
   sleep 10s
 

@@ -8,7 +8,7 @@ global:
 image.debug: true
 primary:
   persistence:
-    storageClass: nfs-client
+    existingClaim: pvc-testgres
   service:
     type: NodePort
     nodePorts:

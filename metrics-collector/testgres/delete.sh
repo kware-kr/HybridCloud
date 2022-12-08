@@ -2,6 +2,7 @@
 
 if [[ $(helm list) =~ "postgres" ]]; then
   helm delete postgres
+  kubectl delete -f pvc.yaml
 fi
 
 #

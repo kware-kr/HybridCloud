@@ -33,5 +33,6 @@ fi
 
 if [[ ! $(helm list) =~ "bitnami" ]]; then
   echo "install postgresql"
+  kubectl apply -f pvc.yaml
   helm install postgres bitnami/postgresql -f values.yaml
 fi
