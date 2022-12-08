@@ -1,6 +1,9 @@
 #!/bin/bash
 
-ip_addr=$1
+chmod +x create_gpu.sh
+./create_gpu.sh
+
+###
 
 if [[ ! $(helm repo list) =~ "bitnami" ]]; then
   echo ""
@@ -16,7 +19,7 @@ if [[ ! $(helm list) =~ "kube-prometheus" ]]; then
   echo ""
   echo ">> wait for prometheus starting"
 
-  helm install --wait kube-prometheus bitnami/kube-prometheus --namespace monitoring
+  helm install --wait kube-prometheus bitnami/kube-prometheus --namespace monitoring -f prometheus.yaml
   sleep 10s
 
   kubectl port-forward --namespace monitoring svc/kube-prometheus-prometheus 9090:9090 --address 0.0.0.0 > /dev/null 2>&1 &
@@ -34,11 +37,6 @@ fi
 
 ###
 
-chmod +x create_gpu.sh
-./create_gpu.sh
-
-###
-
 if [[ ! $(helm list) =~ "grafana" ]]; then
   echo ""
   echo "install grafana"
@@ -49,7 +47,7 @@ if [[ ! $(helm list) =~ "grafana" ]]; then
   echo ""
   echo ">> wait for grafana starting"
 
-  helm install --wait grafana bitnami/grafana -f values.yaml --namespace monitoring
+  helm install --wait grafana bitnami/grafana -f grafana.yaml --namespace monitoring
   sleep 10s
 
   kubectl port-forward svc/grafana --namespace monitoring --address 0.0.0.0 3000:3000 > /dev/null 2>&1 &

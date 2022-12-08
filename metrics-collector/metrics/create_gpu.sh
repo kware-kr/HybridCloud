@@ -11,10 +11,6 @@ kubectl label no worker1 nvidia.com/gpu.deploy.operands=false
 
 kubectl create namespace gpu-operator
 
-curl https://raw.githubusercontent.com/NVIDIA/dcgm-exporter/main/etc/dcp-metrics-included.csv > dcgm-metrics.csv
-
-kubectl create configmap metrics-config -n gpu-operator --from-file=dcgm-metrics.csv
-
 echo ""
 echo ">> wait for gpu-operator starting"
 
