@@ -16,3 +16,8 @@ create table counter
 grant insert on counter to lect;
 grant select on counter to lect;
 ```
+
+```sh
+\q
+exit
+```
