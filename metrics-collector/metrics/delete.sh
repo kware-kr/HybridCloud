@@ -10,13 +10,13 @@ chmod +x delete_gpu.sh
 
 if [[ $(helm list --namespace monitoring) =~ "monitoring" ]]; then
   helm delete grafana --namespace monitoring
-  kubectl delete -f pvc.yaml
+  # kubectl delete -f pvc.yaml
 fi
 
 if [[ $(helm list --namespace monitoring) =~ "monitoring" ]]; then
   helm delete kube-prometheus --namespace monitoring
 fi
 
-if [[ $(kubectl get ns) =~ "monitoring" ]]; then
-  kubectl delete namespace monitoring
-fi
+# if [[ $(kubectl get ns) =~ "monitoring" ]]; then
+#   kubectl delete namespace monitoring
+# fi

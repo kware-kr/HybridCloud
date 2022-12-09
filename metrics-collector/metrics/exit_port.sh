@@ -9,6 +9,7 @@ if [[ -f ".$NAME" ]]; then
   if [[ ! -z ".$NAME" ]]; then
     echo "kill $PID"
     kill -15 $PID
+    kill -9 $PID
   fi
 
   echo "remove .$NAME"
