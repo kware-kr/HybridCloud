@@ -8,7 +8,7 @@ cd ../testgres
 chmod +x delete.sh
 ./delete.sh
 
-cd ../tespring/kube
+cd ../tespring
 kubectl delete -f .
 
 echo ">> delete completed"

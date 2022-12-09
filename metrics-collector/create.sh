@@ -11,11 +11,10 @@ cd testgres
 chmod +x create.sh
 ./create.sh $ip_addr
 
-cd ../tespring/kube
-# chmod +x {build.sh,docker.sh}
+cd ../tespring
 kubectl apply -f .
 
-cd ../../metrics
+cd ../metrics
 chmod +x create.sh
 ./create.sh $ip_addr
 
