@@ -4,13 +4,14 @@ chmod +x create_gpu.sh
 ./create_gpu.sh
 
 ###
-
+#helm repostiory 등록
 if [[ ! $(helm repo list) =~ "bitnami" ]]; then
   echo ""
   echo "add repo bitnami"
   helm repo add bitnami https://charts.bitnami.com/bitnami
 fi
 
+#kube-prometheus 설치
 if [[ ! $(helm list) =~ "kube-prometheus" ]]; then
   echo ""
   echo "install kube-prometheus"
@@ -37,6 +38,7 @@ fi
 
 ###
 
+#grafana설치
 if [[ ! $(helm list) =~ "grafana" ]]; then
   echo ""
   echo "install grafana"
