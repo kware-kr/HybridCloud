@@ -3,6 +3,7 @@
 # swap
 sudo swapoff -a && sudo sed -i '/swap/s/^/#/' /etc/fstab
 
+#OS 최신으로 갱신 및 네트워크관련 및 NFS툴 설치
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl net-tools nfs-common
 
