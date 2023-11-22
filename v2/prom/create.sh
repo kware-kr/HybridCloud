@@ -11,7 +11,7 @@ while :
 do
   kubectl get svc -n monitoring kube-prometheus-prometheus 2> /dev/null && break
   echo -ne "."
-  sleep 3
+  sleep 5
 done
 
 kubectl apply -f prometheus-service.yaml
