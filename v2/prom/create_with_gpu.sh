@@ -13,7 +13,7 @@ while :
 do
   kubectl get svc -n monitoring nvidia-dcgm-exporter 2> /dev/null && break
   echo -ne "."
-  sleep 3
+  sleep 5
 done
 
 kubectl patch svc -n monitoring nvidia-dcgm-exporter --patch='{"spec":{"type":"NodePort","ports":[{"port":9400,"targetPort":9400,"nodePort":30094}]}}'
