@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="h-full flex gap-2 lg:flex-row flex-col lg:justify-center">
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex flex-col gap-2 p-3 card">
+        <div class="flex lg:flex-row flex-col gap-2">
+          <a href="/" class="btn !bg-secondary lg:max-w-[5rem]">뒤로</a>
+          <form class="input-group flex-row flex-1 gap-2" id="form-search">
+            <input id="search" name="search" placeholder=" " autocomplete="off">
+            <label for="search">검색어 입력</label>
+            <button class="w-auto" type="submit" title="검색">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+              </svg>
+            </button>
+            <button id="btn-opt-reset" type="button" class="w-auto" title="초기화">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+              </svg>
+            </button>
+            <button id="btn-opt-help" type="button" class="w-auto" title="도움말">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+              </svg>
+            </button>
+          </form>
+          <button id="btn-opt-save" class="lg:max-w-[5rem]" title="수정한 우선순위를 반영합니다.">반영</button>
+        </div>
+      </div>
+      <div class="flex-1 flex gap-2 lg:flex-row flex-col" id="sort-menu">
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="card lg:h-1/2 flex flex-col gap-2">
+            <p class="text-2xl select-none">매우 높음</p>
+            <div class="list">
+              <div class="list-content"></div>
+            </div>
+          </div>
+          <div class="card lg:h-1/2 flex flex-col gap-2">
+            <p class="text-2xl select-none">높음</p>
+            <div class="list">
+              <div class="list-content"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 flex">
+          <div class="card flex flex-col w-full gap-2">
+            <p class="text-2xl select-none">보통</p>
+            <div class="list">
+              <div class="list-content"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="card lg:h-1/2 flex flex-col gap-2">
+            <p class="text-2xl select-none">낮음</p>
+            <div class="list">
+              <div class="list-content"></div>
+            </div>
+          </div>
+          <div class="card lg:h-1/2 flex flex-col gap-2">
+            <p class="text-2xl select-none">매우 낮음</p>
+            <div class="list">
+              <div class="list-content"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hidden">
+    <div id="view-node" class="select-auto">
+      <form class="flex flex-col gap-2" id="form-view">
+        <div class="input-group">
+          <input id="display" name="displayName" placeholder=" ">
+          <label for="display">표시 명</label>
+        </div>
+        <div class="input-group">
+          <input id="instance" name="instanceName" placeholder=" " disabled>
+          <label for="instance">인스턴스 명</label>
+        </div>
+        <div class="input-group">
+          <input id="url" name="prometheusUrl" placeholder=" " disabled>
+          <label for="url">프로메테우스 API URL</label>
+        </div>
+        <div class="input-group">
+          <input type="checkbox" id="enabled" name="enabled"/>
+          <label for="enabled">사용 여부</label>
+        </div>
+        <button type="submit" class="hidden"/>
+      </form>
+    </div>
+  </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script src="{{ url_for('static', path='/js/page/instances.js') }}"></script>
+  <script src="{{ url_for('static', path='/js/core/Sortable_v1.15.0.min.js') }}"></script>
+{% endblock %}

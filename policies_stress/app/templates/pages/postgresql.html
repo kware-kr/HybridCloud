@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="h-full flex justify-center items-center">
+    <div class="card lg:w-[500px] md:w-[600px] w-full relative transition-all">
+      <form id="form-db" class="flex flex-col gap-2 px-4 py-2" method="post">
+        <p class="text-2xl mb-1.5 select-none">메트릭 수집 DB (postgresql)</p>
+        <div class="input-group">
+          <input id="host" name="host" placeholder=" ">
+          <label for="host">Host</label>
+        </div>
+        <div class="input-group">
+          <input id="port" name="port" placeholder=" " value="5432">
+          <label for="port">Port</label>
+        </div>
+        <div class="input-group">
+          <input id="database" name="database" placeholder=" " value="postgres">
+          <label for="database">Database</label>
+        </div>
+        <div class="input-group">
+          <input id="user" name="user" placeholder=" ">
+          <label for="user">User</label>
+        </div>
+        <div class="input-group">
+          <input id="password" name="password" placeholder=" " type="password">
+          <label for="password">Password</label>
+        </div>
+        <div class="flex gap-1 mt-3 md:flex-row flex-col-reverse">
+          <div class="flex-1">
+            <a href="/" class="btn !bg-secondary md:!w-1/2 w-full">뒤로</a>
+          </div>
+          <div class="flex-1 flex gap-1 md:flex-row flex-col">
+            <button type="button" id="btn-test" class="flex-1 !bg-primary" title="연결을 테스트합니다.">테스트</button>
+            <button type="submit" class="flex-1" title="DB 정보를 저장합니다.">저장</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script src="https://cdn.jsdelivr.net/npm/verbal-expressions@1.0.2/dist/verbalexpressions.min.js"></script>
+  <script src="{{ url_for('static', path='/js/page/postgresql.js') }}"></script>
+{% endblock %}

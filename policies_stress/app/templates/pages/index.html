@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="w-full h-full flex justify-center items-center">
+    <div class="md:w-96 w-full p-4 card">
+      <p class="select-none text-xl text-center mb-2">메뉴</p>
+      <div class="flex flex-col gap-2">
+        <a href="/settings/db/view" class="btn" title="수집을 저장할 PostgreSQL 설정 관리">DB 설정</a>
+        <a href="/settings/apis/view" class="btn" title="프로메테우스 API URL 관리">수집 설정</a>
+        <a href="/kube/view" class="btn" title="쿠버네티스 설정 파일 관리">쿠버네티스 설정</a>
+        <a href="/instances/view" class="btn" title="인스턴스(노드) 우선순위 관리">우선순위 설정</a>
+        <a href="/metrics/monitoring/view" class="btn" title="사용량 모니터링 및 부하 테스트">모니터링</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
