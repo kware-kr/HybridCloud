@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="file">
+    <select id="key" resultType="long">
+        SELECT nextval('k_spp.file_uid_seq')
+    </select>
+
+    <select id="list" resultType="file">
+        select uid
+             , id
+             , saved
+             , name
+             , url
+             , type
+             , extension
+             , size
+             , reg_id
+             , reg_dt
+          from k_spp.file
+         where use_at = 'Y'
+           and uid = #{uid}
+           and saved != 'P'
+           <if test="@Ognl@isNotEmpty(saved)">
+           and saved = #{saved}
+           </if>
+           <if test="@Ognl@isNotEmpty(regId)">
+           and reg_id = #{regId}
+           </if>
+         order by reg_dt desc
+    </select>
+
+    <insert id="insert" parameterType="file">
+        insert into k_spp.file
+            (
+                uid, id, saved, name, url
+              , type, extension, size, reg_id
+            )
+        values
+            (
+                #{uid}, #{id} , #{saved}, #{name}, #{url}
+              , #{type}, #{extension}, #{size}, #{regId}
+            )
+    </insert>
+
+    <update id="merge" parameterType="file">
+        WITH UPSERT AS (
+            UPDATE k_spp.file
+               SET id = #{id}
+				 , saved = #{saved}
+		     WHERE uid = #{uid}
+		       AND url = #{url}
+		     RETURNING *
+        )
+        INSERT INTO k_spp.file (
+            uid, id, saved, name, url
+		  , type, extension, size, reg_id
+		)
+        SELECT #{uid}
+             , #{id}
+             , #{saved}
+             , #{name}
+             , #{url}
+             , #{type}
+             , #{extension}
+             , #{size}
+             , #{regId}
+         WHERE NOT EXISTS ( SELECT * FROM UPSERT )
+	</update>
+
+    <update id="delete" parameterType="file">
+        update k_spp.file
+           set use_at = 'N'
+         where url = #{url}
+    </update>
+
+    <update id="changeSaved" parameterType="file">
+        update k_spp.file
+           set saved = 'Y'
+             , uid = #{uid}
+         where reg_id = #{regId}
+           and url = #{url}
+    </update>
+
+    <delete id="deleteReal" parameterType="file">
+        delete from k_spp.file
+         where url = #{url}
+           <if test="@Ognl@isNotEmpty(saved)">
+           and saved = #{saved}
+           </if>
+    </delete>
+
+    <insert id="insertLog" parameterType="fileLog">
+        insert into k_spp.file_log
+            (
+                file_url
+              , reg_id
+            )
+        values
+            (
+                #{fileUrl}
+              , #{regId}
+            )
+    </insert>
+
+    <select id="selectLog" resultType="fileLog">
+        select uid
+             , file_url
+             , reg_id
+             , reg_dt
+          from k_spp.file_log
+         where file_url = #{fileUrl}
+         order by reg_dt desc
+    </select>
+
+    <select id="isRegister" resultType="boolean">
+        select case when count(*) > 0 then 1 else 0 end
+          from k_spp.file
+         where uid = #{uid}
+           and reg_id = #{regId}
+    </select>
+
+</mapper>

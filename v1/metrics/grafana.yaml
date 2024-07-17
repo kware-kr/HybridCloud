@@ -1,0 +1,10 @@
+admin:
+  user: "admin"
+  password: "1234"
+persistence:
+  existingClaim: pvc-grafana
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring

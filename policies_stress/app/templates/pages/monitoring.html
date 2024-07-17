@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="w-full h-full flex justify-center items-center">
+    <div class="card w-full flex flex-col justify-center lg:items-center items-start drop-shadow-md">
+      <div class="relative h-[500px] w-full transition-all" id="container">
+        <div class="absolute flex gap-2 md:flex-row flex-col w-full z-10">
+          <a href="/" class="btn !bg-secondary md:!w-32 !w-full">뒤로</a>
+          <select id="instances" class="hidden"></select>
+        </div>
+        <div id="btn-refresh" class="absolute right-0 md:top-0 top-24 hover:text-cocoa-500 cursor-pointer z-20 hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+          </svg>
+        </div>
+        <div class="flex w-full h-full md:mt-0 mt-6">
+          <div class="!w-1/2 p-4 md:mt-0">
+            <canvas id="canvas" class="!w-full mt-10"></canvas>
+          </div>
+          <div class="!w-1/2 p-4">
+            <canvas id="canvas2" class="!w-full !h-max m-auto mt-12"></canvas>
+          </div>
+          <div class="absolute text-center flex flex-col justify-center items-center w-full h-full opacity-1 transition-opacity" id="label-hint">
+            <p class="select-none"></p>
+            <button class="hidden w-48 mt-2">새로고침</button>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-row gap-2 w-full mb-4 select-none">
+        <div id="line-legends-container" class="hidden flex p-4">
+          <p>목록</p>
+          <p class="pl-2">|</p>
+          <div id="line-legends"></div>
+        </div>
+        <div class="flex-1 hidden pie-legends-container">
+          <p>파드 목록</p>
+          <div class="flex flex-col overflow-y-auto h-[150px] card" id="pie-legends"></div>
+        </div>
+        <div class="flex-1 hidden pie-legends-container">
+          <p>파드 목록</p>
+          <div class="flex flex-col overflow-y-auto h-[150px] card" id="pie2-legends"></div>
+        </div>
+      </div>
+      <div class="flex w-full gap-2 z-10 md:flex-row flex-col hidden" id="btn-container">
+        <button id="btn-recent" class="opacity-1 !opacity-0 transition-opacity" title="최근 1시간 내의 사용량을 표시합니다.">최근 사용량</button>
+        <button id="btn-perpod" class="opacity-1 !opacity-0 transition-opacity" title="CPU와 메모리의 파드별 사용량을 표시합니다.">파드별 사용량</button>
+        <button id="btn-stress" class="opacity-1 !opacity-0 transition-opacity" title="부하 테스트를 실행합니다." class="!bg-primary">부하 테스트 시작</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script src="{{ url_for('static', path='/js/core/chart_v4.2.0.min.js') }}"></script>
+  <script src="{{ url_for('static', path='/js/page/monitoring.js') }}"></script>
+  <script src="{{ url_for('static', path='/js/page/stress.js') }}"></script>
+{% endblock %}

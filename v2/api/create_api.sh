@@ -1,0 +1,7 @@
+#!/bin/bash
+
+master=$(kubectl get node --no-headers -o custom-columns=":metadata.name" -l node-role.kubernetes.io/master)
+kubectl taint node $master node-role.kubernetes.io/master:NoSchedule-
+kubectl apply -f api.yaml
+sleep 3s
+kubectl taint node $master node-role.kubernetes.io/master:NoSchedule

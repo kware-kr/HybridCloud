@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="view-transition" content="same-origin"/>
+  <link rel="shortcut icon" href="{{ url_for('static', path='/fav32.png') }}">
+  {% include 'fragments/theme.html' %}
+  <title>
+    {% block title %}
+      API
+    {% endblock %}
+  </title>
+</head>
+<body>
+<div class="lg:h-full h-max flex base pb-8">
+  <div class="md:mx-8 md:mt-8 mx-2 mt-2 p-0 flex-1 w-full overflow-hidden">
+    {% block content %}
+    {% endblock %}
+    {% include 'fragments/footer.html' %}
+  </div>
+  <div class="w-full h-full absolute top-0 flex justify-center items-center bg-cocoa-800/50 hidden" id="loading">
+    <svg class="animate-spin -ml-1 mr-3 w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+         viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </div>
+  <div class="hidden" title="assets">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon" id="ico-close">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </div>
+  <div class="notifies" id="notify-container"></div>
+</div>
+<script src="{{ url_for('static', path='/js/page/base.js') }}"></script>
+{% block script %}
+{% endblock %}
+{% include 'fragments/script.html' %}
+</body>
+</html>

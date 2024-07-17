@@ -1,0 +1,88 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.0'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java'
+    id 'war'
+}
+
+group = 'kware'
+version = '1.0'
+description = 'job'
+sourceCompatibility = '1.8'
+
+sourceSets.main.resources.srcDirs = ["src/main/resources", "src/main/java"]
+sourceSets.main.resources.includes = ["**/*.*"]
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    all {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    }
+}
+
+repositories {
+    maven { url 'https://repo.spring.io/release' }
+    mavenCentral()
+    maven { url = uri('https://www.egovframe.go.kr/maven/') }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
+    implementation 'org.springframework.data:spring-data-commons'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'javax.validation:validation-api'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    runtimeOnly 'org.postgresql:postgresql'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.jodd:jodd-core:5.3.0'
+
+    implementation('egovframework.rte:egovframework.rte.fdl.cmmn:3.8.0') {
+        exclude group: 'egovframework.rte', module: 'egovframework.rte.fdl.logging'
+    }
+    implementation('egovframework.rte:egovframework.rte.psl.dataaccess:3.8.0') {
+        exclude group: 'egovframework.rte', module: 'egovframework.rte.fdl.logging'
+        exclude group: 'org.mybatis', module: 'mybatis'
+        exclude group: 'org.mybatis', module: 'mybatis-spring'
+        exclude group: 'javax', module: 'javaee-api'
+    }
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    implementation 'org.apache.poi:poi:5.2.2'
+    implementation 'org.apache.poi:poi-ooxml:5.2.2'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+    implementation 'me.desair.tus:tus-java-server:1.0.0-2.0'
+    implementation 'org.apache.commons:commons-csv:1.9.0'
+    implementation 'org.springframework:spring-core'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.json:json:20230227'
+
+    implementation 'io.kubernetes:client-java:18.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.rabbitmq:amqp-client:5.13.1'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+/*
+tasks.named('bootBuildImage') {
+    builder = 'paketobuildpacks/builder:tiny'
+    environment = ['BP_NATIVE_IMAGE': 'true']
+}
+*/
