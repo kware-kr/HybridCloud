@@ -1,0 +1,48 @@
+version: "0.5"
+request:
+  name: "ml workload"
+  id: "lasdjls-asldsl-alsdkjflaskf"
+  date: "2024-06-15 11:55:00"
+  container:
+  - image: "example-image"
+    resources:
+      request:
+        cpu: 100
+        memory: 134217728
+        gpu: 0
+        ephemeral-storage: 1048576000
+      limits:
+        cpu: 200
+        memory: 268435456
+        gpu: 0
+        ephemeral-storage: 2097152000
+  - image: "example-image2"
+    resources:
+      request:
+        cpu: 300
+        memory: 134217728
+        gpu: 0
+        ephemeral-storage: 1048576000
+      limits: null
+  requestAttributes:
+    workloadType: "ML"
+    isCronJob: true
+    devOpsType: "DEV"
+    cudaVersion: "12.0"
+    gpuDriverVerion: "534.12"
+    maxReplicas: 10
+    isNetworking: true
+    containerImageSize: 500
+    predictedExecutionTime: 600
+    userInfo:
+      id: "user123"
+clUid: null
+node: null
+totalRequestCpu: 400
+totalRequestMemory: 268435456
+totalRequestGpu: 0
+totalRequestDisk: 2097152000
+totalLimitCpu: 400
+totalLimitMemory: 268435456
+totalLimitGpu: 0
+totalLimitDisk: 2097152000

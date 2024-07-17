@@ -1,0 +1,11 @@
+version: "0.5"
+response:
+  id: "lasdjls-asldsl-alsdkjflaskf"
+  name: "ml workload"
+  clusterName: "cluster 이름"
+  clusterId: "cluster 이름"
+  nodeName: "클러스터 내부의 node 이름"
+  priority: 100000
+  preemptionPolicy: "PreemptLowerPriority|Never"
+  date: "2024-06-20 09:59:35"
+  nodeId: null

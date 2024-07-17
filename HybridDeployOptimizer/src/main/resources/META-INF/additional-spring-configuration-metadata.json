@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "spring.rabbitmq.exchange.policy.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.rabbitmq.exchange.policy.name'"
+  },
+  {
+    "name": "spring.rabbitmq.queue.policy_res.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.rabbitmq.queue.policy_res.name'"
+  },
+  {
+    "name": "spring.rabbitmq.queue.policy_req.name",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.rabbitmq.queue.policy_req.name'"
+  },
+  {
+    "name": "spring.rabbitmq.routing.policy_res.key",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.rabbitmq.routing.policy_res.key'"
+  },
+  {
+    "name": "spring.rabbitmq.routing.policy_req.key",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.rabbitmq.routing.policy_req.key'"
+  }
+]}
