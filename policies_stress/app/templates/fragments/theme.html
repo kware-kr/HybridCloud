@@ -1,0 +1,50 @@
+<script src="{{ url_for('static', path='/js/core/tailwind_v3.2.4.min.js') }}"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#503C3B',
+                    secondary: '#9B857C',
+                    cocoa: {
+                        50: '#FCF4ED',
+                        100: '#F8EDE3',
+                        200: '#D8CCC2',
+                        300: '#AD9F95',
+                        400: '#9A8C82',
+                        500: '#7A6A61',
+                        550: '#5B4A41',
+                        600: '#4F4038',
+                        650: '#4B3328',
+                        700: '#3C2A21',
+                        800: '#2B1E16',
+                        900: '#1A120B',
+                    },
+                },
+                animation: {
+                    temp: 'temp 1s ease-in-out infinite',
+                },
+                keyframes: {
+                    temp: {
+                        '50%': { opacity: .5, color: '#4180AF', fontSize: 'x-large' },
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        isDark
+            ? document.documentElement.classList.add('dark')
+            : document.documentElement.classList.remove('dark')
+    }
+</script>
+<style>
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+    .icon { width: 1.5rem; height: 1.5rem; }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', path='/css/index.css') }}"/>

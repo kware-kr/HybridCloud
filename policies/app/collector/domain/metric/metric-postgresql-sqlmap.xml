@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="metric">
+    <insert id="insert" parameterType="metric">
+        INSERT INTO metric
+            (
+                created_at, instance, node_name, data
+            )
+        VALUES
+            (
+                #{createdAt}, #{instance}, #{nodeName}, #{data}::jsonb
+            )
+    </insert>
+
+    <select id="list" resultType="metric">
+        SELECT m1.created_at
+             , m1.instance
+             , m1.node_name
+             , m1.data
+          FROM metric  m1
+          INNER JOIN ( SELECT instance
+                            , node_name
+                            , MAX(created_at) AS max_created_at
+                         FROM metric
+                        GROUP BY instance, node_name
+                     ) m2
+                     ON m1.instance = m2.instance AND m1.node_name = m2.node_name AND m1.created_at = m2.max_created_at
+    </select>
+</mapper>

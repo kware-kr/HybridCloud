@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: deploy-tespring
+  name: deploy-tespring
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: po-tespring
+  template:
+    metadata:
+      labels:
+        app: po-tespring
+    spec:
+      containers:
+      - name: tespring
+        image: lectinua/tespring:latest
+        envFrom:
+        - configMapRef:
+            name: cm-tespring
+        ports:
+        - containerPort: 8080

@@ -1,0 +1,17 @@
+global:
+  postgresql:
+    auth:
+      postgresPassword: 1234
+      username: lect
+      password: 1234
+      database: lect
+image.debug: true
+primary:
+  persistence:
+    existingClaim: pvc-testgres
+  service:
+    type: NodePort
+    nodePorts:
+      postgresql: 30033
+volumePermissions:
+  enabled: true
