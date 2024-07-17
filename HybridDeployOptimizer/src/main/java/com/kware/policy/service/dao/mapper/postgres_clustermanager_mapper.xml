@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
+<mapper namespace="clusterManagerMapper">
+
+<!-- ************************ cluster *************************************  -->
+ <!-- Insert -->
+  <insert id="insertCluster" parameterType="com.kware.policy.service.vo.Cluster">
+    INSERT INTO mo_cluster (
+        uid
+      , nm
+      , info
+      , memo
+      , prom_url
+      , hash_val
+      , delete_at
+      , reg_uid
+      , updt_uid
+    ) VALUES (
+        #{uid}
+      , #{nm}
+      , #{info}::jsonb
+      , #{memo}
+      , #{promUrl}
+      , #{hashVal}
+      , #{deleteAt}
+      , #{regUid}
+      , #{updtUid}
+    )
+  </insert>
+
+  <!-- Update -->
+  <update id="updateCluster" parameterType="com.kware.policy.service.vo.Cluster">
+    UPDATE mo_cluster
+    SET nm        = #{nm}
+      , info      = #{info}::jsonb
+      , memo      = #{memo}
+      , prom_url  = #{promUrl}
+      , hash_val  = #{hashVal}
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE uid     = #{uid}
+      AND hash_val != #{hashVal}
+  </update>
+
+  <!-- Delete -->
+  <delete id="deleteCluster" parameterType="com.kware.policy.service.vo.Cluster">
+    UPDATE mo_cluster
+    SET 
+        delete_at = 'Y'
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE uid     = #{uid}
+  </delete>
+
+  <!-- Select -->
+  <select id="selectClusterList" resultType="com.kware.policy.service.vo.Cluster">
+    SELECT uid
+         , nm
+         , info
+         , memo
+         , prom_url
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster
+    WHERE delete_at = 'N'
+  </select>
+  
+  <select id="selectCluster" resultType="com.kware.policy.service.vo.Cluster" parameterType="com.kware.policy.service.vo.Cluster">
+    SELECT uid
+         , nm
+         , info
+         , memo
+         , prom_url
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster
+    WHERE uid = #{uid}
+  </select>
+
+ <select id="selectClusterCount" resultType="int" parameterType="com.kware.policy.service.vo.Cluster">
+    SELECT count(*)
+    FROM mo_cluster
+    WHERE uid = #{uid}
+    <if test="hashVal != null">
+      AND hash_val = #{hashVal} 
+    </if>
+  </select>
+
+
+<!-- ************************ cluster node*************************************  -->
+	<!-- Insert -->
+  <insert id="insertClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+    INSERT INTO mo_cluster_node (
+          uid
+        , cl_uid
+        , nm
+        , info
+        , gpuinfo
+        , memo
+        , delete_at
+        , hash_val
+        , reg_uid
+        , updt_uid 
+    )VALUES (
+    	  #{uid}
+    	, #{clUid}
+    	, #{nm}
+    	, #{info}::jsonb
+    	, #{gpuinfo}::jsonb
+    	, #{memo}
+    	, #{deleteAt}
+    	, #{hashVal}
+    	, #{regUid}
+    	, #{updtUid}
+    )
+  </insert>
+
+  <!-- Update -->
+  <update id="updateClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+    UPDATE mo_cluster_node
+    SET nm        = #{nm}
+      , info      = #{info}::jsonb
+      , gpuinfo   = #{gpuinfo}::jsonb
+      , memo      = #{memo}
+      , delete_at = #{deleteAt}
+      , hash_val  = #{hashVal}
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE uid     = #{uid} 
+      AND cl_uid  = #{clUid}
+      AND hash_val != #{hashVal}
+  </update>
+
+  <!-- Delete -->
+  <delete id="deleteClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+    UPDATE mo_cluster_node
+    SET delete_at = #{deleteAt}
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE uid     = #{uid} 
+      AND cl_uid  = #{clUid}
+  </delete>
+
+<!-- Select -->
+  <select id="selectClusterNodeList" resultType="com.kware.policy.service.vo.ClusterNode">
+    SELECT uid
+         , cl_uid
+         , nm
+         , info
+         , gpuinfo
+         , memo
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster_node
+   WHERE delete_at = 'N'
+  </select>
+  
+  <!-- Select -->
+  <select id="selectClusterNode" resultType="com.kware.policy.service.vo.ClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+    SELECT uid
+         , cl_uid
+         , nm
+         , info
+         , gpuinfo
+         , memo
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster_node
+    WHERE uid    = #{uid} 
+      AND cl_uid = #{clUid}
+  </select>
+  
+  <select id="selectClusterNodeCount" resultType="int" parameterType="com.kware.policy.service.vo.ClusterNode">
+    SELECT count(*)
+    FROM mo_cluster_node
+    WHERE uid = #{uid}
+      AND cl_uid = #{clUid}
+    <if test="hashVal != null">
+      AND hash_val = #{hashVal} 
+    </if>
+  </select>
+  
+  
+  <!-- ************************ cluster workload *************************************  -->
+	<!-- Insert -->
+  <insert id="insertClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+    INSERT INTO mo_cluster_workload (
+          ml_id
+        , cl_uid
+        , nm
+        , info
+        , memo
+        , delete_at
+        , hash_val
+        , reg_uid
+        , updt_uid 
+    )VALUES (
+    	  #{mlId}
+    	, #{clUid}
+    	, #{nm}
+    	, #{info}::jsonb
+    	, #{memo}
+    	, #{deleteAt}
+    	, #{hashVal}
+    	, #{regUid}
+    	, #{updtUid}
+    )
+  </insert>
+
+  <!-- Update -->
+  <update id="updateClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+    UPDATE mo_cluster_workload
+    SET
+        cl_uid    = #{clUid}
+      , nm        = #{nm}
+      , info      = #{info}::jsonb
+      , memo      = #{memo}
+      , delete_at = #{deleteAt}
+      , hash_val  = #{hashVal}
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE ml_id   = #{mlId} 
+      AND hash_val != #{hashVal}
+  </update>
+
+  <!-- Delete -->
+  <delete id="deleteClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+    UPDATE mo_cluster_workload
+    SET delete_at = #{deleteAt}
+      , updt_uid  = #{updtUid}
+      , updt_dt   = CURRENT_TIMESTAMP
+    WHERE ml_id     = #{mlId} 
+  </delete>
+
+<!-- Select -->
+  <select id="selectClusterWorkloadList" resultType="com.kware.policy.service.vo.ClusterWorkload">
+    SELECT ml_id
+         , cl_uid
+         , nm
+         , info
+         , memo
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster_workload
+   WHERE 1 = 1
+   <if test="clUid != null">
+     AND cl_uid = #{clUid} 
+   </if>
+  </select>
+  
+  <!-- Select -->
+  <select id="selectClusterWorkload" resultType="com.kware.policy.service.vo.ClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+    SELECT ml_id
+         , cl_uid
+         , nm
+         , info
+         , memo
+         , delete_at
+         , hash_val
+         , reg_uid
+         , reg_dt
+         , updt_uid
+         , updt_dt
+    FROM mo_cluster_workload
+    WHERE ml_id    = #{mlId} 
+  </select>
+  
+  <select id="selectClusterWorkloadCount" resultType="int" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+    SELECT count(*)
+    FROM mo_cluster_workload
+    WHERE ml_id = #{mlId}
+    <if test="hashVal != null">
+      AND hash_val = #{hashVal} 
+    </if>
+  </select>
+  
+  <!--     ************************ mo_cluster_history *********************************** -->
+  
+  <insert id="insertHistoryFromCluster" parameterType="HashMap">
+  	INSERT INTO mo_cluster_history(tbl_nm, contents) 
+		SELECT 'mo_cluster' tbl_nm, to_jsonb(t) contents
+		  FROM (
+		  	SELECT *  FROM mo_cluster 	WHERE uid = #{uid}
+		  ) t
+  </insert>
+
+  <insert id="insertHistoryFromClusterNode"  parameterType="HashMap">
+  	INSERT INTO mo_cluster_history(tbl_nm, contents) 
+		SELECT 'mo_cluster_node' tbl_nm, to_jsonb(t) contents
+		  FROM (
+		  	SELECT * FROM mo_cluster_node WHERE uid = #{uid} and cl_uid = #{clUid}
+		  ) t
+  </insert>	
+  
+  <insert id="insertHistoryFromClusterWorkload"  parameterType="HashMap">
+  	INSERT INTO mo_cluster_history(tbl_nm, contents) 
+		SELECT 'mo_cluster_workload' tbl_nm, to_jsonb(t) contents
+		  FROM (
+		  	SELECT * FROM mo_cluster_workload WHERE uid = #{uid}
+		  ) t
+  </insert>	
+</mapper>
+

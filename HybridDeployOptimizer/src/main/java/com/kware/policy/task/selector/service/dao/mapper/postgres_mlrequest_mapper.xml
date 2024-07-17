@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
+<mapper namespace="mlRequetResponseMapper">
+
+	<insert id="insertMoUserRequest" useGeneratedKeys="true" keyProperty="uid">
+		INSERT INTO k_hybrid.mo_user_request (
+	          ml_uid 
+	        , nm 
+	        , info 
+	    ) VALUES (
+	          #{id} 
+	        , #{name} 
+	        , #{info}::jsonb 
+	    )
+	</insert>
+	
+	<select id="selectMoUserRequestById" resultType="com.kware.policy.task.selector.service.vo.WorkloadRequest$Request">
+	    SELECT 
+	          uid
+	        , ml_uid 
+	        , nm 
+	        , info 
+	        , reg_dt
+	    FROM k_hybrid.mo_user_request
+	    WHERE 1 = 1
+	      AND uid    = #{uid}
+	      AND ml_uid = #{id}
+	</select>
+
+	<insert id="insertMoUserResponse">
+	    INSERT INTO k_hybrid.mo_user_response (
+	          uid 
+	        , ml_uid
+	        , cl_uid 
+	        , no_uid 
+	        , info 
+	    ) VALUES (
+	          #{uid} 
+	        , #{id} 
+	        , #{clusterId}::int4 
+	        , #{nodeId} 
+	        , #{info}::jsonb 
+	    )
+	</insert>
+	
+	<select id="selectMoUserResponseById" resultType="com.kware.policy.task.selector.service.vo.WorkloadResponse$Response">
+	    SELECT 
+	          uid 
+	        , ml_uid  
+	        , cl_uid 
+	        , no_uid 
+	        , info 
+	        , reg_dt
+	    FROM k_hybrid.mo_user_response
+	    WHERE 1 = 1
+	      AND uid    = #{uid} 
+	      AND ml_uid = #{id}
+	</select>
+
+</mapper>
+
