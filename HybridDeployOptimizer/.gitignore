@@ -5,3 +5,10 @@
 build
 /bin/
 /.svn/
+/client_console.cmd
+/.project
+/.classpath
+/.settings/
+/gradle/
+/gradlew
+/gradlew.bat
