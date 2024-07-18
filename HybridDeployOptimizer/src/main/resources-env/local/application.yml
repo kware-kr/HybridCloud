@@ -20,8 +20,8 @@ spring:
 
   rabbitmq:
     enable: true  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
-    host: 183.109.110.211   # 172.30.1.243
-    port: 9510   # 5672
+    host: 172.30.1.35
+    port: 5672
     username: admin
     password: admin123!
     exchange:

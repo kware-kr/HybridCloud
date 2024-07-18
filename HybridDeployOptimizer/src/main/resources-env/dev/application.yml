@@ -1,26 +1,11 @@
 spring:
-  application:
-    name: dolphin
   profiles:
-    active: dev
- #웹서버실행하지 않기   
-  #main.web-application-type: none
-  mvc.pathmatch.matching-strategy: ant-path-matcher
+    active: local
+   #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
-    livereload:
-      enabled: true
-          
-server:
-  port: 8888
-
-#datasource id/pw 암호화 처리  : com/kware/common/config/JasyptConfig.java와 test source 참고하여 username, password를 암호화 처리할 수 있음 
-jasypt:
-  encryptor:
-    bean: jasyptStringEncryptor
-    
----
-
-spring:
+    restart.enabled: true
+    livereload.enabled: true
+  mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
     prefix: classpath:templates/
     check-template-location: true
@@ -30,16 +15,62 @@ spring:
   #shutdown  
   pid:
     file: .\.app.pid
-    
-dolphin:
-  apps:
-    home: D:\home\dolphin
-    ports: [9501, 9502]
-    host: 172.30.1.28
+  jackson:
+    time-zone: Asia/Seoul
+
+  rabbitmq:
+    enable: true  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
+    host: 183.109.110.211   # 172.30.1.243
+    port: 9510   # 5672
+    username: admin
+    password: admin123!
+    exchange:
+      policy.name: po_exchane
+    queue:
+      policy_req.name: po_req_queue
+      policy_res.name: po_res_queue
+    routing:
+      policy_req.key: po_req_key
+      policy_res.key: po_res_key
+
+
+server:
+  port: 8889
+  servlet:
+    context-path: /
+    session:
+      timeout: 28800000  # 8 hours in milliseconds
+  jetty:     # Jetty 스레드 풀 설정
+    threads:
+      acceptors: -1 # Number of acceptor threads to use. When the value is -1, the default, the number of acceptors is derived from the operating environment.
+      selectors: -1 # Number of selector threads to use. When the value is -1, the default, the number of selectors is derived from the operating environment.
+      min: 2 # Minimum number of threads e.g. 8 
+      max: 5 # Maximum number of threads e.g. 200
+      #max-queue-capacity:  # Maximum capacity of the thread pool's backing queue. A default is computed based on the threading configuration.
+      #idle-timeout:  # Maximum thread idle time in millisecond e.g. 60000ms      
+
+#datasource id/pw 암호화 처리  : com/kware/common/config/JasyptConfig.java와 test source 참고하여 username, password를 암호화 처리할 수 있음 
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
+
+hybrid:
+  collector:
+    portal-api:
+      url: http://10.10.30.60
+      authorization: 9ed36fd5-4c9b-4fba-827c-84edac08637c 
+      prometheus:
+        authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
+        unified_url: http://10.10.30.60:30138/
+      finish-enalbe: false
+      delete-enalbe: false
+    threads: 5
+  scheduler:
+    threads: 2
   datasource:
-    url: jdbc:log4jdbc:postgresql://172.30.1.243:5433/postgres
+    url: jdbc:log4jdbc:postgresql://172.30.1.35:5433/postgres?currentSchema=k_hybrid
     hikari: 
-      jdbcUrl: ${dolphin.datasource.url}
+      jdbcUrl: ${hybrid.datasource.url}
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
       username: ENC(HrVw3fiyCLDR948tKQhAejZAT9wpchPEpFFoJG3Y38HWipO+iLHob1pXaX1N+pXg)
       #username: postgres
@@ -53,42 +84,25 @@ dolphin:
           prepStmtCacheSize: 250
           prepStmtCacheSqlLimit: 2048
           useServerPrepStmts: true  
-
-
-logging:
-  file:
-    name: D:/home/dolphin/logs/dolpin.log
-    pattern: logs/dolpin-%d{yyyy-MM-dd}-%i.log.gz
-  pattern:
-    console: "[%d{MMdd HH:mm:ss.SSS} %-1.1p] %C{1}:%4.4L- %m%n" 
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  appenders:
-    rolling-file:
-      name: RollingFile
-      type: RollingFile
-      fileName: ${logging.file.name}
-      filePattern: ${logging.file.pattern}
-      layout:
-        pattern: "%d [%t] %-5level %logger{36} - %msg%n"
-      policies:
-        size-based:
-          size: 10MB
-      strategy:
-        type: DefaultRolloverStrategy
-        delete:
-          basePath: logs
-          maxDepth: 2
-          ifFileName:
-            glob: "logs/dolpin-*.log.gz"
-          ifLastModified:
-            age: 1000d
-      compression:
-        type: GzCompressAction
-  level:
-    root: WARN
-    com.zaxxer.hikari: ERROR
-    com.kware: DEBUG
-    jdbc.resultsettable: ERROR
-    jdbc.sqlonly: ERROR
-    jdbc.sqltiming: DEBUG
-    org.springframework.web: ERROR
+  policy:
+    server:
+      h2:
+        enable: false
+        dbname: policydb
+        path:   #mem or null이면 메모리 DB 생성
+        port: 
+    datasource:
+      hikari: 
+        jdbcUrl: jdbc:log4jdbc:h2:tcp://localhost:9093/mem:policydb
+        #jdbcUrl: jdbc:log4jdbc:h2:mem:policydb
+        driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+        username: sa
+        password: 1234
+        pool-name: hikari-cp
+        maximum-pool-size: 10
+        minimum-idle: 2
+        data-source-properties: 
+            cachePrepStmts: true
+            prepStmtCacheSize: 250
+            prepStmtCacheSqlLimit: 2048
+            useServerPrepStmts: true 
