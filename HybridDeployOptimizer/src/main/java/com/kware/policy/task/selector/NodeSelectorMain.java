@@ -21,34 +21,34 @@ class Node {
 
     public Node(String name, int cpuCapacity, int memoryCapacity, int gpuCapacity, int networkCapacity, int diskIoCapacity) {
         this.name = name;
-        this.cpuCapacity = cpuCapacity;
-        this.memoryCapacity = memoryCapacity;
-        this.gpuCapacity = gpuCapacity;
+        this.cpuCapacity     = cpuCapacity;
+        this.memoryCapacity  = memoryCapacity;
+        this.gpuCapacity     = gpuCapacity;
         this.networkCapacity = networkCapacity;
-        this.diskIoCapacity = diskIoCapacity;
+        this.diskIoCapacity  = diskIoCapacity;
         
-        this.cpuUsed = 0;
-        this.memoryUsed = 0;
-        this.gpuUsed = 0;
+        this.cpuUsed     = 0;
+        this.memoryUsed  = 0;
+        this.gpuUsed     = 0;
         this.networkUsed = 0;
-        this.diskIoUsed = 0;
+        this.diskIoUsed  = 0;
     }
 
     public boolean canAccommodate(int cpu, int memory, int gpu, int network, int diskIo) {
-        return (cpuUsed + cpu <= cpuCapacity) &&
-               (memoryUsed + memory <= memoryCapacity) &&
-               (gpuUsed + gpu <= gpuCapacity) &&
+        return (cpuUsed     + cpu     <= cpuCapacity    ) &&
+               (memoryUsed  + memory  <= memoryCapacity ) &&
+               (gpuUsed     + gpu     <= gpuCapacity    ) &&
                (networkUsed + network <= networkCapacity) &&
-               (diskIoUsed + diskIo <= diskIoCapacity);
+               (diskIoUsed  + diskIo  <= diskIoCapacity );
     }
 
     public void allocateResources(int cpu, int memory, int gpu, int network, int diskIo) {
         if (canAccommodate(cpu, memory, gpu, network, diskIo)) {
-            cpuUsed += cpu;
-            memoryUsed += memory;
-            gpuUsed += gpu;
+            cpuUsed     += cpu;
+            memoryUsed  += memory;
+            gpuUsed     += gpu;
             networkUsed += network;
-            diskIoUsed += diskIo;
+            diskIoUsed  += diskIo;
         } else {
             throw new IllegalArgumentException("Insufficient resources on node " + name);
         }
@@ -81,16 +81,17 @@ class Cluster {
     }
 
     private int compareNodes(Node a, Node b, int cpu, int memory, int gpu, int network, int diskIo) {
-        int scoreA = (a.cpuCapacity - a.cpuUsed) - cpu +
-                     (a.memoryCapacity - a.memoryUsed) - memory +
-                     (a.gpuCapacity - a.gpuUsed) - gpu +
+        int scoreA = (a.cpuCapacity     - a.cpuUsed)     - cpu     +
+                     (a.memoryCapacity  - a.memoryUsed)  - memory  +
+                     (a.gpuCapacity     - a.gpuUsed)     - gpu     +
                      (a.networkCapacity - a.networkUsed) - network +
-                     (a.diskIoCapacity - a.diskIoUsed) - diskIo;
-        int scoreB = (b.cpuCapacity - b.cpuUsed) - cpu +
-                     (b.memoryCapacity - b.memoryUsed) - memory +
-                     (b.gpuCapacity - b.gpuUsed) - gpu +
+                     (a.diskIoCapacity  - a.diskIoUsed)  - diskIo;
+        
+        int scoreB = (b.cpuCapacity     - b.cpuUsed)     - cpu     +
+                     (b.memoryCapacity  - b.memoryUsed)  - memory  +
+                     (b.gpuCapacity     - b.gpuUsed)     - gpu     +
                      (b.networkCapacity - b.networkUsed) - network +
-                     (b.diskIoCapacity - b.diskIoUsed) - diskIo;
+                     (b.diskIoCapacity  - b.diskIoUsed)  - diskIo;
         return scoreA - scoreB;
     }
 }

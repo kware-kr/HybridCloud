@@ -10,7 +10,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.kware.policy.task.process.ProcessMain;
+import com.kware.policy.task.scalor.ProcessMain;
 
 /**
  * @author kljang 어플리케이션이 사용 준비가 되면 최초에 실행해야할 자료나 데이터를 처리할 수 있다.

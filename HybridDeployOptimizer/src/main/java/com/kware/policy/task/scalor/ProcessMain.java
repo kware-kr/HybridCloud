@@ -1,4 +1,4 @@
-package com.kware.policy.task.process;
+package com.kware.policy.task.scalor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import com.kware.policy.service.PromQLService;
-import com.kware.policy.task.process.worker.ProcessWorker;
+import com.kware.policy.task.scalor.worker.ProcessWorker;
 
 import lombok.extern.slf4j.Slf4j;
 

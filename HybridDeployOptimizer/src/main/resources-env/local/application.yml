@@ -3,7 +3,7 @@ spring:
     active: local
    #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
-    restart.enabled: true
+    restart.enabled: false
     livereload.enabled: true
   mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
@@ -35,7 +35,7 @@ spring:
 
 
 server:
-  port: 8889
+  port: 8888
   servlet:
     context-path: /
     session:
@@ -85,6 +85,22 @@ hybrid:
           prepStmtCacheSqlLimit: 2048
           useServerPrepStmts: true  
   policy:
+    resource-weights:
+      ml:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 4
+      dl:
+        cpu: 3
+        gpu: 5
+        disk: 3
+        memory: 4
+      inf:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 3
     server:
       h2:
         enable: false
@@ -106,3 +122,4 @@ hybrid:
             prepStmtCacheSize: 250
             prepStmtCacheSqlLimit: 2048
             useServerPrepStmts: true 
+            

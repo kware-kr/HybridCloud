@@ -11,6 +11,12 @@ import com.kware.policy.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 //Bin Packing: Best Fit Decreasing (BFD) 알고리즘 클래스
+/*
+ * Best Fit Decreasing (BFD) 알고리즘:
+	항목들을 내림차순으로 정렬한 후 Best Fit 알고리즘을 적용합니다.
+	큰 항목들을 먼저 배치하고, 남는 공간이 가장 적은 빈에 넣어 최적화합니다.
+	Best Fit보다 빈의 사용 효율이 더욱 높지만, 정렬 과정과 최적의 빈 찾기 과정이 추가됩니다.
+ */
 public class BestFitDecreasingBinPacking {
 
     private List<PromMetricNode> nodes; // 사용 가능한 노드들의 리스트

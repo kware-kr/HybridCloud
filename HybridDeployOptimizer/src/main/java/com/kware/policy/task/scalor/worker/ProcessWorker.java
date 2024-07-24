@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kware.policy.task.process.worker;
+package com.kware.policy.task.scalor.worker;
 
 import com.kware.policy.common.QueueManager;
 

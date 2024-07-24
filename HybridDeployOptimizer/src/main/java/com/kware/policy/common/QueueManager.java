@@ -497,8 +497,8 @@ public class QueueManager {
      * 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 워크로드 List을 제공한다.
      * @return 수정불가능한 ConcurrentHashMap<String,Set<WorkloadRequest>>
      */
-    public ConcurrentHashMap<String,Set<WorkloadRequest>> getNotApplyWorkloadRequestForNode() {
-    	return (ConcurrentHashMap<String, Set<WorkloadRequest>>) Collections.unmodifiableMap(this.notApplyRequestNodeMap);    	
+    public Map<String,Set<WorkloadRequest>> getNotApplyWorkloadRequestForNode() {
+    	return Collections.unmodifiableMap(this.notApplyRequestNodeMap);    	
     }
     
    

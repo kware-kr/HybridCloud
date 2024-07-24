@@ -172,7 +172,7 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				//shutdown 후에 모든 job이 종료될 동안 대기한다. 최대 10초를 대기한다.
 				executorService.awaitTermination(10, TimeUnit.SECONDS);
 				
-				//{{API에만 있는 데이터 추가 처리.
+				//{{API에만 있는 데이터를 수집한 데이터에 추가 처리.
 				//key: node.getUniqueKey() val:ClusterNode
 				ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
 				log.info("=========================================================================================================");
@@ -180,13 +180,14 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 					ClusterNode cnode = nodeApiMap.get(k.getClUid() + "_" + k.getNode());
 					k.setNoUid(cnode.getUid());  //node uid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
-					
+					/*
 					try {
 						log.info("{}",JSONUtil.getJsonstringFromObject(k));
 					} catch (JsonProcessingException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					*/
 					
 					k.addLabels(cnode.getLabels());  // labels 추가
 				});

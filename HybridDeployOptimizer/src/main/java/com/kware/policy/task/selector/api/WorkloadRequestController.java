@@ -3,6 +3,8 @@ package com.kware.policy.task.selector.api;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.algo.BestFitBinPacking;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
+import com.kware.policy.task.selector.service.vo.ResourceWeightProperties.ResourceWeight;
 import com.kware.rabbitmq.publish.RabbitMQPolicyReqProducer;
 import com.kware.rabbitmq.publish.RabbitMQPolicyResProducer;
 
@@ -34,10 +37,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorkloadRequestController {
 	
-	private final WorkloadRequestService wrService;
+	private final WorkloadRequestService wlService;
 	private final RabbitMQPolicyReqProducer reqProducer;
 	private final RabbitMQPolicyResProducer resProducer;
 
+	QueueManager qm = QueueManager.getInstance();
+	
+	
 	//추후 RabbitMQ에서 사용하도록 한다.
     @PostMapping("/ml/schedule/node_select")
     public ResponseEntity<?> processYaml(@RequestBody String yamlstring) {
@@ -48,52 +54,36 @@ public class WorkloadRequestController {
         	reqProducer.sendMessage(yamlstring);
         	//}}
         	
-        	WorkloadRequest wrRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
-        	wrRequest.aggregate();
-            // 여기서는 단순히 변환된 YAML 문자열을 반환하나, 원하는 로직을 수행할 수 있습니다.
-        	{
-        		
-        	}
-        	
-        	//{{ 단순 DB저장
-        	WorkloadRequest.Request req = wrRequest.getRequest();
-        	
+        	WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
+        	wlRequest.aggregate();
+            
+        	//{{ WorkloadRequest DB저장
+        	WorkloadRequest.Request req = wlRequest.getRequest();
         	//단순한 DB저장을 위해 원본 그대로를  json으로 변환하기 위함
         	req.setInfo(YAMLUtil.convertYamlToJson(yamlstring));
-        	wrService.insertMoUserRequest(req);
+        	wlService.insertMoUserRequest(req);
         	//}}
         	
+        	//{{노드 셀렉터
+        	WorkloadResponse wlResponse = wlService.getNodesSelector(wlRequest);
+        	//}}
         	
-        	WorkloadResponse wlResponse = new WorkloadResponse();
-        	wlResponse.setVersion(WorkloadRequestService.interface_version);
+        	//DB 저장
+        	wlService.insertMoUserResponse(wlResponse.getResponse());
         	
-        	WorkloadResponse.Response res = new WorkloadResponse.Response();
-        	res.setUid(req.getUid());
-        	res.setId(req.getId());
-        	res.setName(req.getName());
-        	res.setClusterName("Workload-cluster-01");
-        	res.setClusterId("1");
-        	res.setNodeName("gpu-01");
-        	res.setNodeId("0d0fa95a-1700-473c-bcf5-3ac44e764025");
-        	res.setPreemptionPolicy(null);
-        	res.setPriority(null);
-        	res.setDate(new Date());
-        	
-        	wlResponse.setResponse(res);
-        	res.setInfo(JSONUtil.getJsonstringFromObject(wlResponse));
+        	//WorkloadRequest에 Response 입력
+        	wlRequest.setResponse(wlResponse.getResponse());
 
-        	String res_yamlstring = YAMLUtil.writeString(wlResponse);
-        	System.out.println(res_yamlstring);
         	//{{rabbit-mq
+        	String res_yamlstring = YAMLUtil.writeString(wlResponse);
         	//resProducer.sendYamlMessage(res_yamlstring);
         	resProducer.sendMessage(res_yamlstring);
         	//}}
         	
-        	wrService.insertMoUserResponse(res);
         	
-            return ResponseEntity.ok(res);
+        	return ResponseEntity.ok(wlRequest);
+            //return ResponseEntity.ok(res);
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process YAML");
         }
     }
@@ -102,13 +92,13 @@ public class WorkloadRequestController {
     public ResponseEntity<List<String>> getNodeScroe(@RequestBody String yamlstring) {
     	QueueManager qm = QueueManager.getInstance();
     	List<PromMetricNode> nodes = null;
-    	WorkloadRequest wrRequest = null;
+    	WorkloadRequest wlRequest = null;
     	if(yamlstring == null) {
     		nodes = qm.getLastPromMetricNodesReadOnly();
     	}else {
-    		wrRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
-        	wrRequest.aggregate();
-        	nodes = qm.getAppliablePromMetricNodesReadOnly(wrRequest);
+    		wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
+        	wlRequest.aggregate();
+        	nodes = qm.getAppliablePromMetricNodesReadOnly(wlRequest);
     	}
     	
     	//현재 특성 필터링은 안되었고, 스코어만 계산하는 것으로,
@@ -149,8 +139,13 @@ public class WorkloadRequestController {
     	temp = "Selection Node => Cluster ID:" + bestNode.getClUid() + "	Node Name:" + bestNode.getNode() + "	Score:" + bestNode.getScore();
     	rst.add(temp);
     	
-    	BestFitBinPacking bfbp = new BestFitBinPacking(nodes,qm.getNotApplyWorkloadRequestForNode());
-    	List<PromMetricNode> bfbpList = bfbp.allocate(wrRequest);
+    	
+		ResourceWeight resoruceWeight = new ResourceWeight(1,2,2,2);
+		//null이면 defaul 값을 리턴한다.
+
+		
+    	BestFitBinPacking bfbp = new BestFitBinPacking(nodes,qm.getNotApplyWorkloadRequestForNode(), resoruceWeight);
+    	List<PromMetricNode> bfbpList = bfbp.allocate(wlRequest);
     	
     	for(PromMetricNode node : bfbpList) {
     		temp = "BestFitBinPacking Cluster ID:" + node.getClUid() + "	Node Name:" + node.getNode();
@@ -159,8 +154,8 @@ public class WorkloadRequestController {
     		log.info("BestFitBinPacking: cl: {}, node:[{}, {}]", node.getClUid(), node.getNode(), node.getNoUid());
     	}
     	
-    	if(wrRequest != null)
-    		qm.setWorkloadRequest(wrRequest);
+    	if(wlRequest != null)
+    		qm.setWorkloadRequest(wlRequest);
     	return ResponseEntity.ok(rst);
     }
 }

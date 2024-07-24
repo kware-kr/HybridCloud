@@ -48,17 +48,26 @@ public class PromMetricNode extends PromMetricDefault{
 	private String  role;
 
 
-	Integer capacityCpu = 0;    //밀리코어 
-	Integer capacityGpu = 0;    //GPU 갯수
-	Long    capacityDisk = 0L;   //디스크 byte용량
-	Long    capacityMemory = 0L; //메모리 byte용량
-	Integer capacityPods = 0;   //Pods 갯수
+	Integer capacityCpu     = 0;    //밀리코어 
+	Integer capacityGpu     = 0;    //GPU 갯수
+	Long    capacityDisk    = 0L;   //디스크 byte용량
+	Long    capacityMemory  = 0L; //메모리 byte용량
+	Integer capacityPods    = 0;   //Pods 갯수
 
-	Integer availableCpu = 0;   //밀리코어로서: 코어갯수 * 1000을 전체 사용량으로 표시할 수 있음 실제는 더블형이나 Integer 형으로 변환 계산
-	Integer availableGpu = 0;   //gpu 갯수
-	Long    availableDisk = 0L;
+	Integer availableCpu    = 0;   //밀리코어로서: 코어갯수 * 1000을 전체 사용량으로 표시할 수 있음 실제는 더블형이나 Integer 형으로 변환 계산
+	Integer availableGpu    = 0;   //gpu 갯수
+	Long    availableDisk   = 0L;
 	Long    availableMemory = 0L;
-	Integer availablePods = 0;  //pods 갯수
+	Integer availablePods   = 0;  //pods 갯수
+	
+	//20240720: 사용정보를 일단 수집: 사용처는 차후에
+	Double  usageNetworkTransmit1m = 0.0;
+	Double  usageNetworkReceive1m  = 0.0;
+	Double  usageDiskWrite1m = 0.0;
+	Double  usageDiskRead1m    = 0.0;
+	
+	
+	Double betFitScore = 0.0;
 	
 
 	//이건 맵이 아니면 좋겠는데..
@@ -70,12 +79,15 @@ public class PromMetricNode extends PromMetricDefault{
 	public String getKey() {
 		return this.clUid + StringConstant.STR_UNDERBAR + this.node;
 	}
-	
-	
+		
 	private static final int WEIGHT_CPU    = 3;
     private static final int WEIGHT_MEMORY = 2;
     private static final int WEIGHT_GPU    = 4;
     private static final int WEIGHT_DISK   = 1;
+    
+    private static final int WEIGHT_DISK_USAGE   = 1;
+    private static final int WEIGHT_NETWORK_USAGE   = 1;
+    
     
 	/**
      * 현재 노드의 스코어를 계산하여 반환
@@ -138,9 +150,9 @@ public class PromMetricNode extends PromMetricDefault{
     }
     
     private double getSingleScore(double capacity, double avaiable, double request, int weight ) {
-    	double totalrequest = (capacity - avaiable) + request;
-    	double usagePercentage = 100- ((double) totalrequest / capacity) * 100;
-    	int rawScore = (int) Math.floor(usagePercentage / 10);
+    	double totalrequest    = (capacity - avaiable) + request;
+    	double usagePercentage = 100 - ((double)totalrequest / capacity) * 100;
+    	int rawScore           = (int)Math.floor(usagePercentage / 10);
     	
     	return rawScore * weight;
     }
@@ -239,7 +251,10 @@ public class PromMetricNode extends PromMetricDefault{
 	Map<Integer, PromMetricNodeGPU> mGpuList = new HashMap<Integer, PromMetricNodeGPU>(); //gpu model
 	
 	
-	//이노드에 배포 가능여부
+	/**
+	 * 이노드가 배포 가능한지 확인, 단순히 문제가 있는지 확인
+	 * @return boolean
+	 */
 	public boolean canHandle() {
         return !this.unscheduable &&
         	    statusConditions.getOrDefault(Condition_TYPE.Ready, true) && 
@@ -250,7 +265,15 @@ public class PromMetricNode extends PromMetricDefault{
                ;
     }
 
-	//이 노드에 배포가능여부인데 이 클래스에 있는 게 맞나?
+	 /**
+	  * 이 노드에 기본적으로 이 정도의 리소스롤 배포가능한가?
+	  * 아직 배포가 안된 파드의 정보가 포함되지 않고, 현재 사용량 기준으로만 계산 
+	  * @param _cpu
+	  * @param _memory
+	  * @param _disk
+	  * @param _gpu
+	  * @return
+	  */
 	public boolean canHandle(int _cpu, long _memory, long _disk, int _gpu) {
         return this.canHandle() &&
                availableCpu    >= _cpu &&
@@ -323,7 +346,11 @@ public class PromMetricNode extends PromMetricDefault{
         	mMap.put("status_condition"    , c.getMethod("setStatusCondition"   , String.class));
         	mMap.put("gpu_model"           , c.getMethod("setGpuModel"          , String.class));
         	mMap.put("gpu_temp"            , c.getMethod("setGpuTemp"           , String.class));
-        	mMap.put("cl_uid"              , c.getMethod("setClUid"                   , Integer.class));
+        	mMap.put("cl_uid"              , c.getMethod("setClUid"             , Integer.class));
+        	mMap.put("usage_network_receive_1m"  , c.getMethod("setUsageNetworkReceive1m"  , Double.class));
+        	mMap.put("usage_network_transmit_1m" , c.getMethod("setUsageNetworkTransmit1m" , Double.class));
+        	mMap.put("usage_disk_read_1m"  , c.getMethod("setUsageDiskRead1m"      , Double.class));
+        	mMap.put("usage_disk_write_1m" , c.getMethod("setUsageDiskWrite1m"     , Double.class));
 		} catch (NoSuchMethodException e) {
 			log.error("",e);
 		} catch (SecurityException e) {
@@ -331,5 +358,19 @@ public class PromMetricNode extends PromMetricDefault{
 		}
         
         return mMap;     
+	}
+
+	@Override
+	public String toString() {
+		return "PromMetricNode [clUid=" + clUid + ", noUid=" + noUid + ", status=" + status + ", promTimestamp="
+				+ promTimestamp + ", collectDt=" + collectDt + ", node=" + node + ", unscheduable=" + unscheduable
+				+ ", kubeVer=" + kubeVer + ", role=" + role + ", capacityCpu=" + capacityCpu + ", capacityGpu="
+				+ capacityGpu + ", capacityDisk=" + capacityDisk + ", capacityMemory=" + capacityMemory
+				+ ", capacityPods=" + capacityPods + ", availableCpu=" + availableCpu + ", availableGpu=" + availableGpu
+				+ ", availableDisk=" + availableDisk + ", availableMemory=" + availableMemory + ", availablePods="
+				+ availablePods + ", usageNetworkTransmit1m=" + usageNetworkTransmit1m + ", usageNetworkReceive1m="
+				+ usageNetworkReceive1m + ", usageDiskWrite1m=" + usageDiskWrite1m + ", usageDiskRead1m="
+				+ usageDiskRead1m + ", betFitScore=" + betFitScore + ", statusConditions=" + statusConditions
+				+ ", taintEffects=" + taintEffects + ", mPodList=" + mPodList + ", mGpuList=" + mGpuList + "]";
 	}
 }

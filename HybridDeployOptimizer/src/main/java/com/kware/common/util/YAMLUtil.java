@@ -3,7 +3,11 @@ package com.kware.common.util;
 import java.io.File;
 import java.io.IOException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
@@ -35,6 +39,17 @@ public class YAMLUtil {
         } catch (IOException e) {
             log.error("YAML getRead Error", e);
             return null; 
+        }
+    }
+    
+    //동적 필터 적용
+    public static <T> String writeString(T value, String filterName, SimpleBeanPropertyFilter filter) {
+        try {
+            FilterProvider filters = new SimpleFilterProvider().addFilter(filterName, filter);
+            return mapper.writer(filters).writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
         }
     }
     

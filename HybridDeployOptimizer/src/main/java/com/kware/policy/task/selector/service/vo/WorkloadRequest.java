@@ -1,7 +1,5 @@
 package com.kware.policy.task.selector.service.vo;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -10,10 +8,6 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.kware.common.util.YAMLUtil;
 import com.kware.policy.task.StringConstant;
 
 import lombok.Data;
@@ -22,22 +16,39 @@ import lombok.Getter;
 
 @Data
 public class WorkloadRequest {
-    private String version;
+    private String  version;
     private Request request;
+    private WorkloadResponse.Response response;
     
+    @JsonIgnore
     private Integer clUid = null;
+    @JsonIgnore
     private String  node  = null;
-    
+    @JsonIgnore
     private Integer totalRequestCpu = 0;
-    private Long totalRequestMemory = 0L;
+    @JsonIgnore
+    private Long    totalRequestMemory = 0L;
+    @JsonIgnore
     private Integer totalRequestGpu = 0;
-    private Long totalRequestDisk = 0L;
-    
+    @JsonIgnore
+    private Long    totalRequestDisk = 0L;
+    @JsonIgnore
     private Integer totalLimitCpu = 0;
-    private Long totalLimitMemory = 0L;
+    @JsonIgnore
+    private Long    totalLimitMemory = 0L;
+    @JsonIgnore
     private Integer totalLimitGpu = 0;
-    private Long totalLimitDisk = 0L;
+    @JsonIgnore
+    private Long    totalLimitDisk = 0L;
     
+    public enum WorkloadType{
+    	ML, DL, INF    //이 특성에 맞는 가중치를 적용해야하나?
+    }
+    
+    public enum DevOpsType{
+    	DEV, TEST, PROD //클러스터 설정, 값이 있을 경우만 처리하는 로직
+    }
+        
     @JsonIgnore
     public String getNodeKey() {
     	return this.clUid + StringConstant.STR_UNDERBAR + this.node;
@@ -77,7 +88,7 @@ public class WorkloadRequest {
     @Getter
     public static class ResourceDetail {
         private Integer cpu = 0;
-        private Long memory= 0L;
+        private Long memory = 0L;
         private Integer gpu = 0;
         @JsonProperty("ephemeral-storage")
         private Long ephemeralStorage= 0L;
@@ -105,16 +116,18 @@ public class WorkloadRequest {
 
     @Data
     public static class RequestAttributes {
-        private String workloadType;
-        private Boolean isCronJob;
-        private String devOpsType;
-        private String cudaVersion;
-        private String gpuDriverVerion;
-        private Integer maxReplicas;
-        private Boolean isNetworking;
-        private Integer containerImageSize;
-        private Integer predictedExecutionTime;
-        private UserInfo userInfo;
+        //private String     workloadType;
+        private WorkloadType workloadType;  //enum   ML|DL|INF
+        private Boolean      isCronJob;
+        //private String     devOpsType;
+        private DevOpsType   devOpsType;    //enum    DEV|TEST|PROD
+        private String       cudaVersion;
+        private String       gpuDriverVerion;
+        private Integer      maxReplicas;
+        private Boolean      isNetworking;
+        private Integer      containerImageSize;
+        private Integer      predictedExecutionTime;
+        private UserInfo     userInfo;
     }
 
     @Data
@@ -122,6 +135,12 @@ public class WorkloadRequest {
         private String id;
     }
     
+   
+    
+    
+    /**
+     * 다중컨테이너가 있을때 request, limit을 합산 처리 
+     */
     public void aggregate() {
         for (Container container : request.getContainer()) {
             Resources resources = container.getResources();
@@ -171,7 +190,7 @@ public class WorkloadRequest {
         }
     }
     
-    
+ /*   
     public static void main(String[] args) throws IOException {
     	//yml 파싱테스트
     	File f = new File(".");
@@ -189,7 +208,7 @@ public class WorkloadRequest {
         WorkloadRequest request   = mapper.readValue(new File("./doc/mlRequest01.yaml"), WorkloadRequest.class);
         
         response = YAMLUtil.read(new File("./doc/mlReponse01.yaml"), WorkloadResponse.class);
-        request = YAMLUtil.read(new File("./doc/mlRequest01.yaml"), WorkloadRequest.class);
+        request  = YAMLUtil.read(new File("./doc/mlRequest01.yaml"), WorkloadRequest.class);
         request.aggregate();
         
         response.getResponse().setDate(new Date());
@@ -210,7 +229,7 @@ public class WorkloadRequest {
         mapper.writeValue(new File("./doc/output_request.yaml"), request1);
         mapper.writeValue(new File("./doc/output_response.yaml"), response1);
         
-    	/*
+    	
     	//객체의 hashcode와 equals를 테스트함
     	QueueManager qm = QueueManager.getInstance();
     	WorkloadRequest req0 = new WorkloadRequest();
@@ -235,10 +254,10 @@ public class WorkloadRequest {
     	
     	System.out.println("aaaa0:" + wRequest0.hashCode());
     	System.out.println("aaaa1:" + wRequest1.hashCode());
-*/
+
     	System.exit(1);
     }
-
+*/
 
 	@Override
 	//request.id만을 비교하여 동일한 객체인지 비교함

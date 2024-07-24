@@ -11,6 +11,18 @@ import com.kware.policy.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 //Bin Packing: First Fit Decreasing (FFD) 알고리즘 클래스
+/*
+ * First Fit Decreasing (FFD) 알고리즘:
+
+	입력할 항목들을 내림차순으로 정렬한 후 First Fit 알고리즘을 적용합니다.
+	큰 항목들을 먼저 배치하여 공간 낭비를 줄입니다.
+	First Fit보다 빈의 사용 효율이 높지만, 정렬 과정이 추가됩니다.
+	First Fit (FF) 알고리즘:
+		항목들을 하나씩 순서대로 빈에 넣습니다.
+		각 항목에 대해, 첫 번째로 수용할 수 있는 빈에 항목을 넣습니다.
+		수용 가능한 빈이 없으면 새 빈을 생성하여 항목을 넣습니다.
+		구현이 간단하며 실행 속도가 빠릅니다.
+ */
 public class FirstFitDecreasingBinPacking {
 
     private List<PromMetricNode> nodes; // 사용 가능한 노드들의 리스트
@@ -30,7 +42,7 @@ public class FirstFitDecreasingBinPacking {
     public List<PromMetricNode> allocate(WorkloadRequest request) {
         List<PromMetricNode> bestNodes = new ArrayList<>();
 
-        // 크기가 큰 순서대로 아이템 정렬
+        // 노드 스코어의 크기가 큰 순서대로 아이템 정렬
         List<PromMetricNode> sortedNodes = nodes.stream()
                 .sorted((n1, n2) -> Double.compare(n2.getScore(), n1.getScore()))
                 .collect(Collectors.toList());

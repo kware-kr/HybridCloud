@@ -41,8 +41,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	    ) VALUES (
 	          #{uid} 
 	        , #{id} 
-	        , #{clusterId}::int4 
-	        , #{nodeId} 
+	        , #{result.clusterId}::int4 
+	        , #{result.nodeId} 
 	        , #{info}::jsonb 
 	    )
 	</insert>
