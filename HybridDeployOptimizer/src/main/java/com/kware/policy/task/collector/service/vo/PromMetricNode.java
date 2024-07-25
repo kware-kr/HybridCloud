@@ -1,4 +1,4 @@
-package com.kware.policy.service.vo;
+package com.kware.policy.task.collector.service.vo;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.Getter;
@@ -79,14 +79,15 @@ public class PromMetricNode extends PromMetricDefault{
 	public String getKey() {
 		return this.clUid + StringConstant.STR_UNDERBAR + this.node;
 	}
-		
-	private static final int WEIGHT_CPU    = 3;
-    private static final int WEIGHT_MEMORY = 2;
-    private static final int WEIGHT_GPU    = 4;
+
+	
+	private static final int WEIGHT_CPU    = 1;
+    private static final int WEIGHT_MEMORY = 1;
+    private static final int WEIGHT_GPU    = 1;
     private static final int WEIGHT_DISK   = 1;
     
-    private static final int WEIGHT_DISK_USAGE   = 1;
-    private static final int WEIGHT_NETWORK_USAGE   = 1;
+    private static final int WEIGHT_DISK_USAGE    = 1;
+    private static final int WEIGHT_NETWORK_USAGE = 1;
     
     
 	/**

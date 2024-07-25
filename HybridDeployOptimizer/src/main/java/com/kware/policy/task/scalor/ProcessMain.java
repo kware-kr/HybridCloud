@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
-import com.kware.policy.service.PromQLService;
+import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.scalor.worker.ProcessWorker;
 
 import lombok.extern.slf4j.Slf4j;

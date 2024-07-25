@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kware.policy.common.QueueManager;
+import com.kware.policy.task.common.QueueManager;
 
 /**
  * 외부에 서비스가 필요할때 사용할 용도 

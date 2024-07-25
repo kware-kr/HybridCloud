@@ -18,16 +18,16 @@ import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
 import com.kware.common.util.HttpSSLFactory;
 import com.kware.common.util.JSONUtil;
-import com.kware.policy.common.QueueManager;
-import com.kware.policy.common.QueueManager.PromDequeName;
-import com.kware.policy.service.ClusterManagerService;
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.ClusterNode;
-import com.kware.policy.service.vo.PromMetricNode;
-import com.kware.policy.service.vo.PromMetricNodeGPU;
-import com.kware.policy.service.vo.PromMetricNodes;
-import com.kware.policy.task.APIConstant;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.collector.service.ClusterManagerService;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNodeGPU;
+import com.kware.policy.task.collector.service.vo.PromMetricNodes;
+import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.QueueManager.PromDequeName;
+import com.kware.policy.task.common.constant.APIConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.extern.slf4j.Slf4j;
 

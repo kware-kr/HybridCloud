@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kware.common.util.JSONUtil;
 import com.kware.common.util.YAMLUtil;
-import com.kware.policy.common.QueueManager;
-import com.kware.policy.service.vo.PromMetricNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.algo.BestFitBinPacking;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;

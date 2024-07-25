@@ -1,4 +1,4 @@
-package com.kware.policy.service.dao;
+package com.kware.policy.task.collector.service.dao;
 
 import java.util.List;
 
@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.ClusterNode;
-import com.kware.policy.service.vo.ClusterWorkload;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
+import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 
 @Repository //@Repository("이름")으로 처리하고 @Resource(name="이름") 주입한다.
 public class ClusterManagerDao {

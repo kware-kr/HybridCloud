@@ -1,14 +1,14 @@
-package com.kware.policy.service;
+package com.kware.policy.task.collector.service;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.kware.policy.service.dao.PromQLDao;
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.PromQL;
-import com.kware.policy.service.vo.PromQLResult;
+import com.kware.policy.task.collector.service.dao.PromQLDao;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.PromQL;
+import com.kware.policy.task.collector.service.vo.PromQLResult;
 
 
 //@Slf4j

@@ -11,18 +11,18 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.kware.policy.common.PromQLManager;
-import com.kware.policy.common.QueueManager;
-import com.kware.policy.common.QueueManager.PromDequeName;
-import com.kware.policy.service.ClusterManagerService;
-import com.kware.policy.service.PromQLService;
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.ClusterNode;
-import com.kware.policy.service.vo.PromQL;
+import com.kware.policy.task.collector.service.ClusterManagerService;
+import com.kware.policy.task.collector.service.PromQLService;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
+import com.kware.policy.task.collector.service.vo.PromQL;
 import com.kware.policy.task.collector.worker.CollectorClusterWorker;
 import com.kware.policy.task.collector.worker.CollectorSinglePromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorUnifiedPromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorWorkloadWorker;
+import com.kware.policy.task.common.PromQLManager;
+import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.QueueManager.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 

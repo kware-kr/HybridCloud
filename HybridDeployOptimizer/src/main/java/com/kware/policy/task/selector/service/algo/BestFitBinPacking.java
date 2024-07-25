@@ -9,8 +9,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import com.kware.policy.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.ResourceWeightProperties.ResourceWeight;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +135,8 @@ public class BestFitBinPacking {
         DoScore ds = new DoScore(node.getNode(), node.getClUid(), Math.abs(cpuScore), Math.abs(memoryScore) , Math.abs(diskScore), Math.abs(gpuScore) 
         		                                                      , weight.getCpu()   , weight.getMemory()    , weight.getDisk()   , weight.getGpu());
         
-        log.info("!!!Node Score {}", ds.toString());
+        String buf = "pCpu=" + totalPendingCpu + ", pMemory=" + totalPendingMemory + ", pGpu=" + totalPendingGpu + ", pDisk=" + totalPendingDisk;
+        log.info("!!!Node Score {} \nPending: {}", ds.toString(), buf);
         return ds.getScore();
 
         //return Math.abs(cpuScore) + Math.abs(memoryScore) + Math.abs(diskScore) + Math.abs(gpuScore);

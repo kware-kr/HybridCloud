@@ -1,9 +1,9 @@
-package com.kware.policy.service.vo;
+package com.kware.policy.task.collector.service.vo;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -17,7 +17,7 @@
  */
 package com.kware.policy.task.scalor.worker;
 
-import com.kware.policy.common.QueueManager;
+import com.kware.policy.task.common.QueueManager;
 
 import lombok.extern.slf4j.Slf4j;
 

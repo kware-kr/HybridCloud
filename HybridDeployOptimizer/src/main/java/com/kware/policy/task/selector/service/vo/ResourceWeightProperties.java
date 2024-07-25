@@ -34,9 +34,9 @@ public class ResourceWeightProperties {
     }
     
     public ResourceWeight getResourceWeight(WorkloadType type) {
-    	if(type == null)
+    	if(type == null) {
     		return resourceWeightMap.get(defaultKey);
-    	else {
+    	}else {
     		String key = type.toString().toUpperCase();
     		return resourceWeightMap.get(key);
     	}
@@ -47,26 +47,8 @@ public class ResourceWeightProperties {
     	setDefaultValues(ml , new ResourceWeight(4, 2, 3, 4));
         setDefaultValues(dl , new ResourceWeight(3, 5, 3, 4));
         setDefaultValues(inf, new ResourceWeight(4, 2, 3, 3));
-        /*
-        // ML 기본값 설정
-        if (ml.getCpu()      == 0) ml.setCpu(2);
-        if (ml.getGpu()      == 0) ml.setGpu(3);
-        if (ml.getDisk()     == 0) ml.setDisk(2);
-        if (ml.getMemory()   == 0) ml.setMemory(2);
 
-        // DL 기본값 설정
-        if (dl.getCpu()      == 0) dl.setCpu(1);
-        if (dl.getGpu()      == 0) dl.setGpu(5);
-        if (dl.getDisk()     == 0) dl.setDisk(3);
-        if (dl.getMemory()   == 0) dl.setMemory(4);
-
-        // INF 기본값 설정
-        if (inf.getCpu()    == 0) inf.setCpu(3);
-        if (inf.getGpu()    == 0) inf.setGpu(1);
-        if (inf.getDisk()   == 0) inf.setDisk(2);
-        if (inf.getMemory() == 0) inf.setMemory(3);
-        */
-     // Map에 값 추가
+        // Map에 값 추가
         resourceWeightMap.put("ML" , ml);
         resourceWeightMap.put("DL" , dl);
         resourceWeightMap.put("INF", inf);
@@ -95,6 +77,5 @@ public class ResourceWeightProperties {
             this.disk  = disk;
             this.memory = memory;
         }
-
     }
 }

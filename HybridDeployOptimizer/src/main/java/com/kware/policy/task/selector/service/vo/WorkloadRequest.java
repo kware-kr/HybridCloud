@@ -8,7 +8,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.Data;
 import lombok.Getter;

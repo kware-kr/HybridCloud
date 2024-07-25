@@ -1,4 +1,4 @@
-package com.kware.policy.service.dao;
+package com.kware.policy.task.collector.service.dao;
 
 import java.util.List;
 
@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.PromQL;
-import com.kware.policy.service.vo.PromQLResult;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.PromQL;
+import com.kware.policy.task.collector.service.vo.PromQLResult;
 
 @Repository //@Repository("이름")으로 처리하고 @Resource(name="이름") 주입한다.
 public class PromQLDao  {

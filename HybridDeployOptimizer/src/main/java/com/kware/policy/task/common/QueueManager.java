@@ -1,4 +1,4 @@
-package com.kware.policy.common;
+package com.kware.policy.task.common;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,13 +17,13 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kware.policy.service.vo.ClusterDefault;
-import com.kware.policy.service.vo.PromMetricDefault;
-import com.kware.policy.service.vo.PromMetricNode;
-import com.kware.policy.service.vo.PromMetricNodes;
-import com.kware.policy.service.vo.PromMetricPod;
-import com.kware.policy.service.vo.PromMetricPods;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.collector.service.vo.ClusterDefault;
+import com.kware.policy.task.collector.service.vo.PromMetricDefault;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNodes;
+import com.kware.policy.task.collector.service.vo.PromMetricPod;
+import com.kware.policy.task.collector.service.vo.PromMetricPods;
+import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.extern.slf4j.Slf4j;

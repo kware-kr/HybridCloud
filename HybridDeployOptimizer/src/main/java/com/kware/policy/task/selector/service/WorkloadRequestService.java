@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kware.common.util.JSONUtil;
-import com.kware.policy.common.QueueManager;
-import com.kware.policy.service.vo.PromMetricNode;
-import com.kware.policy.task.APIConstant;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.selector.service.algo.BestFitBinPacking;
 import com.kware.policy.task.selector.service.dao.WorkloadRequestDao;
 import com.kware.policy.task.selector.service.vo.ResourceWeightProperties;
@@ -54,27 +54,26 @@ public class WorkloadRequestService {
 	public WorkloadResponse getNodesSelector(WorkloadRequest wlRequest) {
 		List<PromMetricNode>  nodes = qm.getLastPromMetricNodesReadOnly();
 		Map<String, Set<WorkloadRequest>>  notApplyPodMap = qm.getNotApplyWorkloadRequestForNode();
-		
+
 		WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getRequestAttributes().getWorkloadType();
 		ResourceWeight resoruceWeight = null;
 		//null이면 defaul 값을 리턴한다.
 		resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
-		
+
 		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyPodMap, resoruceWeight);
-		
+
 		List<PromMetricNode>  sel_nodes = bbp.allocate(wlRequest);
 		log.info("select node list: {}", sel_nodes);
-		
+
 		PromMetricNode node = sel_nodes.size() > 0 ? sel_nodes.get(0):null;
 		sel_nodes.clear();
-		
-		WorkloadResponseStatus status = null;
-		
+
 		WorkloadRequest.Request req = wlRequest.getRequest();
-		
+
 		WorkloadResponse wlResponse = new WorkloadResponse();
     	wlResponse.setVersion(WorkloadRequestService.interface_version);
     	
+    	//{{응답 생성
     	WorkloadResponse.Response res = new WorkloadResponse.Response();
     	res.setUid(req.getUid());
     	res.setId(req.getId());
@@ -83,36 +82,37 @@ public class WorkloadRequestService {
     	
     	WorkloadResponse.Response.ResponseResult rsResult = new WorkloadResponse.Response.ResponseResult();
     	//rsResult.setClusterName("Workload-cluster-01");
+    	WorkloadResponseStatus status = null;
     	if(node != null) {
 	    	rsResult.setClusterId(node.getClUid().toString());
 	    	rsResult.setNodeName(node.getNode());
 	    	rsResult.setNodeId(node.getNoUid());
-	    	
+
 	    	//{{이건 어떻게 해야하나
 	    	rsResult.setPreemptionPolicy(null);
 	    	rsResult.setPriority(null);
-	    	
+	    	//}}
+
 	    	status = WorkloadResponseStatus.SUCCESS;
     	}else {
     		status = WorkloadResponseStatus.SUCCESS_NO_NODE;    		
     	}
-    	
+
     	res.setCode(status.getCode());
     	res.setMessage(status.getMessage());
     	//}}
-    	
     	res.setResult(rsResult);
-    	
     	wlResponse.setResponse(res);
+    	
+    	//qm.
+    	
     	try {
 			res.setInfo(JSONUtil.getJsonstringFromObject(wlResponse));
 		} catch (JsonProcessingException e) {
 			log.error("결과 변환에러:{}", e, wlResponse);
 		}
-    	
-    	//wlRequest.setResponse(res);
-		
-		return wlResponse;
+
+    	return wlResponse;
 	}
 	//}}
 }

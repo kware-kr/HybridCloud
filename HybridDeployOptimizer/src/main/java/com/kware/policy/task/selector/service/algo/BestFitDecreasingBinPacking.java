@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.kware.policy.service.vo.PromMetricNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 //Bin Packing: Best Fit Decreasing (BFD) 알고리즘 클래스

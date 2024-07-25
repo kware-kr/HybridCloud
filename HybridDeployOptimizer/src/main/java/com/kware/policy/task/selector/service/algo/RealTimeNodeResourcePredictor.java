@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
-import com.kware.policy.service.vo.PromMetricNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
 
 /**
  * 아직확인하지 않은 모델

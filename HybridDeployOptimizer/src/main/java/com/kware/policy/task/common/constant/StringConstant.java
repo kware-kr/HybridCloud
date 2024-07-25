@@ -1,4 +1,4 @@
-package com.kware.policy.task;
+package com.kware.policy.task.common.constant;
 
 public class StringConstant {
 

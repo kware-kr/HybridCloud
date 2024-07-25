@@ -1,14 +1,14 @@
-package com.kware.policy.service;
+package com.kware.policy.task.collector.service;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.kware.policy.service.dao.ClusterManagerDao;
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.ClusterNode;
-import com.kware.policy.service.vo.ClusterWorkload;
+import com.kware.policy.task.collector.service.dao.ClusterManagerDao;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
+import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 
 /**
  * 통합시스템에서 제공하는 API를 통해서 클러스터의 리스트 및 각 클러스터에 등록된 노드의 정보, 각 노드에서 배포된 Workload리스트를 수집하는 API

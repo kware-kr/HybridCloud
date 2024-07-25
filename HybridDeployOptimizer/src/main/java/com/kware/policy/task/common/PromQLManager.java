@@ -1,4 +1,4 @@
-package com.kware.policy.common;
+package com.kware.policy.task.common;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.kware.common.util.JSONUtil;
-import com.kware.policy.service.vo.PromQL;
+import com.kware.policy.task.collector.service.vo.PromQL;
 
 /**
  * 전체 PromQL테이블의 프로메테우스에 쿼리할 냉용과 쿼리결과는 json으로 오는데 이 데이터에서 어떤데이터를 가져올지를 결정한 jsonpath를 저장한 json데이터를 관리한다.

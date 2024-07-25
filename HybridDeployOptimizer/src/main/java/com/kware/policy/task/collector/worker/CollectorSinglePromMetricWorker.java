@@ -33,17 +33,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kware.common.util.HttpSSLFactory;
-import com.kware.policy.common.PromQLManager;
-import com.kware.policy.common.QueueManager;
-import com.kware.policy.service.PromQLService;
-import com.kware.policy.service.vo.Cluster;
-import com.kware.policy.service.vo.ClusterNode;
-import com.kware.policy.service.vo.PromMetricNodes;
-import com.kware.policy.service.vo.PromMetricPods;
-import com.kware.policy.service.vo.PromQL;
-import com.kware.policy.service.vo.PromQLResult;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.collector.service.PromQLService;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
+import com.kware.policy.task.collector.service.vo.PromMetricNodes;
+import com.kware.policy.task.collector.service.vo.PromMetricPods;
+import com.kware.policy.task.collector.service.vo.PromQL;
+import com.kware.policy.task.collector.service.vo.PromQLResult;
 import com.kware.policy.task.collector.worker.anal.MetricResultAnalyzer;
+import com.kware.policy.task.common.PromQLManager;
+import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.extern.slf4j.Slf4j;
 

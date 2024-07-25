@@ -1,11 +1,11 @@
-package com.kware.policy.service.vo;
+package com.kware.policy.task.collector.service.vo;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.kware.policy.task.StringConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.AccessLevel;
 import lombok.Getter;

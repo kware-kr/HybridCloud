@@ -1,4 +1,4 @@
-package com.kware.policy.service.vo;
+package com.kware.policy.task.collector.service.vo;
 
 import java.util.HashMap;
 import java.util.Map;
