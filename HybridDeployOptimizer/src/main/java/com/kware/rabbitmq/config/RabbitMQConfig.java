@@ -12,8 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.kware.rabbitmq.message.YamlMessageConverter;
-
 @Configuration
 @ConditionalOnProperty(name = "spring.rabbitmq.enable", havingValue = "true")
 public class RabbitMQConfig {

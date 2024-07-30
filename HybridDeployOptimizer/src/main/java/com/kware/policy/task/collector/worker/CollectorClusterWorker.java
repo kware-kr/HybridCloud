@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.jsoup.Jsoup;
 
@@ -25,9 +24,12 @@ import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodeGPU;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
 import com.kware.policy.task.common.QueueManager;
-import com.kware.policy.task.common.QueueManager.PromDequeName;
 import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
+import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,15 +38,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes","unchecked"})
 public class CollectorClusterWorker extends Thread {
 	
 	final QueueManager qm = QueueManager.getInstance();
-	
-	@SuppressWarnings("unchecked")  //key:cluid val:Cluster
-	ConcurrentHashMap<String, Cluster> clusterApiMap  = (ConcurrentHashMap<String, Cluster>)qm.getApiMap(QueueManager.APIMapsName.CLUSTER);
-	@SuppressWarnings("unchecked")  //key: node.getUniqueKey() val:ClusterNode
-	ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
+	APIQueue apiQ   = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
 	
 	//JPATH
 	private final static String JPATH_API_RESULT       = "$.result";
@@ -157,12 +156,12 @@ public class CollectorClusterWorker extends Thread {
 			
 			//여기서 SESSIONID와 비교해서 제거해야한다. this.nodeMap, this.clusterMap:: 기존에 수집했는데, 이번에는 수집되지 않는 데이터 제거
 			//Map에 사용하는 객체는 모두 ClusterDefault를 상속받아서 사용해야 정상작동한다.
-			qm.removeNotIfSessionId(QueueManager.APIMapsName.CLUSTER, SESSIONID );
-			qm.removeNotIfSessionId(QueueManager.APIMapsName.NODE, SESSIONID);
+			apiQ.removeNotIfSessionId(APIMapsName.CLUSTER, SESSIONID );
+			apiQ.removeNotIfSessionId(APIMapsName.NODE, SESSIONID);
 			
 			if(log.isDebugEnabled()) {
-				log.debug("current {} map size={}", QueueManager.APIMapsName.CLUSTER.toString(), this.clusterApiMap.size());
-				log.debug("current {} map size={}", QueueManager.APIMapsName.NODE.toString(), this.nodeApiMap.size());
+				log.debug("current {} map size={}", APIMapsName.CLUSTER.toString(), apiQ.getApiQueueSize(APIMapsName.CLUSTER));
+				log.debug("current {} map size={}", APIMapsName.NODE.toString()   , apiQ.getApiQueueSize(APIMapsName.NODE));
 			}
 		}catch(Exception e) {
 			log.error("ClusterWorkerThread Error:", e);
@@ -209,7 +208,7 @@ public class CollectorClusterWorker extends Thread {
 	}
 	
 	/**
-	 * 리스트정보와 상세정보의 데이터를 합하기위해 보완하는 함수
+	 * 리스트 정보와 상세정보의 데이터를 합하기위해 보완하는 함수
 	 * @param _ctx
 	 * @param _cluserMap
 	 */
@@ -225,6 +224,12 @@ public class CollectorClusterWorker extends Thread {
 	}
 	
 
+	/**
+	 * DB에 입력하고 Queue에 등록
+	 * @param _cl_uid
+	 * @param _clusterMap
+	 * @return
+	 */
 	private Cluster insertCluster(Integer _cl_uid, Map<String, Object> _clusterMap) {
 		Cluster cluster = new Cluster();
 		cluster.setUid(_cl_uid);
@@ -258,7 +263,7 @@ public class CollectorClusterWorker extends Thread {
 		
 		try {
 			
-			if(this.clusterApiMap.containsKey(_cl_uid.toString())) {
+			if(this.apiQ.getApiClusterMap().containsKey(_cl_uid.toString())) {
 				this.service.updateClusterAndInsertHistory(cluster);
 			}else {				
 				this.service.insertCluster(cluster);
@@ -268,7 +273,7 @@ public class CollectorClusterWorker extends Thread {
 			log.error("데이터 Insert 에러 Cluster:\n{}", cluster, e);
 		}finally {
 			cluster.setSessionId(SESSIONID);
-			this.clusterApiMap.put(_cl_uid.toString(), cluster);
+			this.apiQ.putApiMap(cluster);  //key=> cluster.getUniqueKey();
 		}
 		
 		return cluster;
@@ -296,7 +301,6 @@ public class CollectorClusterWorker extends Thread {
 		node.setCudaString((String)_nodeMap.get(StringConstant.STR_cudaVersion));
 		
 		//labels값을 모두 등록함
-		@SuppressWarnings("unchecked")
 		HashMap<String, String> map = (HashMap)_nodeMap.get(StringConstant.STR_labels);
 		Map<String, String> labels = node.getLabels();
 		for (Map.Entry<String, String> entry : map.entrySet()) {
@@ -305,7 +309,7 @@ public class CollectorClusterWorker extends Thread {
 		
 		//{{metirc노드의 GPU를 가져올려고
 		String gpuJsonString = null;
-		PromMetricNodes mNodes = (PromMetricNodes)qm.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
+		PromMetricNodes mNodes = (PromMetricNodes)this.promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		if(mNodes != null) {
 			PromMetricNode mNode = mNodes.getMetricNode(_cl.getUid(), node.getNm());
 			Map<Integer, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
@@ -326,7 +330,7 @@ public class CollectorClusterWorker extends Thread {
 		node.setHashVal(sHashVal);
 		
 		try {
-			if(this.nodeApiMap.containsKey(node.getUniqueKey())) {
+			if(this.apiQ.getApiClusterNodeMap().containsKey(node.getUniqueKey())) {
 				this.service.updateClusterNodeAndInsertHistory(node);
 			}else {				
 				this.service.insertClusterNode(node);
@@ -335,7 +339,7 @@ public class CollectorClusterWorker extends Thread {
 			log.error("데이터 Insert 에러 ClusterNode:\n{}", node, e);
 		}finally {
 			node.setSessionId(SESSIONID);
-			this.nodeApiMap.put(node.getUniqueKey(), node);
+			this.apiQ.putApiMap(node); //key : getUniqueKey()
 		}
 	}
 

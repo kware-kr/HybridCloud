@@ -13,10 +13,12 @@ import com.kware.common.util.JSONUtil;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.APIConstant;
+import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.selector.service.algo.BestFitBinPacking;
+import com.kware.policy.task.selector.service.config.ResourceWeightProperties;
+import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.dao.WorkloadRequestDao;
-import com.kware.policy.task.selector.service.vo.ResourceWeightProperties;
-import com.kware.policy.task.selector.service.vo.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Request;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
@@ -39,6 +41,8 @@ public class WorkloadRequestService {
 	protected WorkloadRequestDao dao;
 	
 	QueueManager qm = QueueManager.getInstance();
+	PromQueue  promQ = qm.getPromQ();
+	RequestQueue requestQ = qm.getRequestQ();
 
 	public int insertMoUserRequest(Request vo) {
 		return dao.insertMoUserRequest(vo);
@@ -50,17 +54,17 @@ public class WorkloadRequestService {
 	//}}db 관련 서비스
 	
 	//{{노드 셀렉터
-	
 	public WorkloadResponse getNodesSelector(WorkloadRequest wlRequest) {
-		List<PromMetricNode>  nodes = qm.getLastPromMetricNodesReadOnly();
-		Map<String, Set<WorkloadRequest>>  notApplyPodMap = qm.getNotApplyWorkloadRequestForNode();
+		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
+		Map<String, Set<WorkloadRequest>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
+		
 
 		WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getRequestAttributes().getWorkloadType();
 		ResourceWeight resoruceWeight = null;
 		//null이면 defaul 값을 리턴한다.
 		resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
 
-		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyPodMap, resoruceWeight);
+		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyRequestMap, resoruceWeight);
 
 		List<PromMetricNode>  sel_nodes = bbp.allocate(wlRequest);
 		log.info("select node list: {}", sel_nodes);
@@ -113,6 +117,31 @@ public class WorkloadRequestService {
 		}
 
     	return wlResponse;
+	}
+	//}}
+	
+	//{{노드 셀렉터
+	/**
+	 * 요청 리퀘스트에 대한 노드의 스코어를 요청한 갯수 만큼 리턴 
+	 * @param wlRequest
+	 * @param nodeConnt
+	 * @return
+	 */
+	public List<PromMetricNode> getNodeScore(WorkloadRequest wlRequest, int nodeConnt) {
+		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
+		Map<String, Set<WorkloadRequest>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
+		
+
+		WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getRequestAttributes().getWorkloadType();
+		ResourceWeight resoruceWeight = null;
+		//null이면 defaul 값을 리턴한다.
+		resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
+
+		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyRequestMap, resoruceWeight);
+
+		List<PromMetricNode>  sel_nodes = bbp.allocate(wlRequest, nodeConnt); //
+
+		return sel_nodes;
 	}
 	//}}
 }

@@ -1,7 +1,7 @@
 package com.kware.policy.task.collector;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -22,7 +22,9 @@ import com.kware.policy.task.collector.worker.CollectorUnifiedPromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorWorkloadWorker;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
-import com.kware.policy.task.common.QueueManager.PromDequeName;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,35 +62,44 @@ public class CollectorMain {
 	private String api_prometheus_unified_url;
 	
 	final QueueManager qm = QueueManager.getInstance();
-	
-	//{{프로메테우스를 통해서 조회된 노드, 파드 정보
-	//@SuppressWarnings("unchecked")
-	//BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_NODEINFO);
-	//@SuppressWarnings("unchecked")
-	//BlockingDeque<PromMetricPods>  podDeque  = (BlockingDeque<PromMetricPods>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_PODINFO);
-	//}
+	APIQueue  apiQ  = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
 	
 	@PostConstruct  // 애플리케이션 시작 시 한 번 실행할 로직
 	@SuppressWarnings("unchecked")
     public void runOnceOnStartup() {
+		/*
         //cluster, clusterNode를 DB에서 가져와서 등록한다.	
-		ConcurrentHashMap<String, Cluster> clusterApiMap = (ConcurrentHashMap<String, Cluster>)qm.getApiMap(QueueManager.APIMapsName.CLUSTER);
+		Map<String, Cluster> clusterApiMap = apiQ.getApiClusterMap();
 		List<Cluster> clusterList = cmService.selectClusterList(null);
 		for(Cluster cl: clusterList) {
 			clusterApiMap.put(Integer.toString(cl.getUid()), cl);
 		}
 		
-		ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
+		Map<String, ClusterNode> nodeApiMap = apiQ.getApiClusterNodeMap();
 		List<ClusterNode> nodeList = cmService.selectClusterNodeList(null);
 		for(ClusterNode n: nodeList) {
 			nodeApiMap.put(n.getUniqueKey(), n);
 		}
+		*/
+		try {//초기에 5초간의 여유를 주가 실행한다.
+			collectClusterTask();
+			
+			Thread.sleep(5000);
+			collectWorkloadTask();
+			
+			Thread.sleep(5000);
+			collectMetricTaskUnified();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
     }
 	
 	
-//	@Scheduled(cron = "0 0/1 * * * *") // 매 2분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
-	@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	//@Scheduled(cron = "0,15,30,45 * * * * *") // 15초마다 스케줄링
+//	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
+	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
+	@Scheduled(cron = "0 * * * * *") // 15초마다 스케줄링
 	public void collectClusterTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("CollectClusterTask 시작");
@@ -102,8 +113,9 @@ public class CollectorMain {
 		
 	}
 	
-//	@Scheduled(cron = "0 0/1 * * * *") // 매 2분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
-	@Scheduled(initialDelay = 5000, fixedDelay = 60000)
+//	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
+	//@Scheduled(initialDelay = 5000, fixedDelay = 60000)
+	@Scheduled(cron = "20 * * * * *") // 30초마다 스케줄링
 	public void collectWorkloadTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectWorkloadTask 시작");
@@ -168,8 +180,8 @@ public class CollectorMain {
 		//}}
 		
 		if(log.isDebugEnabled()) {
-			log.debug("current {} nodeDeque size={}", QueueManager.PromDequeName.METRIC_NODEINFO.toString(), qm.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
-			log.debug("current {} podDeque size={}" , QueueManager.PromDequeName.METRIC_PODINFO.toString() , qm.getPromDequesSize(PromDequeName.METRIC_PODINFO));
+			log.debug("current {} nodeDeque size={}", PromDequeName.METRIC_NODEINFO.toString(), promQ.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
+			log.debug("current {} podDeque size={}" , PromDequeName.METRIC_PODINFO.toString() , promQ.getPromDequesSize(PromDequeName.METRIC_PODINFO));
 		}
 		
 		if(lClusterList != null) {
@@ -179,8 +191,8 @@ public class CollectorMain {
 	}
 	
 	//@Scheduled(cron = "0 0 8-23 * * *") // 매 1분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
-	@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	//@Scheduled(cron = "0,15,30,45 * * * * *") // 15초마다 스케줄링
+	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
+	@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
 	public void collectMetricTaskUnified() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTaskUnified 시작");
@@ -222,14 +234,14 @@ public class CollectorMain {
 
 		worker.setPrometheusUrl(this.api_prometheus_unified_url);
 		//worker.setThreadsNumber(this.col_threads_nu);
-		worker.setThreadsNumber(1);
+		worker.setThreadsNumber(3);
 		//worker.setAuthorizationToken(prometheus_authorization_token);
 		worker.start();
 		//}}
 			
 		if(log.isDebugEnabled()) {
-			log.debug("current {} nodeDeque size={}", QueueManager.PromDequeName.METRIC_NODEINFO.toString(), qm.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
-			log.debug("current {} podDeque size={}" , QueueManager.PromDequeName.METRIC_PODINFO.toString() , qm.getPromDequesSize(PromDequeName.METRIC_PODINFO));
+			log.debug("current {} nodeDeque size={}", PromDequeName.METRIC_NODEINFO.toString(), promQ.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
+			log.debug("current {} podDeque size={}" , PromDequeName.METRIC_PODINFO.toString() , promQ.getPromDequesSize(PromDequeName.METRIC_PODINFO));
 		}
 		
 	}

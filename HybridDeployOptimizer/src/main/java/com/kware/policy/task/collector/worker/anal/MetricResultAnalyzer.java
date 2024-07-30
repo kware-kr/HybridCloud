@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,8 @@ import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.PromQueue;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
@@ -78,13 +79,15 @@ public class MetricResultAnalyzer {
 	private final static String JPATH_VAL_pod_info       = "pod_info";
 	private final static String JPATH_VAL_container_info = "container_info";
 	
-	//{{
-	final Map<String, Method> m_nodeMethdMap      =  PromMetricNode.m_nodeMethdMap;
-	final Map<String, Method> m_podMethdMap       =  PromMetricPod.m_podMethdMap;
-	final Map<String, Method> m_containerMethdMap =  PromMetricContainer.m_containerMethdMap;
+	//{{ json path에서 key값과 연동해서 key와 함수(Method)를 연결하기 위해  final static 으로 생성한 Mapping Map
+	final Map<String, Method> m_nodeMethdMap      =  PromMetricNode.m_nodeMethodMap;
+	final Map<String, Method> m_podMethdMap       =  PromMetricPod.m_podMethodMap;
+	final Map<String, Method> m_containerMethdMap =  PromMetricContainer.m_containerMethodMap;
 	//}}
 	
 	QueueManager qm = QueueManager.getInstance();
+	APIQueue  apiQ  = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
 	
 	final Long current_millitime;
 	final Timestamp timestamp;
@@ -97,11 +100,6 @@ public class MetricResultAnalyzer {
 		this.current_millitime = _current_millitime;
 		this.timestamp = new Timestamp(current_millitime);
 	}
-
-	//{{API를 통해 조회된 workload
-	ConcurrentHashMap<String, ClusterWorkload> workloadApiMap       = (ConcurrentHashMap<String, ClusterWorkload>)qm.getApiMap(QueueManager.APIMapsName.WORKLOAD);
-	ConcurrentHashMap<String, ClusterWorkloadPod> workloadPodApiMap = (ConcurrentHashMap<String, ClusterWorkloadPod>)qm.getApiMap(QueueManager.APIMapsName.WORKLOADPOD); //pod_uid, ClusterWorkloadPod
-	//}}API
 	
 	PromQLManager mp = PromQLManager.getInstance();
 	HashMap<String, Object> clusterInfo = null;
@@ -120,6 +118,11 @@ public class MetricResultAnalyzer {
 			parseLog.debug("prql_uid: {}", _prqlUid);
 		}
 		
+		//{{API를 통해 조회된 workload
+		Map<String, ClusterWorkload>    apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
+		Map<String, ClusterWorkloadPod> apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
+		//}}API
+
 		List<Map<String, Object>> resultList = JsonPath.read(_prqlResult, JPATH_RESULT);
 		try {
 			for (Map<String, Object> t : resultList) {
@@ -167,7 +170,7 @@ public class MetricResultAnalyzer {
 					
 					//{{ portal api를 통한 uid가 있는 경우만 처리한다.
 					String mlId = null;
-					ClusterWorkloadPod wpod = this.workloadPodApiMap.get(sExtPath_puid);
+					ClusterWorkloadPod wpod = apiWorkloadPodMap.get(sExtPath_puid);
 					if(wpod == null) {
 						extractMap.clear();
 						extractMap = null;
@@ -176,7 +179,7 @@ public class MetricResultAnalyzer {
 						mlId = wpod.getMlId();
 						
 						//{{ workload api에는 클러스터 uid가 없어서 여기에서 처리한다.
-						ClusterWorkload clWorkload = this.workloadApiMap.get(mlId);
+						ClusterWorkload clWorkload = apiWorkloadMap.get(mlId);
 						clWorkload.setClUid(clUid);
 						//}}
 					}
@@ -207,7 +210,7 @@ public class MetricResultAnalyzer {
 					String sExtPath_container = (String)extractMap.remove(JPATH_KEY_container); //공통
 					
 					//{{portal api를 통한 uid가 있는 경우만 처리한다.
-					if(!this.workloadPodApiMap.containsKey(sExtPath_puid)) {
+					if(!apiWorkloadPodMap.containsKey(sExtPath_puid)) {
 						extractMap.clear();
 						extractMap = null;
 						continue;

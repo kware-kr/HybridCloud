@@ -56,7 +56,13 @@ public class WorkloadRequest {
 
     @Data
     public static class Request {
-        private String name;  //db:nm 
+    	/**
+    	 *  workload 명
+    	 */
+        private String name;  //db:nm
+        /**
+         * workload mlId
+         */
         private String id;    //db:ml_uid
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private Date date;
@@ -67,6 +73,9 @@ public class WorkloadRequest {
         private String info;  //db:info json String
         
         @JsonIgnore
+        /**
+         * database unique Id
+         */
         private Long uid;     //db:uid
         
         @JsonIgnore

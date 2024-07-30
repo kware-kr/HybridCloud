@@ -9,7 +9,24 @@ import com.kware.common.util.JSONUtil;
 import com.kware.policy.task.collector.service.vo.PromQL;
 
 /**
- * 전체 PromQL테이블의 프로메테우스에 쿼리할 냉용과 쿼리결과는 json으로 오는데 이 데이터에서 어떤데이터를 가져올지를 결정한 jsonpath를 저장한 json데이터를 관리한다.
+ * PromQL테이블에는 프로메테우스에 질의할 쿼리가 포함되어 있음
+ * 프로메테우스에 쿼리할 내용과 쿼리결과에서 필요한 내용을 추출할 jsonpath를 jsonb로 만들어져 있음.
+ * 
+ * 이 클래스는 쿼리의 id를 기반으로 ExtractPaht를 관리한다.
+ * ExtractPath는 프로메테우스에 질의할 promQL과 extractpath(질의 결과에서 필요한 데이터를 추출할 jsonpath 기반의 jsonb)로 구성되어 있음
+ * 
+ * 예) 
+ * promql: kube_node_info * on(node,ref_id) group_right(internal_ip) (kube_node_status_condition == 1)
+ * extract_path: 
+ * { 
+ *   "key": "node_info"
+ * , "node": "$.metric.node"
+ * , "cl_uid": "$.metric.ref_id"
+ * , "instance": "$.metric.internal_ip"
+ * , "timestamp": "$.value[0]"
+ * , "status_condition": "$.metric.condition:$.metric.status"
+ * }
+ * 
  * 각 데이터를 추출한 ExtractPath를 JsonPath를 사용하기 위한 key,value Map으로 변환
  * 
  * 각 prqlUid를 통해서 PromQL 쿼리 및 쿼리결과로부터 각 정보 추출을 위한 Jsonpath를 제공.

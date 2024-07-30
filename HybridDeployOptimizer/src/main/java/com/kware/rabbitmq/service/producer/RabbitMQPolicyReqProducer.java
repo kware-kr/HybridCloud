@@ -1,4 +1,4 @@
-package com.kware.rabbitmq.publish;
+package com.kware.rabbitmq.service.producer;
 
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.kware.rabbitmq.config.RabbitMQConfig;
-import com.kware.rabbitmq.message.YamlMessageConverter;
+import com.kware.rabbitmq.config.YamlMessageConverter;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -49,6 +49,7 @@ public class ClusterNode extends ClusterDefault {
 		this.status = _status;
 	}
 
+	@Override
 	public String getUniqueKey() {
 		return clUid + "_" + nm;
 	}

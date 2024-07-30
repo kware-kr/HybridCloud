@@ -1,4 +1,4 @@
-package com.kware.policy.task.collector.service.vo;
+package com.kware.policy.task.selector.service.config;
 
 import lombok.Getter;
 import lombok.Setter;

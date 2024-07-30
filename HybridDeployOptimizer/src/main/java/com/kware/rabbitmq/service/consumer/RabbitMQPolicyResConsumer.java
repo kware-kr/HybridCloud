@@ -1,4 +1,4 @@
-package com.kware.rabbitmq.consumer;
+package com.kware.rabbitmq.service.consumer;
 
 import java.util.HashMap;
 

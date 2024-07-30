@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kware.rabbitmq.publish.RabbitMQPolicyReqProducer;
-import com.kware.rabbitmq.publish.RabbitMQPolicyResProducer;
+import com.kware.rabbitmq.service.producer.RabbitMQPolicyReqProducer;
+import com.kware.rabbitmq.service.producer.RabbitMQPolicyResProducer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

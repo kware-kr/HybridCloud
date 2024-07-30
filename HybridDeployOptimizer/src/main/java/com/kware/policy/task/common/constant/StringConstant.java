@@ -16,6 +16,8 @@ public class StringConstant {
 	public final static String STR_id            = "id";
 	public final static String STR_driverVersion = "driverVersion";
 	public final static String STR_cudaVersion   = "cudaVersion";
+	public final static String STR_createdAt     = "createdAt";
+	public final static String STR_updatedAt     = "updatedAt";
 	
 	public final static String STR_pod           = "pod";
 	public final static String STR_pods          = "pods";

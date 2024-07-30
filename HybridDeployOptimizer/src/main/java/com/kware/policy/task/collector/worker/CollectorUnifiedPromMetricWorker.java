@@ -22,8 +22,6 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,11 +30,8 @@ import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kware.common.util.HttpSSLFactory;
-import com.kware.common.util.JSONUtil;
 import com.kware.policy.task.collector.service.PromQLService;
-import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
@@ -45,8 +40,10 @@ import com.kware.policy.task.collector.service.vo.PromQLResult;
 import com.kware.policy.task.collector.worker.anal.MetricResultAnalyzer;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
-import com.kware.policy.task.common.QueueManager.PromDequeName;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,18 +60,11 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 	private static final Logger metricLog = LoggerFactory.getLogger("metric-log");
 	private static String prometheus_uri = "/api/v1/query";
 	
+	final PromQLManager mp = PromQLManager.getInstance();
 	final QueueManager qm = QueueManager.getInstance();
 	
-	//BlockingQueue<Map> queue = queueManager.getQueue(QueueManager.QueueName.METRIC_COLLECT);
-	//BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_NODEINFO);
-	//BlockingDeque<PromMetricPods>  podDeque  = (BlockingDeque<PromMetricPods>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_PODINFO);
-	
-	//key:cluid val:Cluster
-	//ConcurrentHashMap<String, Cluster> clusterApiMap  = (ConcurrentHashMap<String, Cluster>)qm.getApiMap(QueueManager.APIMapsName.CLUSTER);
-	//key: node.getUniqueKey() val:ClusterNode
-	//ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
-	
-	PromQLManager mp = PromQLManager.getInstance();
+	APIQueue  apiQ  = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
 	
 	private final String STR_query  = "query";
 	
@@ -146,7 +136,7 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 					Map<String,String> params = new HashMap<String, String>();			
 					try {
 						params.put(this.STR_query, query);
-						result = this.getPrometheusResult(prometheus_url, org.jsoup.Connection.Method.GET, params, null);
+						result = this.getPrometheusResult(prometheus_url, org.jsoup.Connection.Method.GET, params, null, promqlId);
 						
 						//DB입력
 						this.insertResult(null, promqlInfo, result);
@@ -174,10 +164,9 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				
 				//{{API에만 있는 데이터를 수집한 데이터에 추가 처리.
 				//key: node.getUniqueKey() val:ClusterNode
-				ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
 				log.info("=========================================================================================================");
 				this.prom_nodes.getAllNodeList().forEach(k->{
-					ClusterNode cnode = nodeApiMap.get(k.getClUid() + "_" + k.getNode());
+					ClusterNode cnode = this.apiQ.getApiClusterNodeMap().get(k.getClUid() + "_" + k.getNode());
 					k.setNoUid(cnode.getUid());  //node uid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
 					/*
@@ -193,40 +182,14 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				});
 				log.info("=========================================================================================================");
 				//}}API에만 있는 데이터 추가 처리.
-				if(1 == 1) {
-				}
 			} catch (InterruptedException e) {
 				log.error("awaitTermination Error:", e);
 			}
 			
 			
-			
 			//여기서 블러킹 큐에 등록해야겠다.
-			
-			qm.addPromDequesObject(PromDequeName.METRIC_NODEINFO, this.prom_nodes);
-			qm.addPromDequesObject(PromDequeName.METRIC_PODINFO, this.prom_pods);
-			
-			//nodeDeque.addFirst(this.prom_nodes);
-			//podDeque.addFirst(this.prom_pods);
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			this.promQ.addPromDequesObject(PromDequeName.METRIC_NODEINFO, this.prom_nodes);
+			this.promQ.addPromDequesObject(PromDequeName.METRIC_PODINFO , this.prom_pods);
 			
 			
 			
@@ -258,7 +221,7 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 	}
 
 	//private String getPrometheusResult(String url, HashMap<String, String> param) throws IOException {
-	private String getPrometheusResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString) throws IOException {
+	private String getPrometheusResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString, Integer promqlId) throws IOException {
 		
 		org.jsoup.Connection connection = Jsoup.connect(url)
 				.method(method)
@@ -285,9 +248,9 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 		}
 		
 		org.jsoup.Connection.Response dataPage = connection.execute();
-		
+
 		if (log.isDebugEnabled()) {
-			log.debug("수집상태코드 {}?query={} {}", url, logQuery, dataPage.statusCode());
+			log.debug("수집상태코드 prmqlId={}, {}", promqlId, dataPage.statusCode());
 		}
 
 		String json_string = dataPage.body();

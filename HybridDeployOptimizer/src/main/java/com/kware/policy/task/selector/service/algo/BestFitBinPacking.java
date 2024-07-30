@@ -9,8 +9,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import com.kware.policy.task.selector.service.vo.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +26,7 @@ public class BestFitBinPacking {
 
 	
     private List<PromMetricNode> nodes; // 사용 가능한 노드들의 리스트
+    private int defaultBestNodeCount = 5;
     
     //key: clid_node(getNodeKey)
     private Map<String, Set<WorkloadRequest>> notApplyRequestNodeMap; // 노드가 선택되었지만 미반영된 할당된 요청들을 관리
@@ -44,7 +45,7 @@ public class BestFitBinPacking {
      * @param request WorkloadRequest
      * @return List<PromMetricNode> 최적의 노드 리스트
      */
-    public List<PromMetricNode> allocate(WorkloadRequest request) {
+    public List<PromMetricNode> allocate(WorkloadRequest request, int maxCount) {
         // 우선순위 큐를 사용하여 노드의 스코어를 기준으로 정렬
         Queue<NodeScore> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(NodeScore::getScore));
 
@@ -57,15 +58,24 @@ public class BestFitBinPacking {
             }
         }
 
-        // 우선순위 큐에서 상위 5개의 노드를 추출하여 PromMetricNode 리스트로 반환
+        // 우선순위 큐에서 전체 노드를 추출하여 PromMetricNode 리스트로 반환
         List<PromMetricNode> bestFitNodes = new ArrayList<>();
-        for (int i = 0; i < 5 && !priorityQueue.isEmpty(); i++) {
+        if(maxCount == 0) //전체를 가져오고 싶을때
+        	maxCount = Integer.MAX_VALUE;
+        //우선순위 큐에서 상위 n개의 노드를 추출하여 PromMetricNode 리스트로 반환
+        for (int i = 0; i < maxCount && !priorityQueue.isEmpty(); i++) {
             bestFitNodes.add(priorityQueue.poll().getNode());
         }
+        
         
         priorityQueue.clear();
 
         return bestFitNodes;
+    }
+    
+    
+    public List<PromMetricNode> allocate(WorkloadRequest request) {
+    	return allocate(request, defaultBestNodeCount);
     }
 
     /**

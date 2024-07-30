@@ -1,5 +1,7 @@
 package com.kware.policy.task.collector.service.vo;
 
+import com.kware.policy.task.common.constant.StringConstant;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,4 +20,11 @@ public class PromQL extends ClusterDefault{
 	String defaultAt;
 	String extractPath;
 	//String namespace; //namespace를 외부에서 변경하여  promql의 namespace 조건을 변경하기 위함
+	
+	@Override
+	public String getUniqueKey() {
+		return clUid + StringConstant.STR_UNDERBAR + prqlUid;
+	}
+	@Override
+	public void clear() {}
 }

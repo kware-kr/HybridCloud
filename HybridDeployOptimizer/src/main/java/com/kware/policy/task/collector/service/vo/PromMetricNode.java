@@ -305,7 +305,7 @@ public class PromMetricNode extends PromMetricDefault{
 		mPodList = null;
 	}
 	
-	public final static Map<String, Method> m_nodeMethdMap = PromMetricNode.getMethodMapper();
+	public final static Map<String, Method> m_nodeMethodMap = PromMetricNode.getMethodMapper();
 	
 	private static Map<String, Method> getMethodMapper(){
 		PromMetricNode p = new PromMetricNode();

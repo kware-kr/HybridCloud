@@ -38,6 +38,14 @@ public class JSONUtil {
     	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         return jsonWriter.writeValueAsString(obj);
     }
+    
+   // Generic Method to Create Object from JSON
+    public static <T> T fromJson(String json, Class<T> clazz) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, clazz);
+    }
+
+    
     /**
      * Map을 jsonString으로 변환한다.
      *

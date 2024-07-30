@@ -18,12 +18,12 @@
 package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.jsoup.Jsoup;
 
@@ -32,6 +32,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
 import com.kware.common.util.HttpSSLFactory;
 import com.kware.common.util.JSONUtil;
+import com.kware.common.util.StringUtil;
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadPod;
@@ -40,6 +41,9 @@ import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
+import com.kware.policy.task.common.queue.PromQueue;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
@@ -48,13 +52,22 @@ import net.minidev.json.JSONArray;
 @SuppressWarnings("rawtypes")
 public class CollectorWorkloadWorker extends Thread {
 	final QueueManager qm = QueueManager.getInstance();
-	@SuppressWarnings("unchecked")
-	ConcurrentHashMap<String, ClusterWorkload> workloadApiMap       = (ConcurrentHashMap<String, ClusterWorkload>)qm.getApiMap(QueueManager.APIMapsName.WORKLOAD);
-	@SuppressWarnings("unchecked")
-	ConcurrentHashMap<String, ClusterWorkloadPod> workloadPodApiMap = (ConcurrentHashMap<String, ClusterWorkloadPod>)qm.getApiMap(QueueManager.APIMapsName.WORKLOADPOD);
+	/*
+	 * @SuppressWarnings("unchecked") ConcurrentHashMap<String, ClusterWorkload>
+	 * workloadApiMap = (ConcurrentHashMap<String,
+	 * ClusterWorkload>)qm.getApiMap(QueueManager.APIMapsName.WORKLOAD);
+	 * 
+	 * @SuppressWarnings("unchecked") ConcurrentHashMap<String, ClusterWorkloadPod>
+	 * workloadPodApiMap = (ConcurrentHashMap<String,
+	 * ClusterWorkloadPod>)qm.getApiMap(QueueManager.APIMapsName.WORKLOADPOD);
+	 * 
+	 * @SuppressWarnings("unchecked") BlockingDeque<PromMetricPods> podDeque =
+	 * (BlockingDeque<PromMetricPods>)qm.getPromDeque(QueueManager.PromDequeName.
+	 * METRIC_PODINFO);
+	 */
 	
-	@SuppressWarnings("unchecked")
-	BlockingDeque<PromMetricPods>  podDeque  = (BlockingDeque<PromMetricPods>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_PODINFO);
+	APIQueue apiQ   = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
 	
 	//JPATH
 	//private final static String JPATH_API_RESULT = "$.result.content"; //파라미터를 {pageRequest{ page: 1, size: 1}} 가 있을때와 없을때 차이가 있네.
@@ -102,6 +115,7 @@ public class CollectorWorkloadWorker extends Thread {
 	}
 	
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
 		this.isRunning = true;
@@ -127,6 +141,11 @@ public class CollectorWorkloadWorker extends Thread {
 			DocumentContext list_ctx = JsonPath.parse(apiResult);
 			List<Map<String, Object>> workloadList = this.annlyApiResultFromWorkloadList(list_ctx);
 			
+			
+			Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
+			Map apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
+			BlockingDeque<PromMetricPods> promPodsDeque   = this.promQ.getPromPodsDeque();
+			
 			for(Map<String,Object> mTmp: workloadList) {
 				String mlId = (String)mTmp.get(StringConstant.STR_mlId);
 				
@@ -145,7 +164,7 @@ public class CollectorWorkloadWorker extends Thread {
 				Map<String, Object> workloadDetailMap = this.annlyApiResultFromWorkloadDetail(detail_ctx);
 				
 				//{{DB입력
-				ClusterWorkload workload = this.insertClusterWorkload(mlId, workloadDetailMap);
+				ClusterWorkload workload = this.insertClusterWorkload(mlId, workloadDetailMap, apiWorkloadMap);
 				//}}
 				
 				//{{전역 큐에 등록
@@ -155,16 +174,31 @@ public class CollectorWorkloadWorker extends Thread {
 				workload.setMPods(pods);
 				
 				//{{ ---------------여기에서 pods의 리스트들의 완료여부를 확인해서 모두 완료상태이면 종료API 발신한다.
+				/**
+				 * api에서 수집한 워크로드 상태가 finished가 아니면 프로메테우스에서 검색해서 
+				 *   - 없는 것은 현재 처리하지 않음(나중에 제거할 필요 있음)
+				 *   - 있는데 종료되었으면 종료 api호출
+				 *   
+				 *  api에서 수집한 워크로드 상태가 finished면 
+				 *    - 삭제 API 호출
+				 *    
+				 *    종료가 이루어지고 다음 수집 시간에 삭제가 이루어지는 구조임
+				 *    
+				 * ===================================== 향후 처리 ===========================================
+				 * api에 존재하는 워크로드와 파드의 시작시간을 등록하고, 
+				 * 시작시간이 1시간이 되었는데도 진행하지 않으면, 삭제처리할까? 아니 이부분은 자동으로 처리하지 않는 것으로 하고
+				 * 시간은은 시작시간 갱신시간을 Long 값으로 일단 관리하자, DB에선 json에 있으므로 별도로 저장하지 않는다.
+				 * =========================================================================================
+				 */
 				try { //전체 업무에 방해받지 않도록하기 위함
 					if(isFinishEnable && workload.getDeleteAt().equals(StringConstant.STR_N)) { //상태가 미완료: finished가 아니면
 						boolean isCompleteWorkload = true;
-						PromMetricPods mPods = podDeque.peekFirst();
+						PromMetricPods mPods = promPodsDeque.peek();
 						for (Map.Entry<String, ClusterWorkloadPod> entry : pods.entrySet()) {
 						    PromMetricPod mPod = mPods.getMetricPod(workload.getClUid(), entry.getValue().getUid());
-						    if(mPod == null) 
+						    if(mPod == null) { 
 						    	isCompleteWorkload = false;
-						    
-						    if (isCompleteWorkload && !mPod.isCompleted()) {
+						    }else if (!mPod.isCompleted()) {
 						        isCompleteWorkload = false;
 						    }
 						}
@@ -173,19 +207,19 @@ public class CollectorWorkloadWorker extends Thread {
 						if(isCompleteWorkload) {
 							this.finishApiForWorklaod(mlId); // 완료처리
 						}
-					}if(isDeleteEnable && workload.getDeleteAt().equals(StringConstant.STR_N)) { //완료되었으면 삭제처리
+					}else if(isDeleteEnable && workload.getDeleteAt().equals(StringConstant.STR_Y)) { //완료되었으면 삭제처리
 						this.deleteApiForWorklaod(mlId);
 					}
 				}catch(Exception e) {
 					log.error("API 호출 error", e);
-				}			
+				}
 				//}}-----------------------------
 				
 				//별도의 map에 podUid를 통해서 mlId를 찾을 수 있도록 등록함
-				this.workloadPodApiMap.putAll(pods);
+				apiWorkloadPodMap.putAll(pods);
 				//}}파드리스트
-				this.workloadApiMap.put(mlId, workload);
-				//}}
+				apiWorkloadMap.put(mlId, workload);
+				//}} 전역큐 등록
 				
 				detail_ctx.delete(JPATH_ALL);
 				workloadDetailMap.clear();
@@ -200,11 +234,11 @@ public class CollectorWorkloadWorker extends Thread {
 			
 			//여기서 SESSIONID와 비교해서 제거해야한다. this.workloadMap:: 기존에 수집했는데, 이번에는 수집되지 않는 데이터 제거
 			//Map에 사용하는 객체는 모두 ClusterDefault를 상속받아서 사용해야 정상작동한다.
-			qm.removeNotIfSessionId(QueueManager.APIMapsName.WORKLOAD   , SESSIONID);
-			qm.removeNotIfSessionId(QueueManager.APIMapsName.WORKLOADPOD, SESSIONID);
+			apiQ.removeNotIfSessionId(APIMapsName.WORKLOAD   , SESSIONID);
+			apiQ.removeNotIfSessionId(APIMapsName.WORKLOADPOD, SESSIONID);
 	
 			if(log.isDebugEnabled())
-				log.debug("current {} maps size={}", QueueManager.APIMapsName.WORKLOAD.toString(), this.workloadApiMap.size());
+				log.debug("current {} maps size={}", APIMapsName.WORKLOAD.toString(), apiQ.getApiQueueSize(APIMapsName.WORKLOAD));
 		}catch(Exception e) {
 			log.error("WorkloadWorker Thread Error:" , e);
 		}
@@ -260,6 +294,13 @@ public class CollectorWorkloadWorker extends Thread {
 				wPod.setKind((String)pod.get(StringConstant.STR_kind));
 				wPod.setNode((String)pod.get(StringConstant.STR_node));
 				wPod.setPod((String)pod.get(StringConstant.STR_pod));
+				
+				String sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
+				String sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
+				
+				wPod.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
+				wPod.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
+				
 				wPod.setMlId(mlId);
 				wPod.setSessionId(SESSIONID);
 				wpMap.put(wPod.getUid(), wPod);
@@ -269,10 +310,17 @@ public class CollectorWorkloadWorker extends Thread {
 		return wpMap;
 	}
 	
-	private ClusterWorkload insertClusterWorkload(String _ml_uid, Map<String, Object> _workloadMap) {
+	final static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+	
+	private ClusterWorkload insertClusterWorkload(String _ml_uid, Map<String, Object> _workloadMap, Map<String, Object> _apiWorkloadMap) {
 		ClusterWorkload workload = new ClusterWorkload();
 		Integer nId    = (Integer)_workloadMap.get(StringConstant.STR_id);
 		String sStatus = (String)_workloadMap.get(StringConstant.STR_status);
+		String sCreatedAt = (String)_workloadMap.get(StringConstant.STR_createdAt);
+		String sUpdatedAt = (String)_workloadMap.get(StringConstant.STR_updatedAt);
+		
+		workload.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
+		workload.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
 		
 		workload.setMlId(_ml_uid);
 		workload.setId(nId);
@@ -294,7 +342,7 @@ public class CollectorWorkloadWorker extends Thread {
 		
 		try {
 			//기존에 이미 등록되어 있으면. 
-			ClusterWorkload t = this.workloadApiMap.get(_ml_uid);
+			ClusterWorkload t = (ClusterWorkload)_apiWorkloadMap.get(_ml_uid);
 			if(t != null) {
 				workload.setClUid(t.getClUid());
 				this.service.updateClusterWorkloadAndInsertHistory(workload);

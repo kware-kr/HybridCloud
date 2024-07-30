@@ -22,8 +22,6 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +42,9 @@ import com.kware.policy.task.collector.worker.anal.MetricResultAnalyzer;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,25 +56,17 @@ import lombok.extern.slf4j.Slf4j;
  * DB에 저장할때는 쿼리켤과를 파싱해서 각 키별로 저장한다. data:{ result:[{},{}]}인데 각 배열값에는 metric: value 가 있는 각1개씩 DB에 저장한다.
  */
 @Slf4j
-@SuppressWarnings({"unchecked"})
 public class CollectorSinglePromMetricWorker extends Thread {
 
 	private static final Logger metricLog = LoggerFactory.getLogger("metric-log");
 	private static String prometheus_uri = "/api/v1/query";
-	
+
+	final PromQLManager mp = PromQLManager.getInstance();
 	final QueueManager qm = QueueManager.getInstance();
 	
-	//BlockingQueue<Map> queue = queueManager.getQueue(QueueManager.QueueName.METRIC_COLLECT);
-	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_NODEINFO);
-	BlockingDeque<PromMetricPods>  podDeque  = (BlockingDeque<PromMetricPods>)qm.getPromDeque(QueueManager.PromDequeName.METRIC_PODINFO);
-	
-	//key:cluid val:Cluster
-	ConcurrentHashMap<String, Cluster> clusterApiMap  = (ConcurrentHashMap<String, Cluster>)qm.getApiMap(QueueManager.APIMapsName.CLUSTER);
-	//key: node.getUniqueKey() val:ClusterNode
-	ConcurrentHashMap<String, ClusterNode> nodeApiMap = (ConcurrentHashMap<String, ClusterNode>)qm.getApiMap(QueueManager.APIMapsName.NODE);
-	
-	PromQLManager mp = PromQLManager.getInstance();
-	
+	APIQueue  apiQ  = qm.getApiQ();
+	PromQueue promQ = qm.getPromQ();
+		
 	private final String STR_query  = "query";
 	
 	PromQLService service = null;
@@ -166,25 +159,21 @@ public class CollectorSinglePromMetricWorker extends Thread {
 				
 				//{{API에만 있는 데이터 추가 처리.
 				this.prom_nodes.getAllNodeList().forEach(k->{
-					ClusterNode cnode = this.nodeApiMap.get(k.getClUid() + "_" + k.getNode());
+					ClusterNode cnode = this.apiQ.getApiClusterNodeMap().get(k.getClUid() + "_" + k.getNode());
 					k.setNoUid(cnode.getUid());  //node uid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
 					k.addLabels(cnode.getLabels());  // labels 추가
 				});
 
 				//}}API에만 있는 데이터 추가 처리.
-				if(1 == 1) {
-				}
 			} catch (InterruptedException e) {
 				log.error("awaitTermination Error:", e);
 			}
 			
 			//여기서 블러킹 큐에 등록해야겠다.
-			
-			nodeDeque.addFirst(this.prom_nodes);
-			podDeque.addFirst(this.prom_pods);
-			
-			
+			this.promQ.addPromDequesObject(PromDequeName.METRIC_NODEINFO, this.prom_nodes);
+			this.promQ.addPromDequesObject(PromDequeName.METRIC_PODINFO , this.prom_pods);
+
 			promqlIdList.clear();
 			promqlIdList = null;
 		}catch(Exception e) {

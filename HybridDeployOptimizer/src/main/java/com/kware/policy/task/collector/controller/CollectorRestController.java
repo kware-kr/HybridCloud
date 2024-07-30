@@ -1,26 +1,19 @@
-package com.kware.policy.api;
-
-import java.util.List;
-import java.util.Map;
+package com.kware.policy.task.collector.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.kware.policy.task.common.QueueManager;
 
 /**
  * 외부에 서비스가 필요할때 사용할 용도 
  */
 @RestController
 @RequestMapping("/queue")
-public class CollectorController {
-	static Logger logger = LoggerFactory.getLogger(CollectorController.class);
+public class CollectorRestController {
+	static Logger logger = LoggerFactory.getLogger(CollectorRestController.class);
 
-	
+	/*
 	
 	@GetMapping("/api/clusters")
     public ResponseEntity<Map> getCluster() {
@@ -57,4 +50,6 @@ public class CollectorController {
     	QueueManager qm = QueueManager.getInstance();
     	return ResponseEntity.ok(qm.getLastPromMetricPodsReadOnly());
     }
+    
+    */
 }

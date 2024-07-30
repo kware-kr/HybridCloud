@@ -47,4 +47,14 @@ public class Cluster extends ClusterDefault {
 	public void setStatus(Boolean _status) {
 		this.status = _status;
 	}
+
+	@Override
+	public String getUniqueKey() {
+		return uid.toString();
+	}
+
+	@Override
+	public void clear() {
+		nodes.clear();
+	}
 }

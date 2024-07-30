@@ -8,7 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 <!-- ************************ cluster *************************************  -->
  <!-- Insert -->
-  <insert id="insertCluster" parameterType="com.kware.policy.service.vo.Cluster">
+  <insert id="insertCluster" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
     INSERT INTO mo_cluster (
         uid
       , nm
@@ -33,7 +33,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </insert>
 
   <!-- Update -->
-  <update id="updateCluster" parameterType="com.kware.policy.service.vo.Cluster">
+  <update id="updateCluster" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
     UPDATE mo_cluster
     SET nm        = #{nm}
       , info      = #{info}::jsonb
@@ -47,7 +47,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </update>
 
   <!-- Delete -->
-  <delete id="deleteCluster" parameterType="com.kware.policy.service.vo.Cluster">
+  <delete id="deleteCluster" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
     UPDATE mo_cluster
     SET 
         delete_at = 'Y'
@@ -57,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </delete>
 
   <!-- Select -->
-  <select id="selectClusterList" resultType="com.kware.policy.service.vo.Cluster">
+  <select id="selectClusterList" resultType="com.kware.policy.task.collector.service.vo.Cluster">
     SELECT uid
          , nm
          , info
@@ -73,7 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     WHERE delete_at = 'N'
   </select>
   
-  <select id="selectCluster" resultType="com.kware.policy.service.vo.Cluster" parameterType="com.kware.policy.service.vo.Cluster">
+  <select id="selectCluster" resultType="com.kware.policy.task.collector.service.vo.Cluster" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
     SELECT uid
          , nm
          , info
@@ -89,7 +89,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     WHERE uid = #{uid}
   </select>
 
- <select id="selectClusterCount" resultType="int" parameterType="com.kware.policy.service.vo.Cluster">
+ <select id="selectClusterCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
     SELECT count(*)
     FROM mo_cluster
     WHERE uid = #{uid}
@@ -101,7 +101,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 <!-- ************************ cluster node*************************************  -->
 	<!-- Insert -->
-  <insert id="insertClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+  <insert id="insertClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     INSERT INTO mo_cluster_node (
           uid
         , cl_uid
@@ -128,7 +128,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </insert>
 
   <!-- Update -->
-  <update id="updateClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+  <update id="updateClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     UPDATE mo_cluster_node
     SET nm        = #{nm}
       , info      = #{info}::jsonb
@@ -144,7 +144,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </update>
 
   <!-- Delete -->
-  <delete id="deleteClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+  <delete id="deleteClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     UPDATE mo_cluster_node
     SET delete_at = #{deleteAt}
       , updt_uid  = #{updtUid}
@@ -154,7 +154,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </delete>
 
 <!-- Select -->
-  <select id="selectClusterNodeList" resultType="com.kware.policy.service.vo.ClusterNode">
+  <select id="selectClusterNodeList" resultType="com.kware.policy.task.collector.service.vo.ClusterNode">
     SELECT uid
          , cl_uid
          , nm
@@ -172,7 +172,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </select>
   
   <!-- Select -->
-  <select id="selectClusterNode" resultType="com.kware.policy.service.vo.ClusterNode" parameterType="com.kware.policy.service.vo.ClusterNode">
+  <select id="selectClusterNode" resultType="com.kware.policy.task.collector.service.vo.ClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     SELECT uid
          , cl_uid
          , nm
@@ -190,7 +190,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       AND cl_uid = #{clUid}
   </select>
   
-  <select id="selectClusterNodeCount" resultType="int" parameterType="com.kware.policy.service.vo.ClusterNode">
+  <select id="selectClusterNodeCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     SELECT count(*)
     FROM mo_cluster_node
     WHERE uid = #{uid}
@@ -203,7 +203,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   
   <!-- ************************ cluster workload *************************************  -->
 	<!-- Insert -->
-  <insert id="insertClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+  <insert id="insertClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     INSERT INTO mo_cluster_workload (
           ml_id
         , cl_uid
@@ -228,7 +228,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </insert>
 
   <!-- Update -->
-  <update id="updateClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+  <update id="updateClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     UPDATE mo_cluster_workload
     SET
         cl_uid    = #{clUid}
@@ -244,7 +244,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </update>
 
   <!-- Delete -->
-  <delete id="deleteClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+  <delete id="deleteClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     UPDATE mo_cluster_workload
     SET delete_at = #{deleteAt}
       , updt_uid  = #{updtUid}
@@ -253,7 +253,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </delete>
 
 <!-- Select -->
-  <select id="selectClusterWorkloadList" resultType="com.kware.policy.service.vo.ClusterWorkload">
+  <select id="selectClusterWorkloadList" resultType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     SELECT ml_id
          , cl_uid
          , nm
@@ -273,7 +273,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   </select>
   
   <!-- Select -->
-  <select id="selectClusterWorkload" resultType="com.kware.policy.service.vo.ClusterWorkload" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+  <select id="selectClusterWorkload" resultType="com.kware.policy.task.collector.service.vo.ClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     SELECT ml_id
          , cl_uid
          , nm
@@ -289,7 +289,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     WHERE ml_id    = #{mlId} 
   </select>
   
-  <select id="selectClusterWorkloadCount" resultType="int" parameterType="com.kware.policy.service.vo.ClusterWorkload">
+  <select id="selectClusterWorkloadCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     SELECT count(*)
     FROM mo_cluster_workload
     WHERE ml_id = #{mlId}

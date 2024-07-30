@@ -16,35 +16,49 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class ClusterWorkload extends ClusterDefault{
-  private Integer clUid;
-  private Integer id;
-  private String nm;
-  private String userId;
-  private String info;
-  private String memo;
-  private String hashVal;
-  private String mlId;
-  
-  
-  @Getter(AccessLevel.NONE)
- // @Setter(AccessLevel.NONE)
-  private Map<String, ClusterWorkloadPod> mPods = new HashMap<String, ClusterWorkloadPod>();
-  
-  public ClusterWorkloadPod getPod(String _podUid) {
-	  return mPods.get(_podUid);
-  }
-  
-  public Boolean containsPod(String _podUid) {
-	  return mPods.containsKey(_podUid);
-  }
-  
-  public void addPod(String _podUid, ClusterWorkloadPod _pod) {
-	  mPods.put(_podUid, _pod);
-  }
-  
-  public void clear() {
-	  mPods.clear();
-	  mPods = null;
-  }
+public class ClusterWorkload extends ClusterDefault {
+	private Integer clUid;
+	private Integer id;
+	private String nm;
+	private String userId;
+	private String info;
+	private String memo;
+	private String hashVal;
+	private String mlId;
+	private long   createdAt;
+	private long   updatedAt;
+
+	@Override
+	public String getUniqueKey() {
+		return mlId;
+	}
+	
+	@Override
+	public void clear() {
+		mPods.clear();
+		mPods = null;
+	}
+	
+	// @Setter(AccessLevel.NONE)
+	@Getter(AccessLevel.NONE)
+	private Map<String, ClusterWorkloadPod> mPods = new HashMap<String, ClusterWorkloadPod>();
+
+	public ClusterWorkloadPod getPod(String _podUid) {
+		return mPods.get(_podUid);
+	}
+
+	public Boolean containsPod(String _podUid) {
+		return mPods.containsKey(_podUid);
+	}
+
+	/**
+	 * ClusterWorkload에 포함되어 있는 pod를 관리한다.
+	 * @param _podUid
+	 * @param _pod
+	 */
+	public void addPod(String _podUid, ClusterWorkloadPod _pod) {
+		mPods.put(_podUid, _pod);
+	}
+
+	
 }

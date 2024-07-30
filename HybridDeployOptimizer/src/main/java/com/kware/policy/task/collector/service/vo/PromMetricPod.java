@@ -113,7 +113,7 @@ public class PromMetricPod extends PromMetricDefault{
 		mContainerList = null;
 	}
 	
-	public final static Map<String, Method> m_podMethdMap = PromMetricPod.getMethodMapper();
+	public final static Map<String, Method> m_podMethodMap = PromMetricPod.getMethodMapper();
 	
 	private static Map<String, Method> getMethodMapper(){
 		PromMetricPod p = new PromMetricPod();

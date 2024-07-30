@@ -31,7 +31,7 @@ public class PromMetricContainer extends PromMetricDefault{
 	private Boolean terminated;
 	private String  terminatedReason;
 	
-	public final static Map<String, Method> m_containerMethdMap = PromMetricContainer.getMethodMapper();
+	public final static Map<String, Method> m_containerMethodMap = PromMetricContainer.getMethodMapper();
 	
 	private static Map<String, Method> getMethodMapper(){
 		PromMetricContainer p = new PromMetricContainer();
