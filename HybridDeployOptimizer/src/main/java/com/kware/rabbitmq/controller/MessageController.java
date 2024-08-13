@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kware.common.util.StringUtil;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.rabbitmq.service.producer.RabbitMQPolicyReqProducer;
 import com.kware.rabbitmq.service.producer.RabbitMQPolicyResProducer;
+import com.kware.rabbitmq.service.vo.RMQCommandIFv1;
+import com.kware.rabbitmq.service.vo.RMQCommandIFv1.Header;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +54,30 @@ public class MessageController {
         return ResponseEntity.ok("Request Yaml Message sent to RabbitMQ ...");
     }
 	
+	
+    /**
+     * RabbitMQ에 보내도록 노드 선택 요청하기 위한 인터페이스
+     * @param String ymlstring
+     * @param WorkloadRequest wlReq
+     */
+    private void sendReqRabbitMQ_node_request(String ymlstring, WorkloadRequest wlReq) {
+    	RMQCommandIFv1 cmdIf = new RMQCommandIFv1();
+    	Header header = cmdIf.getHeader();
+    	header.setMsg_id(wlReq.getRequest().getId());
+    	header.setLocation("keti");
+    	header.setMsg_kind("req");
+    	header.setMsg_type("node_request");
+    	header.setTimestamp(StringUtil.getToday());
+    	RMQCommandIFv1.Body body = cmdIf.getBody();
+    	body.setEncoding("base64");
+    	body.setDecodedContents(ymlstring);
+    	
+    	try {
+			reqProducer.sendMessage(cmdIf.toJson());
+		} catch (Exception e) {
+			log.error("RabbitMQ send Error", e);
+		}
+    }
 	
 	////////////////////////////// response queue /////////////////////////////////////////////
 	
