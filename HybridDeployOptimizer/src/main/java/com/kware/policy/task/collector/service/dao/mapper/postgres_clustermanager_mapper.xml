@@ -320,7 +320,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   	INSERT INTO mo_cluster_history(tbl_nm, contents) 
 		SELECT 'mo_cluster_workload' tbl_nm, to_jsonb(t) contents
 		  FROM (
-		  	SELECT * FROM mo_cluster_workload WHERE uid = #{uid}
+		  	SELECT * FROM mo_cluster_workload WHERE ml_id = #{mlId}
 		  ) t
   </insert>	
 </mapper>

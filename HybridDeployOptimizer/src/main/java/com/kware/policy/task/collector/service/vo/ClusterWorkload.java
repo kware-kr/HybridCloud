@@ -18,7 +18,7 @@ import lombok.ToString;
 @ToString
 public class ClusterWorkload extends ClusterDefault {
 	private Integer clUid;
-	private Integer id;
+	private Integer id;  //기본 ID
 	private String nm;
 	private String userId;
 	private String info;

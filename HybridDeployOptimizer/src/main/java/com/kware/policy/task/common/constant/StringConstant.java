@@ -36,4 +36,22 @@ public class StringConstant {
 	
 	public final static String JSON_EMPTY        = "{}";
 	public final static String STR_UNDERBAR      = "_";
+	
+	
+	public static enum PodStatusPhase{
+		PENDING,
+	    RUNNING,
+	    SUCCEEDED,
+	    FAILED,
+	    UNKNOWN
+	};
+	
+	public static enum PriorityClass{
+		criticalPriority, highPriority, mediumPriority, lowPriority, veryLowPriority
+	};
+	
+	public static enum PreemptionPolicy{
+		PreemptLowerPriority, Never
+	}
+	
 }

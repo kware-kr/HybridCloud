@@ -62,6 +62,19 @@ public class YAMLUtil {
         }
     }
     
+    public static <T> String writeString(T _value, boolean base64encoding) {
+    	if(_value == null)
+    		return null;
+    	
+        String rtnstring = null;
+        
+        if(base64encoding == true)
+    		rtnstring = StringUtil.encodebase64(writeString(_value));
+    	else rtnstring = writeString(_value);
+        
+    	return rtnstring;
+    }
+    
     public static <T> void writeFile(File _file, T _value) {
         try {
             mapper.writeValue(_file, _value);
@@ -80,6 +93,17 @@ public class YAMLUtil {
         String rtnstring = jsonWriter.writeValueAsString(obj); 
         obj.clear();
         return rtnstring;
+    }
+    
+    public static String convertYamlToJson(String yamlString, boolean base64encoding) throws IOException {
+    	if(yamlString == null)
+    		return null;
+    	
+    	String rtnstring = null;
+    	if(base64encoding == true)
+    		rtnstring = StringUtil.encodebase64(convertYamlToJson(yamlString));
+    	else rtnstring = convertYamlToJson(yamlString);
+    	return rtnstring;
     }
     
     

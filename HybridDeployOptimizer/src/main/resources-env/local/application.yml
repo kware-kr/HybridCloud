@@ -3,7 +3,7 @@ spring:
     active: local
    #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
-    restart.enabled: false
+    restart.enabled: true
     livereload.enabled: true
   mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
@@ -19,7 +19,7 @@ spring:
     time-zone: Asia/Seoul
 
   rabbitmq:
-    enable: true  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
+    enable: false  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
     host: 172.30.1.35
     port: 5672
     username: admin
@@ -33,6 +33,22 @@ spring:
       policy_req.key: po_req_key
       policy_res.key: po_res_key
 
+  security:
+    user:
+      name: admin
+      password: admin123!
+      roles: ACTUATOR
+#actuator를 활성화
+management:
+  server.port: 8889
+  endpoints:
+    web.exposure:
+        include: "*"
+    #jmx.exposure.exclude: "*" 
+  security:
+    enabled: true
+  basic:
+    enabled: true
 
 server:
   port: 8888

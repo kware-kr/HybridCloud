@@ -167,6 +167,9 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				log.info("=========================================================================================================");
 				this.prom_nodes.getAllNodeList().forEach(k->{
 					ClusterNode cnode = this.apiQ.getApiClusterNodeMap().get(k.getClUid() + "_" + k.getNode());
+					if(cnode == null)
+						return;
+					
 					k.setNoUid(cnode.getUid());  //node uid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
 					/*
@@ -190,6 +193,15 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 			//여기서 블러킹 큐에 등록해야겠다.
 			this.promQ.addPromDequesObject(PromDequeName.METRIC_NODEINFO, this.prom_nodes);
 			this.promQ.addPromDequesObject(PromDequeName.METRIC_PODINFO , this.prom_pods);
+			
+			
+			if(log.isDebugEnabled()) {
+				log.info("***********************************************************************************************************");
+				log.debug("프로메테우스 노드:{}", this.prom_nodes.getAllNodeList());
+				log.info("-----------------------------------------------------------------------------------------------------------");
+				log.debug("프로메테우스 파드:{}", this.prom_pods.getAllPodList());
+				log.info("***********************************************************************************************************");
+			}
 			
 			
 			

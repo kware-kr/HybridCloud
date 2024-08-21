@@ -99,7 +99,9 @@ public class CollectorMain {
 	
 //	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	@Scheduled(cron = "0 * * * * *") // 15초마다 스케줄링
+	
+	
+	//@Scheduled(cron = "0 * * * * *") // 15초마다 스케줄링
 	public void collectClusterTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("CollectClusterTask 시작");
@@ -115,7 +117,9 @@ public class CollectorMain {
 	
 //	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000)
-	@Scheduled(cron = "20 * * * * *") // 30초마다 스케줄링
+	
+	
+	//@Scheduled(cron = "20 * * * * *") // 30초마다 스케줄링
 	public void collectWorkloadTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectWorkloadTask 시작");
@@ -192,7 +196,10 @@ public class CollectorMain {
 	
 	//@Scheduled(cron = "0 0 8-23 * * *") // 매 1분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
+	
+	
+	
+	//@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
 	public void collectMetricTaskUnified() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTaskUnified 시작");

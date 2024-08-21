@@ -18,8 +18,12 @@ public class WorkloadResponse {
     public static class Response {
     	private String  id;         //db:ml_uid
     	//private String  name;       //workload name
+    	
+    	@JsonIgnore
     	private Integer code;
+    	@JsonIgnore
     	private String  message;
+    	
     	ResponseResult  result;
     	
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
@@ -39,9 +43,19 @@ public class WorkloadResponse {
             //private String  clusterName; 
             private String  clusterId;  //db: cl_uid
             private String  nodeName;
+            
+            //사용가능 불가능 처리
             private Integer priority;
+            
+            //StringConstant.priorityClass
+            //criticalPriority,highPriority,mediumPriority,lowPriority,veryLowPriority 
+            private String priorityClass;
+            //PreemptLowerPriority|Never
             private String  preemptionPolicy;
-            private String  nodeId;    //db: no_uid            
+            private String  nodeId;    //db: no_uid     
+            
         }
+        
+        private String  originRequest;
     }
 }

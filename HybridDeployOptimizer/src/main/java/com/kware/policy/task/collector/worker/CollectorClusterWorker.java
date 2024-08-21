@@ -137,16 +137,18 @@ public class CollectorClusterWorker extends Thread {
 				Cluster cluster = this.insertCluster(clusterIdx, mTmp);
 				
 				//{{노드 입력
-				for(Map<String, Object> mNode: clusterDetailList) {
-					//DB 입력
-					//queue nodeApiMap 노드 입력 
-					this.insertClusterNode(cluster, mNode);
+				if(clusterDetailList != null) {
+					for(Map<String, Object> mNode: clusterDetailList) {
+						//DB 입력
+						//queue nodeApiMap 노드 입력 
+						this.insertClusterNode(cluster, mNode);
+					}
+					//}}노드 입력
+					clusterDetailList.clear();
+					clusterDetailList = null;
 				}
-				//}}노드 입력
 				
 				detail_ctx.delete(JPATH_ALL);
-				clusterDetailList.clear();
-				clusterDetailList = null;
 				//}} 스레드 변경 가능
 			}
 			
@@ -198,6 +200,9 @@ public class CollectorClusterWorker extends Thread {
 		// code 값 확인
 		String code = _ctx.read(CollectorClusterWorker.JPATH_CODE);
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
+			if(_ctx.read(CollectorClusterWorker.JPATH_API_RESULT) == null)
+				return null;
+			
 			resultList = _ctx.read(CollectorClusterWorker.JPATH_API_RESULT_NODES);
 			//resultList = (List)SerializationUtils.clone((ArrayList)resultList);
 		} else {
@@ -214,6 +219,10 @@ public class CollectorClusterWorker extends Thread {
 	 */
 	private void supplementCluster(DocumentContext _ctx, Map<String, Object> _cluserMap) {
 		Map<String, Object> allMap = _ctx.read(CollectorClusterWorker.JPATH_API_RESULT);
+		
+		if(allMap == null)
+			return;
+		
 		//allMap은 상세정보에서 추출한 값이고, clusterMap은 리스트에서 있는 값으로, 리스트에는 없으나, 상세에 있는 키,값을 리스트쪽에 넣어주기위함.
 		//그래서 정보와 상세정보를 동일하게 유지하도록 함, 각 값은 동일한 시점에 추출한 것으로 여기서 키값만 비교하고, 값은 비교하지 않는다.
 		for (Map.Entry<String, Object> entry : allMap.entrySet()) {

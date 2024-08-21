@@ -56,7 +56,9 @@ dependencies {
     
     implementation 'org.springframework.boot:spring-boot-starter-amqp' //rabbitmq
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
-        
+    
+    implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuaor
+    implementation 'org.springframework.boot:spring-boot-starter-security'    
     
     testImplementation 'org.springframework.boot:spring-boot-starter-test'  //junit 등 테스터
 //}}SpringBoot	

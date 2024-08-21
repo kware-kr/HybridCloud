@@ -5,6 +5,9 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.kware.policy.task.common.constant.StringConstant.PodStatusPhase;
+
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -30,12 +33,16 @@ public class PromMetricPod extends PromMetricDefault{
 	private String instance; //가독성 나중에 지울수 있음
 	private String pod; //pode명
 	private String podUid;
-	private String kind; //created_by_kind
+	private String kind; //created_by_kind job, deployment, replicaset, statefulset 등, 이런 컨트롤러는 파드의 이름이 변경됨 
 	private String parent; //created_by_이름
 	private String namespace; //created_by_이름
+	
 	private Timestamp createdTimestamp;
 	private Timestamp scheduledTimestamp;
 	private Timestamp completedTimestamp;
+	
+	@Setter(AccessLevel.NONE)
+	private PodStatusPhase statusPhase;//Running, Sucessed, Failed, Pending, Unknown 
 	
 	private Integer usageCpu1m;
 	private Integer usageCpu;
@@ -51,6 +58,8 @@ public class PromMetricPod extends PromMetricDefault{
 	private Long usageNetworkReceive;
 	private Long usageNetworkIo1m;
 	private Long usageNetworkIo;
+	
+	private String priorityClass; //해당 파드의 priority 정보를 가져와서 뭘할까????? kube_pod_info에 보이는데 일단 이건 나중에
 
 	private Map<Integer, Integer> mUsgeGpuMap = new HashMap<Integer, Integer>(); //개별 GPU사용량:<GPU 번호, 사용량은 %>
 	private Map<String, Long> mLimitsList   = new HashMap<String, Long>();   //리소스이름: <(cpu, memory, gpu, disk), 값>
@@ -82,6 +91,10 @@ public class PromMetricPod extends PromMetricDefault{
 		}catch(Exception e) {
 			log.error("setUsageGpu error:{}", _val, e);
 		}
+	}
+	
+	public void setStatusPhase(String phaseString) {
+		this.statusPhase = PodStatusPhase.valueOf(phaseString.toUpperCase());
 	}
 	
 	//기존 맵에 데이터를 입력
@@ -160,6 +173,8 @@ public class PromMetricPod extends PromMetricDefault{
         	mMap.put("limits"                  , c.getMethod("setLimits"                  , String.class));
         	mMap.put("usage_gpu"               , c.getMethod("setUsageGpu"                , String.class));
         	mMap.put("cl_uid"                  , c.getMethod("setClUid"                   , Integer.class));
+        	mMap.put("status_phase"            , c.getMethod("setStatusPhase"             , String.class));
+        	mMap.put("priority_class"          , c.getMethod("setPriorityClass"           , String.class)); //아직 promql에 적용안함.kube_pod_info 참조
 		} catch (NoSuchMethodException e) {
 			log.error("",e);
 		} catch (SecurityException e) {
@@ -168,4 +183,5 @@ public class PromMetricPod extends PromMetricDefault{
         
         return mMap;
 	}
+	
 }

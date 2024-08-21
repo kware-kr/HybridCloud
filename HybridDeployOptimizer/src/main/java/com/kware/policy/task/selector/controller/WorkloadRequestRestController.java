@@ -2,12 +2,21 @@ package com.kware.policy.task.selector.controller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kware.common.openapi.vo.APIResponse;
+import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.common.util.StringUtil;
 import com.kware.common.util.YAMLUtil;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
@@ -17,10 +26,6 @@ import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
-import com.kware.rabbitmq.service.producer.RabbitMQPolicyReqProducer;
-import com.kware.rabbitmq.service.producer.RabbitMQPolicyResProducer;
-import com.kware.rabbitmq.service.vo.RMQCommandIFv1;
-import com.kware.rabbitmq.service.vo.RMQCommandIFv1.Header;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,33 +37,69 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
+@RequestMapping("/interface/api/v1")
 @RequiredArgsConstructor
 public class WorkloadRequestRestController {
 	
 	private final WorkloadRequestService    wlService;
-	private final RabbitMQPolicyReqProducer reqProducer;
-	private final RabbitMQPolicyResProducer resProducer;
 
 	QueueManager qm = QueueManager.getInstance();
 	//APIQueue     apiQ     = qm.getApiQ();
 	PromQueue    promQ    = qm.getPromQ();
 	RequestQueue requestQ = qm.getRequestQ();
 	
+	
+	//json parser 에러
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?>  handleValidationException(HttpMessageNotReadableException ex) {
+		APIResponseCode errCode = APIResponseCode.INVALID_PARAMETER_ERROR;
+		APIResponse<String> res = new APIResponse(errCode.getCode(),errCode.getMessage(), null);
+		
+		return ResponseEntity.ok(res);
+    }
+	
+	@ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+	
+	@ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleException(HttpServletRequest request, Exception ex) {
+		log.error("Error 요청 URI:{}",request.getRequestURI(), ex);
+		APIResponseCode errCode = APIResponseCode.INTERNAL_SYSTEM_ERROR;
+		
+		APIResponse<String> res = new APIResponse(errCode.getCode(),errCode.getMessage(), null);
+		
+		return ResponseEntity.ok(res);
+    }
+	
+	@ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<?> handleDataAccessException(HttpServletRequest request, Exception ex) {
+		log.error("Error 요청 URI:{}",request.getRequestURI(), ex);
+		APIResponseCode errCode = APIResponseCode.INTERNAL_DATABASE_ERROR;
+		
+		APIResponse<String> res = new APIResponse(errCode.getCode(),errCode.getMessage(), null);
+		
+		return ResponseEntity.ok(res);
+    }
+	
 	//추후 RabbitMQ에서 사용하도록 한다.
 	/**
 	 * 배포가능한 최적의 노드를 조회(BestFitBinPacking)
 	 * @param yamlstring
 	 * @return
+	 * @throws Exception 
 	 */
-    @PostMapping("/ml/schedule/node_select")
-    public ResponseEntity<?> getNodeBFBP(@RequestBody String yamlstring) {
-        try {
-        	//{{rabbitmq에 송신 테스트
-        	//reqProducer.sendYamlMessage(yamlstring);
-        	reqProducer.sendMessage(yamlstring);
-        	//}}
-        	
+    @PostMapping("/do/schedule/nodeselect")
+    public ResponseEntity<?> getNodeBFBP(@RequestBody String yamlstring) throws Exception  {
+        //try {
+        	APIResponseCode status = null;
         	WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
+        	if(wlRequest == null) {
+        		status = APIResponseCode.INPUT_ERROR;
+        		APIResponse<String> ares = new APIResponse(status.getCode(),status.getMessage(), null);
+        		return ResponseEntity.ok(ares);
+        	}
         	wlRequest.aggregate();
             
         	//{{ WorkloadRequest DB저장
@@ -77,57 +118,38 @@ public class WorkloadRequestRestController {
         	
         	//WorkloadRequest에 Response 입력
         	wlRequest.setResponse(wlResponse.getResponse());
-
-        	//{{rabbit-mq
-        	String res_yamlstring = YAMLUtil.writeString(wlResponse);
-        	//resProducer.sendYamlMessage(res_yamlstring);
-        	resProducer.sendMessage(res_yamlstring);
-        	//}}
-
-        	return ResponseEntity.ok(wlRequest);
-            //return ResponseEntity.ok(res);
-        } catch (Exception e) {
+        	String res_yamlstring = YAMLUtil.writeString(wlRequest, false);
+        	wlResponse.getResponse().setOriginRequest(StringUtil.encodebase64(yamlstring));
+        	
+  /*
+        	WorkloadResponse.Response wlResponseRes =wlResponse.getResponse();
+        	wlResponseRes.getResult().setOriginRequest(yamlstring);
+        	String res_yamlstring = YAMLUtil.writeString(wlResponseRes, false);
+*/
+        	
+        	APIResponse<String> ares = new APIResponse(wlResponse.getResponse().getCode(),wlResponse.getResponse().getMessage()
+        			, wlResponse.getResponse() 
+        			//res_yamlstring
+        			);
+        	
+        	//return ResponseEntity.ok(wlRequest);
+            return ResponseEntity.ok(ares);
+        /*} catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process YAML");
-        }
+        }*/
     }
     
-    /**
-     * RabbitMQ에 보내도록 노드 선택 요청하기 위한 인터페이스
-     * @param String ymlstring
-     * @param WorkloadRequest wlReq
-     */
-    private void sendReqRabbitMQ_node_request(String ymlstring, WorkloadRequest wlReq) {
-    	RMQCommandIFv1 cmdIf = new RMQCommandIFv1();
-    	Header header = cmdIf.getHeader();
-    	header.setMsg_id(wlReq.getRequest().getId());
-    	header.setLocation("keti");
-    	header.setMsg_kind("req");
-    	header.setMsg_type("node_request");
-    	header.setTimestamp(StringUtil.getToday());
-    	RMQCommandIFv1.Body body = cmdIf.getBody();
-    	body.setEncoding("base64");
-    	body.setDecodedContents(ymlstring);
-    	
-    	try {
-			reqProducer.sendMessage(cmdIf.toJson());
-		} catch (Exception e) {
-			log.error("RabbitMQ send Error", e);
-		}
-    }
+
     
     /**
      * 배포가능한 노드의 전체 스코어 BestFitBinPacking 알고리즘 적용한 계산
      * @param yamlstring
      * @return
      */
-    @PostMapping("/ml/schedule/node_score_bfbp")
+    @PostMapping("/do/schedule/node_score_bfbp")
     public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String yamlstring) {
         try {
         	
-        	//{{rabbitmq에 송신 테스트
-        	//reqProducer.sendYamlMessage(yamlstring);
-        	reqProducer.sendMessage(yamlstring);
-        	//}}
         	
         	WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
         	wlRequest.aggregate();
@@ -154,8 +176,9 @@ public class WorkloadRequestRestController {
      * @param yamlstring
      * @return
      */
-    @PostMapping("/ml/schedule/node_score_for_capacity")
-    public ResponseEntity<?> getNodeScroeCapacity(@RequestBody String yamlstring) {
+    //@PostMapping("/do/schedule/node_score_for_capacity")
+    @RequestMapping(value = "/do/schedule/node_score_for_capacity", method={RequestMethod.POST, RequestMethod.GET })
+    public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String yamlstring) {
     	List<PromMetricNode> nodes = null;
     	WorkloadRequest wlRequest = null;
     	if(yamlstring == null) {

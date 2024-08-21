@@ -135,6 +135,8 @@ public class PromQueue {
     public List<PromMetricNode> getLastPromMetricNodesReadOnly() {
 		BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
+    	if(nodes == null)
+    		return null;
     	
     	return nodes.getUnmodifiableAllNodeList();
     }
@@ -146,6 +148,9 @@ public class PromQueue {
     public List<PromMetricNode> getAppliablePromMetricNodesReadOnly() {
     	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
+    	
+    	if(nodes == null)
+    		return null;
     	return nodes.getUnmodifiableAppliableNodeList();
     }
     
@@ -156,6 +161,8 @@ public class PromQueue {
     public List<PromMetricNode> getAppliablePromMetricNodesReadOnly(WorkloadRequest req) {
     	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
+    	if(nodes == null)
+    		return null;
     	
     	return nodes.getUnmodifiableAppliableNodeList(req.getTotalLimitCpu(), req.getTotalLimitMemory(), req.getTotalLimitDisk(), req.getTotalLimitGpu());
     }
@@ -168,6 +175,9 @@ public class PromQueue {
     public List<PromMetricPod> getLastPromMetricPodsReadOnly() {
     	BlockingDeque<PromMetricPods> deque = (BlockingDeque<PromMetricPods>)promDequesMap.get(PromDequeName.METRIC_PODINFO);
     	PromMetricPods pods = deque.peekFirst();
+    	
+    	if(pods == null)
+    		return null;
     	
     	return pods.getUnmodifiableAllPodList();
     }

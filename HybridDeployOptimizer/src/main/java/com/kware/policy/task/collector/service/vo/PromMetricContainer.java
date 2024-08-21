@@ -28,6 +28,7 @@ public class PromMetricContainer extends PromMetricDefault{
 	private Timestamp createdTimestamp;
 	private Boolean running;
 	private Boolean waiting;
+	private String  waitingReason;
 	private Boolean terminated;
 	private String  terminatedReason;
 	
@@ -56,6 +57,8 @@ public class PromMetricContainer extends PromMetricDefault{
         	mMap.put("created_timestamp"       , c.getMethod("setCreatedTimestamp"        , Timestamp.class));
         	mMap.put("running"                 , c.getMethod("setRunning"                 , Boolean.class));
         	mMap.put("waiting"                 , c.getMethod("setWaiting"                 , Boolean.class));
+        	mMap.put("waiting"                 , c.getMethod("setWaiting"                 , Boolean.class));
+        	mMap.put("waiting_reason"          , c.getMethod("setWaitingReason"           , String.class));
         	mMap.put("terminated"              , c.getMethod("setTerminated"              , Boolean.class));
         	mMap.put("terminated_reason"       , c.getMethod("setTerminatedReason"        , String.class));
         	mMap.put("cl_uid"                  , c.getMethod("setClUid"                   , Integer.class));
