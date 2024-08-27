@@ -61,9 +61,9 @@ public class PromMetricPod extends PromMetricDefault{
 	
 	private String priorityClass; //해당 파드의 priority 정보를 가져와서 뭘할까????? kube_pod_info에 보이는데 일단 이건 나중에
 
-	private Map<Integer, Integer> mUsgeGpuMap = new HashMap<Integer, Integer>(); //개별 GPU사용량:<GPU 번호, 사용량은 %>
-	private Map<String, Long> mLimitsList   = new HashMap<String, Long>();   //리소스이름: <(cpu, memory, gpu, disk), 값>
-	private Map<String, Long> mRequestsList = new HashMap<String, Long>(); //리소스이름: <(cpu, memory, gpu, disk), 값>
+	private Map<Integer, Integer> mUsgeGpuMap   = new HashMap<Integer, Integer>(); //개별 GPU사용량:<GPU 번호, 사용량은 %>
+	private Map<String, Long>     mLimitsList   = new HashMap<String, Long>();   //리소스이름: <(cpu, memory, gpu, disk), 값>
+	private Map<String, Long>     mRequestsList = new HashMap<String, Long>(); //리소스이름: <(cpu, memory, gpu, disk), 값>
 
 	private Map<String, PromMetricContainer> mContainerList  = new HashMap<String, PromMetricContainer>(); //pod에 포함된 container
 	

@@ -53,6 +53,7 @@ public class PromMetricNode extends PromMetricDefault{
 	Long    capacityDisk    = 0L;   //디스크 byte용량
 	Long    capacityMemory  = 0L; //메모리 byte용량
 	Integer capacityPods    = 0;   //Pods 갯수
+	Long    capacityMaxHzCpu= 0L;
 
 	Integer availableCpu    = 0;   //밀리코어로서: 코어갯수 * 1000을 전체 사용량으로 표시할 수 있음 실제는 더블형이나 Integer 형으로 변환 계산
 	Integer availableGpu    = 0;   //gpu 갯수
@@ -350,8 +351,9 @@ public class PromMetricNode extends PromMetricDefault{
         	mMap.put("cl_uid"              , c.getMethod("setClUid"             , Integer.class));
         	mMap.put("usage_network_receive_1m"  , c.getMethod("setUsageNetworkReceive1m"  , Double.class));
         	mMap.put("usage_network_transmit_1m" , c.getMethod("setUsageNetworkTransmit1m" , Double.class));
-        	mMap.put("usage_disk_read_1m"  , c.getMethod("setUsageDiskRead1m"      , Double.class));
-        	mMap.put("usage_disk_write_1m" , c.getMethod("setUsageDiskWrite1m"     , Double.class));
+        	mMap.put("usage_disk_read_1m"  , c.getMethod("setUsageDiskRead1m"   , Double.class));
+        	mMap.put("usage_disk_write_1m" , c.getMethod("setUsageDiskWrite1m"  , Double.class));
+        	mMap.put("capacity_maxhz_cpu"  , c.getMethod("setCapacityMaxHzCpu"  , Long.class));
 		} catch (NoSuchMethodException e) {
 			log.error("",e);
 		} catch (SecurityException e) {

@@ -3,10 +3,13 @@ package com.kware.policy.task.collector.service.vo;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.kware.policy.task.common.constant.APIConstant;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /*
  * 워크로드는 동일한 클러스터에 배포된다.(이것 확인)
@@ -23,11 +26,17 @@ public class ClusterWorkload extends ClusterDefault {
 	private String userId;
 	private String info;
 	private String memo;
+	
+	@JsonIgnore
 	private String hashVal;
+	
 	private String mlId;
+	private String namespace;
 	private long   createdAt;
 	private long   updatedAt;
-
+	private APIConstant.WorkloadStatus status;
+	
+	@JsonIgnore
 	@Override
 	public String getUniqueKey() {
 		return mlId;
@@ -43,6 +52,10 @@ public class ClusterWorkload extends ClusterDefault {
 	@Getter(AccessLevel.NONE)
 	private Map<String, ClusterWorkloadPod> mPods = new HashMap<String, ClusterWorkloadPod>();
 
+	public Map<String, ClusterWorkloadPod> getPods(){
+		return this.mPods;
+	}
+	
 	public ClusterWorkloadPod getPod(String _podUid) {
 		return mPods.get(_podUid);
 	}
@@ -59,6 +72,22 @@ public class ClusterWorkload extends ClusterDefault {
 	public void addPod(String _podUid, ClusterWorkloadPod _pod) {
 		mPods.put(_podUid, _pod);
 	}
-
 	
+	public void setStatusString(String status) {
+		if (status != null && !status.isEmpty()) {
+            try {
+                this.status =  APIConstant.WorkloadStatus.valueOf(status); // String을 Enum으로 변환
+            } catch (IllegalArgumentException e) {
+            	this.status = null;
+            }
+        }
+	}	
+	
+	@JsonIgnore
+	public String getStatuString() {
+        if (status != null) {
+            return status.name(); // Enum의 name() 메서드를 사용해 String으로 변환
+        }
+        return null;
+    }
 }

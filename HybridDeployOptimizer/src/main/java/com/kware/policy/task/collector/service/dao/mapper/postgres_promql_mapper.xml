@@ -75,7 +75,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			, m.uid prql_uid
 			, m.grp_nm
 			, m.nm
-			, REPLACE(m.cont,'#|namespace|','string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator') AS cont 
+			, REPLACE(m.cont,'#|namespace|',#{excludeNamespaces}) AS cont 
 			/*, REPLACE(m.cont,'#|namespace|','aaa') AS cont*/
 			, m.extract_path::text
 			, m.type_cd

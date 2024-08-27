@@ -1,8 +1,13 @@
 package com.kware.policy.task.collector.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.kware.policy.task.collector.service.dao.PromQLDao;
@@ -17,6 +22,17 @@ public class PromQLService {
 	
 	@Autowired
 	protected PromQLDao dao;
+	
+	@Value("${hybrid.policy.exclude-namespaces}")
+	private String excludeNamespaces;
+	
+	private Map<String, String> paramMap = new HashMap<String,String>();
+	
+	@PostConstruct
+	private void init() {
+		paramMap.put("excludeNamespaces", excludeNamespaces);
+	}
+	
 
 
 	public List<Cluster> selectClusterList() {
@@ -38,7 +54,7 @@ public class PromQLService {
 	 * @return
 	 */
 	public List<PromQL> selectPromqlListAll() {
-		return dao.selectPromqlListAll();
+		return dao.selectPromqlListAll(paramMap);
 	}
 	
 	public int insertPromqlResult(PromQLResult vo) {

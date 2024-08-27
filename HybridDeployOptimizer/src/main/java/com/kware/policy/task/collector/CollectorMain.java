@@ -1,7 +1,6 @@
 package com.kware.policy.task.collector;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -13,13 +12,14 @@ import org.springframework.stereotype.Component;
 
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
+import com.kware.policy.task.collector.service.ResourceUsageService;
 import com.kware.policy.task.collector.service.vo.Cluster;
-import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.PromQL;
 import com.kware.policy.task.collector.worker.CollectorClusterWorker;
 import com.kware.policy.task.collector.worker.CollectorSinglePromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorUnifiedPromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorWorkloadWorker;
+import com.kware.policy.task.collector.worker.ResourceUsageWorker;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
@@ -40,6 +40,9 @@ public class CollectorMain {
 	
 	@Autowired
 	private ClusterManagerService cmService;
+	
+	@Autowired
+	private ResourceUsageService ruService;
 	
 	@Value("${hybrid.collector.threads}")
     private int col_threads_nu;
@@ -100,8 +103,10 @@ public class CollectorMain {
 //	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
 	
-	
-	//@Scheduled(cron = "0 * * * * *") // 15초마다 스케줄링
+	/**
+	 * 클러스터, 클러스터 노드 수집
+	 */
+	@Scheduled(cron = "0 * * * * *") // 1분 스케줄링
 	public void collectClusterTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("CollectClusterTask 시작");
@@ -118,8 +123,10 @@ public class CollectorMain {
 //	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000)
 	
-	
-	//@Scheduled(cron = "20 * * * * *") // 30초마다 스케줄링
+	/**
+	 * 각 클러스터에서 운영되는 워크로드 수집
+	 */
+	@Scheduled(cron = "20 * * * * *") // 1분 스케줄링
 	public void collectWorkloadTask() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectWorkloadTask 시작");
@@ -136,7 +143,7 @@ public class CollectorMain {
 		
 	//클러스터별 프로메테우스 운영: 통합으로 변경되면서 사용안함.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	public void collectMetricTask() {
+	public void collectMetricTaskSingle() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTask 시작");
 		}
@@ -199,7 +206,7 @@ public class CollectorMain {
 	
 	
 	
-	//@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
+	@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
 	public void collectMetricTaskUnified() {
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTaskUnified 시작");
@@ -251,5 +258,18 @@ public class CollectorMain {
 			log.debug("current {} podDeque size={}" , PromDequeName.METRIC_PODINFO.toString() , promQ.getPromDequesSize(PromDequeName.METRIC_PODINFO));
 		}
 		
+	}
+	
+	@Scheduled(cron = "50 * * * * *") // 30초마다 스케줄링
+	public void ResourceUsageTask() {
+		if(log.isDebugEnabled()) {
+			log.debug("ResourceUsageTask 시작");
+		}
+		
+		//{{ 노드와 파드의 리소스 사용량을 매 분마다 저장: 추후 모니터링 그래프 활용할 수 있도록
+		ResourceUsageWorker worker = new ResourceUsageWorker();
+		worker.setResourceUsageServiceService(this.ruService);
+		worker.start();
+		//}}
 	}
 }

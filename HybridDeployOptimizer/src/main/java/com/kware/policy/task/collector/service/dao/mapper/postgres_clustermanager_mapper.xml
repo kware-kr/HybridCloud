@@ -270,6 +270,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
    <if test="clUid != null">
      AND cl_uid = #{clUid} 
    </if>
+   <if test="deleteAt != null">
+     AND delete_at = #{deleteAt} 
+   </if>
+   <if test="deleteAt == null">
+     AND delete_at = 'N' 
+   </if>
   </select>
   
   <!-- Select -->
@@ -323,5 +329,133 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		  	SELECT * FROM mo_cluster_workload WHERE ml_id = #{mlId}
 		  ) t
   </insert>	
+  
+  <!--     ************************ mo_resource_usage_node *********************************** -->
+  
+      <insert id="insertResourceUsageNode" parameterType="com.kware.policy.task.collector.service.vo.ResourceUsageNode">
+        INSERT INTO k_hybrid.mo_resource_usage_node (
+            cl_uid,
+            collect_dt,
+            node_nm,
+            results
+        ) VALUES (
+            #{clUid},
+            #{collectDt},
+            #{nodeNm},
+            #{results}
+        )
+    </insert>
+    
+    <sql id="where_selectResourceUsageNode">
+        <choose>
+            <when test="startDt == null and endDt == null">
+                collect_dt &gt;= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
+            </when>
+            <when test="startDt != null and endDt == null">
+                collect_dt &gt;= #{startDt}
+            </when>
+            <when test="startDt == null and endDt != null">
+                collect_dt &lt;= #{endDt}
+            </when>
+            <otherwise>
+                collect_dt BETWEEN #{startDt} AND #{endDt}
+            </otherwise>
+        </choose>
+        <if test="clUid != null">
+            AND cl_uid = #{clUid}
+        </if>
+        <if test="nodeNm != null">
+            AND node_nm = #{nodeNm}
+        </if>
+    </sql>
+
+    <select id="selectResourceUsageNode" resultType="com.kware.policy.task.collector.service.vo.ResourceUsageNode">
+        SELECT 
+            cl_uid,
+            collect_dt,
+            node_nm,
+            results,
+            reg_dt
+        FROM k_hybrid.mo_resource_usage_node 
+        WHERE 
+        <include refid="where_selectResourceUsageNode"/>
+        ORDER BY collect_dt DESC
+        <if test="pageNumber != null and pageSize != null">
+          LIMIT #{pageSize} OFFSET (#{pageNumber} - 1) * #{pageSize}
+        </if>
+    </select>
+
+    <select id="selectResourceUsageNodeAllByClUid" resultType="com.kware.policy.task.collector.service.vo.ResourceUsageNode">
+        SELECT 
+            cl_uid,
+            collect_dt,
+            node_nm,
+            results,
+            reg_dt
+        FROM k_hybrid.mo_resource_usage_node 
+        WHERE cl_uid = #{clUid}
+          AND collect_dt BETWEEN #{startDt} AND #{endDt}
+    </select>
+  
+  
+  <!--     ************************ mo_resource_usage_pod *********************************** -->
+  <sql id="where_selectResourceUsagePod">
+        <choose>
+            <when test="startDt == null and endDt == null">
+                collect_dt &gt;= CURRENT_TIMESTAMP - INTERVAL '30 minutes'
+            </when>
+            <when test="startDt != null and endDt == null">
+                collect_dt &gt;= #{startDt}
+            </when>
+            <when test="startDt == null and endDt != null">
+                collect_dt &lt;= #{endDt}
+            </when>
+            <otherwise>
+                collect_dt BETWEEN #{startDt} AND #{endDt}
+            </otherwise>
+        </choose>
+        <if test="clUid != null">
+            AND cl_uid = #{clUid}
+        </if>
+        <if test="mlId != null">
+            AND ml_id = #{mlId}
+        </if>
+        <if test="podUid != null">
+            AND pod_uid = #{podUid}
+        </if>
+    </sql>
+    
+  <insert id="insertResourceUsagePod" parameterType="com.kware.policy.task.collector.service.vo.ResourceUsagePod">
+        INSERT INTO k_hybrid.mo_resource_usage_pod (
+             collect_dt, 
+             cl_uid, 
+             ml_id, 
+             pod_uid, 
+             results
+         ) VALUES (
+             #{collectDt}, 
+             #{clUid}, 
+             #{mlId}, 
+             #{podUid}, 
+             #{results}
+         )
+    </insert>
+
+    <select id="selectResourceUsagePod" parameterType="com.kware.policy.task.collector.service.vo.ResourceUsagePod" resultType="com.kware.policy.task.collector.service.vo.ResourceUsagePod">
+        SELECT * FROM k_hybrid.mo_resource_usage_pod 
+         WHERE
+         <include refid="where_selectResourceUsageNode"/> 
+          ORDER BY collect_dt DESC
+        <if test="pageNumber != null and pageSize != null">
+          LIMIT #{pageSize} OFFSET (#{pageNumber} - 1) * #{pageSize}
+        </if>
+    </select>
+
+    <select id="selectResourceUsagePodAllByMlId" parameterType="String" resultType="com.kware.policy.task.collector.service.vo.ResourceUsagePod">
+        SELECT * FROM k_hybrid.mo_resource_usage_pod 
+        WHERE ml_id = #{mlId}
+          AND collect_dt BETWEEN #{startDt} AND #{endDt}
+    </select>
+   
 </mapper>
 

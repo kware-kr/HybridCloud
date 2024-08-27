@@ -19,6 +19,7 @@ package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
 
@@ -70,13 +72,17 @@ public class CollectorWorkloadWorker extends Thread {
 	PromQueue promQ = qm.getPromQ();
 	
 	//JPATH
-	//private final static String JPATH_API_RESULT = "$.result.content"; //파라미터를 {pageRequest{ page: 1, size: 1}} 가 있을때와 없을때 차이가 있네.
-	private final static String JPATH_API_RESULT = "$.result";
+	private final static String JPATH_API_RESULT_CONTENT = "$.result.content"; //파라미터를 {pageRequest{ page: 1, size: 1}} 가 있을때와 없을때 차이가 있네.
+	private final static String JPATH_API_RESULT         = "$.result";
 	//private final static String JPATH_API_RESULT_WORKLOADS = "$.result";
 	//private final static String JPATH_METRIC = "$.metric";
 	//private final static String JPATH_VALUE  = "$.value";
 	private final static String JPATH_CODE   = "$.code";
 	private final static String JPATH_ALL    = "$..*";
+	
+	//pageable
+	private final static String JPATH_last           = "$.result.last";
+	private final static String JPATH_totlaElement   = "$.result.totalElements";
 	
 	private final static String REG_mlId     = "\\{mlId\\}";
 	
@@ -114,6 +120,13 @@ public class CollectorWorkloadWorker extends Thread {
 		this.isDeleteEnable = _isDelete;
 	}
 	
+	@Data
+	public static class WorkloadRequest{
+		int page;
+		int size = 20;
+		//String status;
+	}
+	
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -129,17 +142,46 @@ public class CollectorWorkloadWorker extends Thread {
 			
 			String url = this.api_base_url + APIConstant.API_ML_LIST;
 			String apiResult;
-			try {
-				//Map<String,String> params = new HashMap<String, String>();
-				
-				apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.POST, null, "{}");
-			} catch (IOException e) {
-				log.error("스레드 종료: 워크로드 리스트 API 호출 에러: {}",url, e);
-				return;
-			}
 			
-			DocumentContext list_ctx = JsonPath.parse(apiResult);
-			List<Map<String, Object>> workloadList = this.annlyApiResultFromWorkloadList(list_ctx);
+			DocumentContext list_ctx = null;
+			List<Map<String, Object>> workloadList = new ArrayList<Map<String, Object>>();
+			int pageNumber    = 0;
+			int totalElements = 0;
+			boolean isLast = false;
+			while(!isLast) {
+				pageNumber++;
+				try {
+					WorkloadRequest pageRequest = new WorkloadRequest();
+					pageRequest.page = pageNumber;
+					
+					Map<String, WorkloadRequest> bodyparm  = new HashMap<String, WorkloadRequest>();
+					bodyparm.put("pageRequest", pageRequest);
+					
+					String bodyString = JSONUtil.getJsonStringFromMap(bodyparm);
+					
+					
+					apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.POST, null, bodyString);
+					//apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.POST, null, "{}");
+				} catch (IOException e) {
+					log.error("스레드 종료: 워크로드 리스트 API 호출 에러: {}",url, e);
+					return;
+				}
+				
+				list_ctx = JsonPath.parse(apiResult);
+				
+				//pageabel를 사용하므로 result.content를 가져옴
+				List<Map<String, Object>> workloadList_temp = this.annlyApiResultFromWorkloadList(list_ctx);
+				workloadList.addAll(workloadList_temp);
+				workloadList_temp.clear();
+				
+				isLast = list_ctx.read(JPATH_last);
+				totalElements = list_ctx.read(JPATH_totlaElement);
+				
+				if(isLast == false) {
+					if(totalElements <= workloadList_temp.size()) // 혹시 못빠져나놀가봐
+						break;
+				}
+			}
 			
 			
 			Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
@@ -178,6 +220,8 @@ public class CollectorWorkloadWorker extends Thread {
 				 * api에서 수집한 워크로드 상태가 finished가 아니면 프로메테우스에서 검색해서 
 				 *   - 없는 것은 현재 처리하지 않음(나중에 제거할 필요 있음)
 				 *   - 있는데 종료되었으면 종료 api호출
+				 *   완료체크는 각 파드의 completedTimestamp가 존재하는 경우에만 해당 파드가 완료된 것으로 파악하고, 
+				 *   워크로드가 Error 상태인 것은 처리하지 않는다.(이건 포탈에서)
 				 *   
 				 *  api에서 수집한 워크로드 상태가 finished면 
 				 *    - 삭제 API 호출
@@ -197,9 +241,11 @@ public class CollectorWorkloadWorker extends Thread {
 						for (Map.Entry<String, ClusterWorkloadPod> entry : pods.entrySet()) {
 						    PromMetricPod mPod = mPods.getMetricPod(workload.getClUid(), entry.getValue().getUid());
 						    if(mPod == null) { 
-						    	isCompleteWorkload = false;
+						    	isCompleteWorkload = false; 
+						    	break;
 						    }else if (!mPod.isCompleted()) {
 						        isCompleteWorkload = false;
+						        break;
 						    }
 						}
 						
@@ -250,7 +296,7 @@ public class CollectorWorkloadWorker extends Thread {
 
 		String code = _ctx.read(JPATH_CODE); 		// 정상상태인지 code 값 확인
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
-			resultList = _ctx.read(JPATH_API_RESULT);
+			resultList = _ctx.read(JPATH_API_RESULT_CONTENT);
 //			resultList = (List)SerializationUtils.clone((ArrayList)resultList);
 		} else {
 			log.error("에러: code가 10001이 아닙니다.");
@@ -293,13 +339,19 @@ public class CollectorWorkloadWorker extends Thread {
 				wPod.setUid((String)pod.get(StringConstant.STR_uid));
 				wPod.setKind((String)pod.get(StringConstant.STR_kind));
 				wPod.setNode((String)pod.get(StringConstant.STR_node));
-				wPod.setPod((String)pod.get(StringConstant.STR_pod));
+				wPod.setPod((String)pod.get(StringConstant.STR_name));
+				wPod.setStatus((String)pod.get(StringConstant.STR_status));
+				
+				wPod.setNamespace((String)pod.get(StringConstant.STR_namespace));
+				wPod.setOwnerUid((String)pod.get(StringConstant.STR_ownerUid));
+				wPod.setOwnerKind((String)pod.get(StringConstant.STR_ownerKind));
+				wPod.setRestart((Integer)pod.get(StringConstant.STR_restart));
 				
 				String sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
 				String sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
 				
-				wPod.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
-				wPod.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
+				wPod.setCreatedAt(StringUtil.getMilliseconds(formatterpod, sCreatedAt));
+				wPod.setUpdatedAt(StringUtil.getMilliseconds(formatterpod, sUpdatedAt));
 				
 				wPod.setMlId(mlId);
 				wPod.setSessionId(SESSIONID);
@@ -310,12 +362,13 @@ public class CollectorWorkloadWorker extends Thread {
 		return wpMap;
 	}
 	
-	final static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+	final static SimpleDateFormat formatterpod = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	final static SimpleDateFormat formatter    = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 	
 	private ClusterWorkload insertClusterWorkload(String _ml_uid, Map<String, Object> _workloadMap, Map<String, Object> _apiWorkloadMap) {
 		ClusterWorkload workload = new ClusterWorkload();
-		Integer nId    = (Integer)_workloadMap.get(StringConstant.STR_id);
-		String sStatus = (String)_workloadMap.get(StringConstant.STR_status);
+		Integer nId       = (Integer)_workloadMap.get(StringConstant.STR_id);
+		String sStatus    = (String)_workloadMap.get(StringConstant.STR_status);
 		String sCreatedAt = (String)_workloadMap.get(StringConstant.STR_createdAt);
 		String sUpdatedAt = (String)_workloadMap.get(StringConstant.STR_updatedAt);
 		
@@ -324,15 +377,18 @@ public class CollectorWorkloadWorker extends Thread {
 		
 		workload.setMlId(_ml_uid);
 		workload.setId(nId);
-		//workload.setClUid(_cl_uid); //정보가 없어서 메트릭에서 추가해야한다.
+		//workload.setClUid(_cl_uid); //정보가 없어서 메트릭에서 추가해야한다.:MetricResultAnalyzer
+		
+		workload.setStatusString(sStatus);
 		if(StringConstant.STR_finished.equalsIgnoreCase(sStatus)) {  //Started | finished
 			workload.setDeleteAt(StringConstant.STR_Y);
 		}else {
 			workload.setDeleteAt(StringConstant.STR_N);
 		}
-		workload.setNm((String)_workloadMap.get(StringConstant.STR_name));
-		workload.setMemo((String)_workloadMap.get(StringConstant.STR_description));
-		workload.setUserId((String)_workloadMap.get(StringConstant.STR_userId));
+		workload.setNm(       (String)_workloadMap.get(StringConstant.STR_name));
+		workload.setMemo(     (String)_workloadMap.get(StringConstant.STR_description));
+		workload.setUserId(   (String)_workloadMap.get(StringConstant.STR_userId));
+		workload.setNamespace((String)_workloadMap.get(StringConstant.STR_namespace));
 		
 		String sJson = JSONUtil.getJsonStringFromMap(_workloadMap);
 		String sHashVal = HashUtil.getMD5Hash(sJson);

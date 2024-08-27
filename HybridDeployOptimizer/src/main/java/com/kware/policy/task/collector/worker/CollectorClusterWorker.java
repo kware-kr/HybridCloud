@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.jsoup.Jsoup;
 
@@ -17,6 +19,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
 import com.kware.common.util.HttpSSLFactory;
 import com.kware.common.util.JSONUtil;
+import com.kware.common.util.StringUtil;
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.ClusterNode;
@@ -32,6 +35,8 @@ import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONArray;
+
 
 /**
  * portal api를 호출
@@ -256,13 +261,23 @@ public class CollectorClusterWorker extends Thread {
 		}
 		
 		sTmp = (String)_clusterMap.get(StringConstant.STR_status);
-		if(StringConstant.STR_finished.equalsIgnoreCase(sTmp)) {
+		cluster.setStatusString(sTmp);
+		if(StringConstant.STR_finished.equalsIgnoreCase(sTmp) || StringConstant.STR_healthy.equalsIgnoreCase(sTmp)) {
 			cluster.setDeleteAt(StringConstant.STR_N);
 			cluster.setStatus(Boolean.TRUE);
 		}else {
 			cluster.setDeleteAt(StringConstant.STR_Y);
 			cluster.setStatus(Boolean.FALSE);
 		}
+		
+		sTmp = (String)_clusterMap.get(StringConstant.STR_version);
+		cluster.setKubeVer(sTmp);
+		
+
+		try {
+			sTmp = (String)_clusterMap.get(StringConstant.STR_createAt);
+			cluster.setCreateAt(StringUtil.parseFlexibleLocalDateTime(sTmp));
+		}catch(IllegalArgumentException e) {	}
 		
 		String sJson = JSONUtil.getJsonStringFromMap(_clusterMap);  //json 원문
 		String sHashVal = HashUtil.getMD5Hash(sJson);               //json 원문 요약값(Hash값)
@@ -289,13 +304,14 @@ public class CollectorClusterWorker extends Thread {
 	}
 	
 	private void insertClusterNode(Cluster _cl, Map<String, Object> _nodeMap) {
-		
 		ClusterNode node = new ClusterNode();
+		String sTmp = null;		
 		String sUid    = (String)_nodeMap.get(StringConstant.STR_uid);
 		String sStatus = (String)_nodeMap.get(StringConstant.STR_status);
 		
 		node.setUid(sUid);
 		node.setClUid(_cl.getUid());
+		
 		if(StringConstant.STR_true.equals(sStatus)) {
 			node.setDeleteAt(StringConstant.STR_N);
 		}else {
@@ -304,6 +320,25 @@ public class CollectorClusterWorker extends Thread {
 		node.setNm((String)_nodeMap.get(StringConstant.STR_name));
 		node.setMemo((String)_nodeMap.get(StringConstant.STR_description));
 		node.setStatus((String)_nodeMap.get(StringConstant.STR_status));
+		
+		Object obj = _nodeMap.get("usageDto");
+		if(obj instanceof Map) {
+			node.setUsageDto(JSONUtil.convertMapToObject((Map)obj, ClusterNode.UsageDto.class));
+		}
+		
+		try {
+			sTmp = (String)_nodeMap.get(StringConstant.STR_createdAt);
+			node.setCreatedAt(StringUtil.parseFlexibleLocalDateTime(sTmp));
+		}catch(IllegalArgumentException e) {	}
+		
+		obj = _nodeMap.get(StringConstant.STR_role);
+		if(obj instanceof JSONArray) {
+			JSONArray jsonArray = (JSONArray)obj;
+			sTmp= jsonArray.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(StringConstant.STR_COMMA));
+			node.setRole(sTmp);
+		}
 		
 		//GPU driver관련
 		node.setGpuDriverString((String)_nodeMap.get(StringConstant.STR_driverVersion));
@@ -321,10 +356,12 @@ public class CollectorClusterWorker extends Thread {
 		PromMetricNodes mNodes = (PromMetricNodes)this.promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		if(mNodes != null) {
 			PromMetricNode mNode = mNodes.getMetricNode(_cl.getUid(), node.getNm());
+			node.setPromMetricNode(mNode);
+			
 			Map<Integer, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
 			
 			try {
-				gpuJsonString = JSONUtil.toJsonString(gpulist,this.gpuFilterSet);
+				gpuJsonString = JSONUtil.getJsonstringFromObject(gpulist,this.gpuFilterSet);
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}

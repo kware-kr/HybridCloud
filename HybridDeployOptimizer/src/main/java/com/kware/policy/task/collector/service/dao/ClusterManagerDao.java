@@ -140,5 +140,8 @@ public class ClusterManagerDao {
 	public int insertHistoryFromClusterWorkload(ClusterWorkload workload) {
 		return sqlSessionTemplate.insert("clusterManagerMapper.insertHistoryFromClusterWorkload", workload);
 	}
+	
+	
+	
 
 }

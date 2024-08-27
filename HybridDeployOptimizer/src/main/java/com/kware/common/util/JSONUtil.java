@@ -32,22 +32,39 @@ public class JSONUtil {
      */
     @SuppressWarnings("unused")
     private static Logger logger = LogManager.getLogger(JSONUtil.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    
+    private static final ObjectMapper jsonWriter = new ObjectMapper();
+    {   //ObjectMapper의 속성이 변경되므로, 별도로 하나 만듬
+    	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    }
+    
+    private static final ObjectMapper notNullMapper = new ObjectMapper();
+    {
+    	//null 값인 필드들이 JSON 출력에서 제외됩니다.
+    	notNullMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    	//빈 객체(필드가 없는 객체 또는 모든 필드가 null인 객체)를 직렬화할 때 오류가 발생하지 않고, {}로 표현됩니다
+    	notNullMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
+    
     
     public static String getJsonstringFromObject(Object obj) throws JsonProcessingException {
-    	ObjectMapper jsonWriter = new ObjectMapper();
-    	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         return jsonWriter.writeValueAsString(obj);
     }
     
    // Generic Method to Create Object from JSON
     public static <T> T fromJson(String json, Class<T> clazz) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json, clazz);
+        return objectMapper.readValue(json, clazz);
+    }
+    
+    //Map을 임의의 클래스 객체로 변환하는 static 제네릭 메서드
+    public static <T> T convertMapToObject(Map<String, Object> map, Class<T> clazz) {
+        return objectMapper.convertValue(map, clazz);
     }
 
     
     /**
-     * Map을 jsonString으로 변환한다.
+     * Map을 JSONObject로 변환한다.
      *
      * @param map Map<String, Object>.
      * @return String.
@@ -65,7 +82,7 @@ public class JSONUtil {
     }
     
     /**
-     * List<Map>을 json으로 변환한다.
+     * List<Map>을 JSONArray로 변환한다.
      *
      * @param list List<Map<String, Object>>.
      * @return JSONArray.
@@ -106,7 +123,7 @@ public class JSONUtil {
         Map<String, Object> map = null;
         
         try {
-            map = new ObjectMapper().readValue(jsonObj.toJSONString(), Map.class) ;
+            map = objectMapper.readValue(jsonObj.toJSONString(), Map.class) ;
         } catch (JsonParseException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
@@ -149,7 +166,7 @@ public class JSONUtil {
         Map<String, Object> map = null;
         
         try {
-            map = new ObjectMapper().readValue(jsonstrng, Map.class) ;
+            map = objectMapper.readValue(jsonstrng, Map.class) ;
         } catch (JsonParseException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
@@ -174,20 +191,16 @@ public class JSONUtil {
         return jsonObject.toJSONString();
     }
     
-    public static String toJsonString(Object object, Set<String> fieldsToExclude) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-
+    public static String getJsonstringFromObject(Object object, Set<String> fieldsToExclude) throws JsonProcessingException {
         // 필터 설정
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.addFilter("dynamicFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept(fieldsToExclude));
 
-        mapper.setFilterProvider(filterProvider);
-        mapper.addMixIn(Object.class, DynamicFilterMixIn.class);
+        notNullMapper.setFilterProvider(filterProvider);
+        notNullMapper.addMixIn(Object.class, DynamicFilterMixIn.class);
 
-        return mapper.writeValueAsString(object);
+        return notNullMapper.writeValueAsString(object);
     }
 
     // 믹스인 어노테이션 설정

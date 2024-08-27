@@ -4,8 +4,15 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Locale;
 
 public class StringUtil {
 
@@ -50,6 +57,36 @@ public class StringUtil {
 		return timestamp;
 	}
 	
+	private static final DateTimeFormatter FLEXIBLE_FORMATTER = new DateTimeFormatterBuilder()
+			.appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S"))  // 2023-08-21 15:30:00
+			.appendOptional(DateTimeFormatter.ISO_DATE_TIME)           // 2023-08-21T15:30:00
+			.appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))  // 2023-08-21 15:30:00
+	        .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)           // 2023-08-21T15:30:00
+	        .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE)                // 2023-08-21
+	        .appendOptional(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"))  // 2023/08/21 15:30:00
+	        .appendOptional(DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"))  // 08/21/2023 15:30:00
+	        .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+	        .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+	        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+	        .toFormatter(Locale.ENGLISH);
+	
+	public static LocalDateTime parseFlexibleLocalDateTime(String dateString) {
+        try {
+            return LocalDateTime.parse(dateString, FLEXIBLE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Date format not supported: " + dateString, e);
+        }
+    }
+	
+	public static Date parseFlexibleDate(String dateString) {
+        try {
+        	LocalDateTime localDateTime = LocalDateTime.parse(dateString, FLEXIBLE_FORMATTER);
+            ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+            return Date.from(zonedDateTime.toInstant());
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Date format not supported: " + dateString, e);
+        }
+    }
 	
 	/**
 	 *   

@@ -1,6 +1,7 @@
 package com.kware.policy.task.collector.service.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,8 @@ public class PromQLDao  {
 	 * 클러스터와 상관없는 metric query list
 	 * @return
 	 */
-	public List<PromQL> selectPromqlListAll() {
-		return sqlSessionTemplate.selectList("promQLCollectMapper.selectPromqlListAll");		
+	public List<PromQL> selectPromqlListAll(Map vo) { //exclude 과련정보
+		return sqlSessionTemplate.selectList("promQLCollectMapper.selectPromqlListAll", vo);		
 	}
 	
 	public List<Cluster> selectClusterList() {

@@ -25,6 +25,14 @@ public class PromMetricPods extends PromMetricDefault{
 		return mPodList.get(_clUid + key_spliter + _podUid);
 	}
 	
+	public PromMetricPod getMetricPod(String _id) {
+		return mPodList.get(_id);
+	}
+	
+	public Map<String, PromMetricPod> getPodsMap(){
+		return this.mPodList;
+	}
+	
 	/**
 	 * 모든 노드의 리스트 제공
 	 * @return

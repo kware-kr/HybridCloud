@@ -6,6 +6,10 @@ public class APIConstant {
 		CLUID, PRQLUID, RESULT, EXTRACTPATH
 	};
 	
+	public static enum WorkloadStatus{
+		Started, Finished, Error, Running
+	};
+	
 	public static String API_CLUSTER_PROMETHEUSURL = "/interface/api/v2/ml/cluster/{clusterId}/prometheusUrl"; //GET : Prometheus URL
 	public static String API_CLUSTER               = "/interface/api/v2/ml/cluster/{clusterIdx}";              //GET : cluster 상세조회(prometheus url 있음)
 	public static String API_CLUSTER_LIST          = "/interface/api/v2/ml/cluster/list";                      //GET : cluster 리스트

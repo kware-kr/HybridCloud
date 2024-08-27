@@ -10,10 +10,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public abstract class ClusterDefault {
-	private String deleteAt = "N";
-	private Long regUid;
+	private String    deleteAt = "N";
+	@JsonIgnore
+	private Long      regUid;
+	@JsonIgnore
 	private Timestamp regDt;
-	private Long updtUid;
+	@JsonIgnore
+	private Long      updtUid;
+	@JsonIgnore
 	private Timestamp updtDt;
 
 	@JsonIgnore

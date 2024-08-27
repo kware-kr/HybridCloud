@@ -1,8 +1,10 @@
 package com.kware.policy.task.collector.service.vo;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.AccessLevel;
@@ -19,8 +21,15 @@ public class Cluster extends ClusterDefault {
 	private String info; //수집한 json데이터
 	private String memo;
 	private String promUrl;  // 클러스터별 프로메테우스 url=> 2024.07 통합 프로메테우스로 변경
+	
+	@JsonIgnore
 	private String hashVal;
+	
 	private Boolean status;
+	
+	private String kubeVer;
+	private String statusString;
+	private LocalDateTime createAt;
 	
 	/**/
 	@Getter(AccessLevel.NONE)
@@ -48,6 +57,7 @@ public class Cluster extends ClusterDefault {
 		this.status = _status;
 	}
 
+	@JsonIgnore
 	@Override
 	public String getUniqueKey() {
 		return uid.toString();

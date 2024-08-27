@@ -1,5 +1,6 @@
 package com.kware.policy.task.collector.service.vo;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,16 +17,17 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ClusterNode extends ClusterDefault {
-	private String uid;
+	private String  uid;
 	private Integer clUid;
-	private String nm;
-	private String info;
-	private String memo;
-	private String hashVal;
-	private String gpuinfo;
+	private String  nm;
+	private String  info;
+	private String  memo;
+	@JsonIgnore
+	private String  hashVal;
+	private String  gpuinfo;
 
-	private String gpuDriverString;
-	private String cudaString;
+	private String  gpuDriverString;
+	private String  cudaString;
 
 	@JsonIgnore
 	@Setter(AccessLevel.NONE)
@@ -36,6 +38,30 @@ public class ClusterNode extends ClusterDefault {
 	private CudaVersion cudaVersion = null;
 
 	private Boolean status;
+	private LocalDateTime createdAt;
+	private String role;
+	private UsageDto usageDto;
+	
+	private PromMetricNode promMetricNode;
+	
+	@Getter
+	@Setter
+	public static class UsageDto {
+	    private int    allocatedPods;
+	    private int    podCapacity;
+	    private double podFraction;
+	    private int    cpuCapacity;
+	    private int    cpuLimits;
+	    private double cpuLimitsFraction;
+	    private int    cpuRequests;
+	    private double cpuRequestsFraction;
+	    private long   memoryCapacity;
+	    private long   memoryLimits;
+	    private double memoryLimitsFraction;
+	    private long   memoryRequests;
+	    private double memoryRequestsFraction;
+	}
+	
 	private Map<String, String> labels = new HashMap<String, String>();
 
 	public void setStatus(String _status) {
@@ -49,6 +75,7 @@ public class ClusterNode extends ClusterDefault {
 		this.status = _status;
 	}
 
+	@JsonIgnore
 	@Override
 	public String getUniqueKey() {
 		return clUid + "_" + nm;

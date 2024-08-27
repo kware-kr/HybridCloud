@@ -1,6 +1,5 @@
 package com.kware.policy.task.common.queue;
 
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;

@@ -8,7 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 현재 수집 세션(시간)에 수집된 ProMetricNode 전체를 관리하기 위한 그룹 클래스 
+ * 현재 수집 세션(시간)에 수집된 ProMetricNode 전체를 관리하기 위한 그룹 클래스
+ * 
+ * 수집만 하고 지우지는 않는다, 현재 시간의 노드의 정보임 
  */
 public class PromMetricNodes extends PromMetricDefault{
 	//key:cluit + "_" + node
@@ -20,6 +22,14 @@ public class PromMetricNodes extends PromMetricDefault{
 	
 	public PromMetricNode getMetricNode(Integer _clUid, String _node) {
 		return mNodeList.get(_clUid + "_" + _node);
+	}
+	
+	public PromMetricNode getMetricNode(String _id) {
+		return mNodeList.get(_id);
+	}
+	
+	public Map<String, PromMetricNode> getNodesMap(){
+		return this.mNodeList;
 	}
 	
 	/**
