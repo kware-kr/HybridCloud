@@ -3,7 +3,7 @@ spring:
     active: local
    #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
-    restart.enabled: true
+    restart.enabled: false
     livereload.enabled: true
   mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
@@ -15,8 +15,11 @@ spring:
   #shutdown  
   pid:
     file: .\.app.pid
-  jackson:
-    time-zone: Asia/Seoul
+#  jackson:
+#    time-zone: Asia/Seoul
+    #serialization.WRITE_DATES_AS_TIMESTAMPS: false
+    #date-format: yyyy-MM-dd HH:mm:ss
+
 
   rabbitmq:
     enable: false  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
@@ -78,8 +81,8 @@ hybrid:
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
         unified_url: http://10.10.30.60:30138/
-      finish-enalbe: false
-      delete-enalbe: false
+      finish-enalbe: true
+      delete-enalbe: true
     threads: 5
   scheduler:
     threads: 2
@@ -117,6 +120,7 @@ hybrid:
         gpu: 2
         disk: 3
         memory: 3
+    exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator"
     server:
       h2:
         enable: false
