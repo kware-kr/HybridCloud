@@ -8,10 +8,11 @@ import javax.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.WorkloadType;
 
 import lombok.Data;
-import net.minidev.json.annotate.JsonIgnore;
+
 
 
 @Component

@@ -41,7 +41,7 @@ public class WorkloadRequestService {
 	protected WorkloadRequestDao dao;
 	
 	QueueManager qm = QueueManager.getInstance();
-	PromQueue  promQ = qm.getPromQ();
+	PromQueue    promQ = qm.getPromQ();
 	RequestQueue requestQ = qm.getRequestQ();
 
 	public int insertMoUserRequest(Request vo) {

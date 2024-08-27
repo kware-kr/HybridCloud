@@ -46,6 +46,9 @@ public class BestFitBinPacking {
      * @return List<PromMetricNode> 최적의 노드 리스트
      */
     public List<PromMetricNode> allocate(WorkloadRequest request, int maxCount) {
+    	if(this.nodes == null)
+    		return null;
+    	
         // 우선순위 큐를 사용하여 노드의 스코어를 기준으로 정렬
         Queue<NodeScore> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(NodeScore::getScore));
 
