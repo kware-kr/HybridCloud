@@ -7,7 +7,7 @@ public class APIConstant {
 	};
 	
 	public static enum WorkloadStatus{
-		Started, Finished, Error, Running
+		Started, Finished, Error, Running, Pending
 	};
 	
 	public static String API_CLUSTER_PROMETHEUSURL = "/interface/api/v2/ml/cluster/{clusterId}/prometheusUrl"; //GET : Prometheus URL

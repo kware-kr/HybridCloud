@@ -1,6 +1,7 @@
 package com.kware.common.util;
 
 import java.nio.charset.Charset;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -14,8 +15,12 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Locale;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class StringUtil {
 
+	final static SimpleDateFormat defaultformatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	final static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 
 	public static String getToday() {
@@ -35,8 +40,7 @@ public class StringUtil {
 	public static long getMilliseconds(String dateStr) {
 		long timestamp = 0;
 		try {
-			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			Date date = formatter.parse(dateStr);
+			Date date = defaultformatter.parse(dateStr);
 			timestamp = date.getTime();
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -56,6 +60,48 @@ public class StringUtil {
 		}
 		return timestamp;
 	}
+	
+    /**
+     * 문자열을 기본 포맷으로 Timestamp로 변환합니다.
+     *
+     * @param dateString 변환할 날짜 문자열
+     * @return 변환된 Timestamp 객체
+     * @throws ParseException 날짜 문자열 포맷 오류 시
+     */
+    public static Timestamp getTimestamp(String dateString)  {
+    	if(dateString == null)
+    		return null;
+    	
+    	Date date = null;
+		try {
+			date = defaultformatter.parse(dateString);
+		} catch (ParseException e) {
+			log.error("Timestamp Error {}", dateString, e);
+		}
+        return new Timestamp(date.getTime());
+    }
+
+    /**
+     * 문자열을 지정된 포맷으로 Timestamp로 변환합니다.
+     *
+     * @param dateString 변환할 날짜 문자열
+     * @param format 날짜 포맷
+     * @return 변환된 Timestamp 객체
+     * @throws ParseException 날짜 문자열 포맷 오류 시
+     */
+    public static Timestamp getTimestamp(SimpleDateFormat formatter, String dateString)  {
+    	if(dateString == null)
+    		return null;
+    	
+        Date date = null;
+		try {
+			date = formatter.parse(dateString);
+		} catch (ParseException e) {
+			log.error("Timestamp Error {}", dateString, e);
+		}
+        return new Timestamp(date.getTime());
+    }
+    
 	
 	private static final DateTimeFormatter FLEXIBLE_FORMATTER = new DateTimeFormatterBuilder()
 			.appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S"))  // 2023-08-21 15:30:00

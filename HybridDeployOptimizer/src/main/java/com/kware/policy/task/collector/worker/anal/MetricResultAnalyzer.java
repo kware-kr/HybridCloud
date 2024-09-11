@@ -161,7 +161,7 @@ public class MetricResultAnalyzer {
 						node.setNode(sExtPath_node);
 						// node.setNoUid(sExtPath_node); //테스트로 일단 node값과 동일한 값
 						node.setCollectDt(this.timestamp);
-						node.setTimestamp(current_millitime);
+						node.setTimemillisecond(current_millitime);
 						node.setPromTimestamp(new Timestamp(sExtPath_timestamp.longValue() * 1000));
 						this.prom_nodes.setMetricNode(node);
 					}
@@ -201,7 +201,7 @@ public class MetricResultAnalyzer {
 						pod.setPod(sExtPath_pod);
 						pod.setPodUid(sExtPath_puid);
 						pod.setCollectDt(this.timestamp);
-						pod.setTimestamp(current_millitime); // timestamp와 동일한 값인데
+						//pod.setTimestamp(current_millitime); // timestamp와 동일한 값인데
 						pod.setMlId(mlId); // api에서 수집한 mlid 등록
 						pod.setPromTimestamp(new Timestamp(sExtPath_timestamp.longValue() * 1000));
 						this.prom_pods.setMetricPod(pod);
@@ -210,7 +210,8 @@ public class MetricResultAnalyzer {
 					
 					ClusterWorkloadPod cwPod = apiQ.getApiWorkloadPodMap().get(pod.getPodUid());
 					if(cwPod != null) {
-						cwPod.setCompleted(pod.isCompleted());
+						if(pod.isCompleted())
+							cwPod.setCompleted(true);
 					}
 
 					// if(pod != null) //테스트

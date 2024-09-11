@@ -15,10 +15,10 @@ spring:
   #shutdown  
   pid:
     file: .\.app.pid
-#  jackson:
-#    time-zone: Asia/Seoul
+  jackson:
+    time-zone: Asia/Seoul
     #serialization.WRITE_DATES_AS_TIMESTAMPS: false
-    #date-format: yyyy-MM-dd HH:mm:ss
+    date-format: yyyy-MM-dd HH:mm:ss
 
 
   rabbitmq:
@@ -81,8 +81,8 @@ hybrid:
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
         unified_url: http://10.10.30.60:30138/
-      finish-enalbe: true
-      delete-enalbe: true
+      finish-enalbe: false
+      delete-enalbe: false
     threads: 5
   scheduler:
     threads: 2

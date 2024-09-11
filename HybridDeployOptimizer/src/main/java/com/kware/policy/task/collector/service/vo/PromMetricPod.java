@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kware.policy.task.common.constant.StringConstant.PodStatusPhase;
 
 import lombok.AccessLevel;
@@ -22,7 +23,10 @@ public class PromMetricPod extends PromMetricDefault{
 	private Integer clUid;
 	//private String noUid;
 	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp promTimestamp; //프로메테우스가 수집한 시간
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp collectDt;
 
 	///////////////////////////////////////////////
@@ -33,12 +37,19 @@ public class PromMetricPod extends PromMetricDefault{
 	private String instance; //가독성 나중에 지울수 있음
 	private String pod; //pode명
 	private String podUid;
-	private String kind; //created_by_kind job, deployment, replicaset, statefulset 등, 이런 컨트롤러는 파드의 이름이 변경됨 
+	private String createByKind; //created_by_kind job, deployment, replicaset, statefulset 등, 이런 컨트롤러는 파드의 이름이 변경됨 
+	private String createByName;  //job, deploymente, workflow 이름
+	
 	private String parent; //created_by_이름
 	private String namespace; //created_by_이름
 	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp createdTimestamp;
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp scheduledTimestamp;
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp completedTimestamp;
 	
 	@Setter(AccessLevel.NONE)
@@ -150,7 +161,8 @@ public class PromMetricPod extends PromMetricDefault{
 //        	mMap.put("pod_uid"                 , c.getMethod("setPodUid"                  , String.class));
         	mMap.put("parent"                  , c.getMethod("setParent"                  , String.class));
         	mMap.put("labels"                  , c.getMethod("setLabels"                  , Map.class));
-        	mMap.put("kind"                    , c.getMethod("setKind"                    , String.class));
+        	mMap.put("createByKind"            , c.getMethod("setCreateByKind"            , String.class));
+        	mMap.put("createByName"            , c.getMethod("setCreateByName"            , String.class));
         	mMap.put("namespace"               , c.getMethod("setNamespace"               , String.class));
         	mMap.put("created_timestamp"       , c.getMethod("setCreatedTimestamp"        , Timestamp.class));
         	mMap.put("scheduled_timestamp"     , c.getMethod("setScheduledTimestamp"      , Timestamp.class));

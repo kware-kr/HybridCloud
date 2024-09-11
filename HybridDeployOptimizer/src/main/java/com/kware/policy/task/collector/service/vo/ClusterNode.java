@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.kware.common.config.serializer.HumanReadableSizeSerializer;
 import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.AccessLevel;
@@ -55,7 +57,9 @@ public class ClusterNode extends ClusterDefault {
 	    private double cpuLimitsFraction;
 	    private int    cpuRequests;
 	    private double cpuRequestsFraction;
+	    @JsonSerialize(using = HumanReadableSizeSerializer.class)
 	    private long   memoryCapacity;
+	    @JsonSerialize(using = HumanReadableSizeSerializer.class)
 	    private long   memoryLimits;
 	    private double memoryLimitsFraction;
 	    private long   memoryRequests;

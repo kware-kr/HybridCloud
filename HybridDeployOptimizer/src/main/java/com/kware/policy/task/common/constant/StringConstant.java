@@ -30,6 +30,7 @@ public class StringConstant {
 	public final static String STR_node          = "node";
 	public final static String STR_namespace     = "namespace";
 	public final static String STR_ownerUid      = "ownerUid";
+	public final static String STR_ownerName     = "ownerName";
 	public final static String STR_ownerKind     = "ownerKind";
 	public final static String STR_restart       = "restart";
 	

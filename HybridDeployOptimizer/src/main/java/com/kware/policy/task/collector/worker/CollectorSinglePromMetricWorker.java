@@ -85,8 +85,8 @@ public class CollectorSinglePromMetricWorker extends Thread {
 	public CollectorSinglePromMetricWorker(Long _current_millitime) {
 		this.current_millitime = _current_millitime;
 		
-		this.prom_nodes.setTimestamp(this.current_millitime);
-		this.prom_pods.setTimestamp(this.current_millitime);
+		this.prom_nodes.setTimemillisecond(this.current_millitime);
+		this.prom_pods.setTimemillisecond(this.current_millitime);
 		this.timestamp = new Timestamp(current_millitime);
 	}
 

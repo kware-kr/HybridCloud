@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,6 +20,7 @@ public class PromMetricContainer extends PromMetricDefault{
 	private Integer clUid;
 	//private String noUid;
 	///////////////////////////////////////////////
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp promTimestamp;//쿼리결과마다 존재하는 프로메테우스의 시간정보
 
 	private String node;     //가독성  나중에 지울수 있음
@@ -25,7 +28,9 @@ public class PromMetricContainer extends PromMetricDefault{
 	private String pod;      //pode명
 	private String container;
 
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp createdTimestamp;
+	
 	private Boolean running;
 	private Boolean waiting;
 	private String  waitingReason;

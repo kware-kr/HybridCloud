@@ -220,7 +220,7 @@ public class PromQueue {
         
         while (iterator.hasNext()) {
         	PromMetricDefault element = (PromMetricDefault)iterator.next();
-            if (element.getTimestamp() < cutoffTime) {
+            if (element.getTimemillisecond() < cutoffTime) {
             	element.clear();
                 iterator.remove();
             } else {

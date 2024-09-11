@@ -35,6 +35,18 @@
 		</rollingPolicy>
 	</appender>
 	
+	<appender name="requestLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/request.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/request-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
 	<appender name="parseLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${APP_LOG_ROOT}/parse.log</file>
 		<encoder>
@@ -115,6 +127,11 @@
 	<logger name="org.springframework" level="ERROR" additivity="false">
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	
+	<logger name="com.kware.policy.task.selector" level="DEBUG" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="requestLog" />
 	</logger>
 	
 	<logger name="metric-log" level="INFO" additivity="false">

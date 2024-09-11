@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kware.common.config.serializer.HumanReadableSizeSerializer;
 import com.kware.common.openapi.vo.APIPagedResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.common.util.JSONUtil;
@@ -56,7 +57,25 @@ public class CollectorRestController {
 		apiQ     = qm.getApiQ();
 		promQ    = qm.getPromQ();
 		requestQ = qm.getRequestQ();
+		
+		HumanReadableSizeSerializer.setHumanReadable(false);
 	}
+	
+	/**
+	 * 개발할때만 편의상 잘 보도록 하기 위함
+	 * @param config
+	 * @return
+	 */
+	@GetMapping("/config/set/hummanreadable/{val}")
+    public ResponseEntity<Boolean> setHummanReadable(@PathVariable("val") Integer val) {
+		if(val == 1) {
+			HumanReadableSizeSerializer.setHumanReadable(true);
+			return ResponseEntity.ok(true);
+		}else {
+			HumanReadableSizeSerializer.setHumanReadable(false);
+			return ResponseEntity.ok(false);
+		}
+    }
 	
 	
 	@GetMapping("/api/clusters")

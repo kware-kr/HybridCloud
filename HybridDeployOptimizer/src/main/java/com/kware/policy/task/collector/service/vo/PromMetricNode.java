@@ -7,7 +7,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.kware.common.config.serializer.HumanReadableSizeSerializer;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
@@ -36,7 +39,10 @@ public class PromMetricNode extends PromMetricDefault{
 //	private BigDecimal metricValue;
 //	private Timestamp prqlDt;
 	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp promTimestamp;
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp collectDt;
 
 	///////////////////////////////////////////////
@@ -50,14 +56,19 @@ public class PromMetricNode extends PromMetricDefault{
 
 	Integer capacityCpu     = 0;    //밀리코어 
 	Integer capacityGpu     = 0;    //GPU 갯수
+	@JsonSerialize(using = HumanReadableSizeSerializer.class)
 	Long    capacityDisk    = 0L;   //디스크 byte용량
+	@JsonSerialize(using = HumanReadableSizeSerializer.class)
 	Long    capacityMemory  = 0L; //메모리 byte용량
 	Integer capacityPods    = 0;   //Pods 갯수
+	@JsonSerialize(using = HumanReadableSizeSerializer.class)
 	Long    capacityMaxHzCpu= 0L;
 
 	Integer availableCpu    = 0;   //밀리코어로서: 코어갯수 * 1000을 전체 사용량으로 표시할 수 있음 실제는 더블형이나 Integer 형으로 변환 계산
 	Integer availableGpu    = 0;   //gpu 갯수
+	@JsonSerialize(using = HumanReadableSizeSerializer.class)
 	Long    availableDisk   = 0L;
+	@JsonSerialize(using = HumanReadableSizeSerializer.class)
 	Long    availableMemory = 0L;
 	Integer availablePods   = 0;  //pods 갯수
 	

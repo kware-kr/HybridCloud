@@ -18,6 +18,7 @@
 package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.concurrent.BlockingDeque;
 
 import org.jsoup.Jsoup;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
@@ -319,48 +321,6 @@ public class CollectorWorkloadWorker extends Thread {
 		
 		return resultMap;
 	}
-
-
-	/**
-	 * worklaod detail정보에서 pods관련 정보를 분리하는 함수
-	 * @return
-	 */
-	private Map<String, ClusterWorkloadPod> getPodsFromDetail(Map<String, Object> resultMap){
-		Map<String, ClusterWorkloadPod> wpMap = new HashMap<String, ClusterWorkloadPod>();	
-		String mlId = (String)resultMap.get(StringConstant.STR_mlId);
-				
-		JSONArray resourcesArray = (JSONArray)resultMap.get(StringConstant.STR_resources);
-		for(int i = 0 ; i < resourcesArray.size(); i++) {
-			Map resource = (Map)resourcesArray.get(i);
-			JSONArray podsArray = (JSONArray)resource.get(StringConstant.STR_pods);
-			for(int j = 0 ; j < podsArray.size(); j++) {
-				Map pod = (Map)podsArray.get(j);
-				ClusterWorkloadPod wPod = new ClusterWorkloadPod();
-				wPod.setUid((String)pod.get(StringConstant.STR_uid));
-				wPod.setKind((String)pod.get(StringConstant.STR_kind));
-				wPod.setNode((String)pod.get(StringConstant.STR_node));
-				wPod.setPod((String)pod.get(StringConstant.STR_name));
-				wPod.setStatus((String)pod.get(StringConstant.STR_status));
-				
-				wPod.setNamespace((String)pod.get(StringConstant.STR_namespace));
-				wPod.setOwnerUid((String)pod.get(StringConstant.STR_ownerUid));
-				wPod.setOwnerKind((String)pod.get(StringConstant.STR_ownerKind));
-				wPod.setRestart((Integer)pod.get(StringConstant.STR_restart));
-				
-				String sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
-				String sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
-				
-				wPod.setCreatedAt(StringUtil.getMilliseconds(formatterpod, sCreatedAt));
-				wPod.setUpdatedAt(StringUtil.getMilliseconds(formatterpod, sUpdatedAt));
-				
-				wPod.setMlId(mlId);
-				wPod.setSessionId(SESSIONID);
-				wpMap.put(wPod.getUid(), wPod);
-			}
-		}
-		
-		return wpMap;
-	}
 	
 	final static SimpleDateFormat formatterpod = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	final static SimpleDateFormat formatter    = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -372,8 +332,11 @@ public class CollectorWorkloadWorker extends Thread {
 		String sCreatedAt = (String)_workloadMap.get(StringConstant.STR_createdAt);
 		String sUpdatedAt = (String)_workloadMap.get(StringConstant.STR_updatedAt);
 		
-		workload.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
-		workload.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
+		workload.setCreatedAt(StringUtil.getTimestamp(formatter, sCreatedAt));
+		workload.setUpdatedAt(StringUtil.getTimestamp(formatter, sUpdatedAt));
+		
+		//workload.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
+		//workload.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
 		
 		workload.setMlId(_ml_uid);
 		workload.setId(nId);
@@ -410,6 +373,54 @@ public class CollectorWorkloadWorker extends Thread {
 		}
 		
 		return workload;
+	}
+	
+	/**
+	 * worklaod detail정보에서 pods관련 정보를 분리하는 함수
+	 * @return
+	 */
+	private Map<String, ClusterWorkloadPod> getPodsFromDetail(Map<String, Object> resultMap){
+		Map<String, ClusterWorkloadPod> wpMap = new HashMap<String, ClusterWorkloadPod>();	
+		String mlId = (String)resultMap.get(StringConstant.STR_mlId);
+				
+		JSONArray resourcesArray = (JSONArray)resultMap.get(StringConstant.STR_resources);
+		for(int i = 0 ; i < resourcesArray.size(); i++) {
+			Map resource = (Map)resourcesArray.get(i);
+			
+			
+			
+			JSONArray podsArray = (JSONArray)resource.get(StringConstant.STR_pods);
+			for(int j = 0 ; j < podsArray.size(); j++) {
+				Map pod = (Map)podsArray.get(j);
+				ClusterWorkloadPod wPod = new ClusterWorkloadPod();
+				wPod.setUid((String)pod.get(StringConstant.STR_uid));
+				wPod.setKind((String)pod.get(StringConstant.STR_kind));
+				wPod.setNode((String)pod.get(StringConstant.STR_node));
+				wPod.setPod((String)pod.get(StringConstant.STR_name));
+				wPod.setStatus((String)pod.get(StringConstant.STR_status));
+				
+				wPod.setNamespace((String)pod.get(StringConstant.STR_namespace));
+				wPod.setOwnerUid( (String)pod.get(StringConstant.STR_ownerUid));
+				wPod.setOwnerName((String)pod.get(StringConstant.STR_ownerName));
+				wPod.setOwnerKind((String)pod.get(StringConstant.STR_ownerKind));
+				wPod.setRestart( (Integer)pod.get(StringConstant.STR_restart));
+				
+				String sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
+				String sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
+				
+				wPod.setCreatedAt(StringUtil.getTimestamp(sCreatedAt));
+				wPod.setUpdatedAt(StringUtil.getTimestamp(sUpdatedAt));
+				
+				//wPod.setCreatedAt(StringUtil.getMilliseconds(formatterpod, sCreatedAt));
+				//wPod.setUpdatedAt(StringUtil.getMilliseconds(formatterpod, sUpdatedAt));
+				
+				wPod.setMlId(mlId);
+				wPod.setSessionId(SESSIONID);
+				wpMap.put(wPod.getUid(), wPod);
+			}
+		}
+		
+		return wpMap;
 	}
 	
 	/**
