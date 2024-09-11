@@ -8,58 +8,60 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 	<insert id="insertMoUserRequest" useGeneratedKeys="true" keyProperty="uid">
 		INSERT INTO k_hybrid.mo_user_request (
-	          ml_uid 
+	          ml_id 
 	        , nm 
-	        , info 
+	        , info
+	        , status
 	    ) VALUES (
-	          #{id} 
+	          #{mlId} 
 	        , #{name} 
-	        , #{info}::jsonb 
+	        , #{info}::jsonb
+	        , #{status}
 	    )
 	</insert>
 	
 	<select id="selectMoUserRequestById" resultType="com.kware.policy.task.selector.service.vo.WorkloadRequest$Request">
 	    SELECT 
 	          uid
-	        , ml_uid 
+	        , ml_id 
 	        , nm 
 	        , info 
+	        , status
 	        , reg_dt
 	    FROM k_hybrid.mo_user_request
 	    WHERE 1 = 1
 	      AND uid    = #{uid}
-	      AND ml_uid = #{id}
+	      AND ml_uid = #{mlId}
 	</select>
 
 	<insert id="insertMoUserResponse">
 	    INSERT INTO k_hybrid.mo_user_response (
-	          uid 
-	        , ml_uid
+	          req_uid 
+	        , ml_id
 	        , cl_uid 
-	        , no_uid 
+	        <!-- , no_uid -->
 	        , info 
 	    ) VALUES (
-	          #{uid} 
-	        , #{id} 
-	        , #{result.clusterId}::int4 
-	        , #{result.nodeId} 
+	          #{reqUid} 
+	        , #{mlId} 
+	        , #{clUid}::int4 
+<!-- 	        , #{result.noUid} --> 
 	        , #{info}::jsonb 
 	    )
 	</insert>
 	
 	<select id="selectMoUserResponseById" resultType="com.kware.policy.task.selector.service.vo.WorkloadResponse$Response">
 	    SELECT 
-	          uid 
-	        , ml_uid  
+	          req_uid 
+	        , ml_id  
 	        , cl_uid 
 	        , no_uid 
 	        , info 
 	        , reg_dt
 	    FROM k_hybrid.mo_user_response
 	    WHERE 1 = 1
-	      AND uid    = #{uid} 
-	      AND ml_uid = #{id}
+	      AND uid   = #{reqUid} 
+	      AND ml_id = #{mlId}
 	</select>
-
 </mapper>
 

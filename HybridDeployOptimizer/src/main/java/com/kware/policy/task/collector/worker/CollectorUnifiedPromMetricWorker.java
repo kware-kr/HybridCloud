@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kware.common.util.HttpSSLFactory;
+import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
@@ -112,6 +113,11 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 		this.service = pService;
 	}
 	
+	ClusterManagerService cmService = null;
+	public void setClusterManagerService(ClusterManagerService cmService) {
+		this.cmService = cmService;
+	}
+	
 	public void setAuthorizationToken(String authorization_token) {
 		this.authorization_token = authorization_token;
 	}
@@ -171,7 +177,8 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 					if(cnode == null)
 						return;
 					
-					k.setNoUid(cnode.getUid());  //node uid 설정
+					k.setUid(cnode.getUid());//DB key값
+					k.setNoUuid(cnode.getNoUuid());  //node uuid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
 					/*
 					try {

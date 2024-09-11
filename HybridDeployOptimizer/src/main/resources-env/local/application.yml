@@ -4,7 +4,7 @@ spring:
    #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
     restart.enabled: false
-    livereload.enabled: true
+    livereload.enabled: false
   mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
     prefix: classpath:templates/
@@ -81,8 +81,8 @@ hybrid:
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
         unified_url: http://10.10.30.60:30138/
-      finish-enalbe: false
-      delete-enalbe: false
+      finish-enalbe: true
+      delete-enalbe: true
     threads: 5
   scheduler:
     threads: 2

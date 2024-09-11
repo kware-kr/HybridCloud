@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,15 +34,16 @@ public class RequestQueue {
     //요청한 request 관리: key: WorkloadRequest.request.id ==> mlUid
     private final ConcurrentHashMap<String, WorkloadRequest> requestMap;
     
-    //응답을 했지만 실제 적용이 안된 request: cl_uid + "_" + node_name(메트릭에는 노드 uid가 없다)
-    private final ConcurrentHashMap<String, Set<WorkloadRequest>> requestNotApplyMap;
+    //응답을 했지만 실제 적용이 안된 request: cl_uid + "_" + node_name(메트릭에는 노드 uid가 없다);즉 노드에 할당된 워크로드의 컨테이너(파드)
+    //내부 Map의 키: mlid+'_" + container_name
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Container>> requestNotApplyMap;
     //}}요청관리
   
     public RequestQueue() {
     	queueLog.info("Queue Log Start ====================================================="); //로그 파일 생성하는 목적
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
         requestMap = new ConcurrentHashMap<String, WorkloadRequest>();
-        requestNotApplyMap = new ConcurrentHashMap<String, Set<WorkloadRequest>>();
+        requestNotApplyMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, Container>>();
     }
     
     //---------------------------------------------------------------------------------------------------
@@ -50,7 +52,7 @@ public class RequestQueue {
   	 * @return Map<String, WorkloadRequest>
   	 */
   	public Map<String, WorkloadRequest> getWorkloadRequestMap() {
-  		return (ConcurrentHashMap<String, WorkloadRequest>)requestMap;
+  		return this.requestMap;
   	}
   	
   	/**
@@ -58,7 +60,7 @@ public class RequestQueue {
      * @return ReadOnly Map<String,WorkloadRequest>
      */
     public Map<String,WorkloadRequest> getWorkloadRequestReadOlnyMap() {
-    	return (ConcurrentHashMap<String, WorkloadRequest>) Collections.unmodifiableMap(this.requestMap);    	
+    	return Collections.unmodifiableMap(this.requestMap);    	
     }
   	
   	/**
@@ -66,15 +68,15 @@ public class RequestQueue {
   	 * 나타나지 않는 과도기 상태의 요청를 관리하는 ConcurrentHashMap
   	 * @return Map<String, Set<WorkloadRequest>>
   	 */
-  	public Map<String, Set<WorkloadRequest>> getWorkloadRequestNotApplyMap() {
-  		return (ConcurrentHashMap<String, Set<WorkloadRequest>>)requestNotApplyMap;
+  	public Map<String, ConcurrentHashMap<String, Container>> getWorkloadRequestNotApplyMap() {
+  		return this.requestNotApplyMap;
   	}
   	
     /**
      * 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 읽기전용 Map을 제공한다.
      * @return ReadOnly Map<String, Set<WorkloadRequest>>
      */
-    public Map<String,Set<WorkloadRequest>> getWorkloadRequestNotApplyReadOnlyMap() {
+    public Map<String, Map<String,Container>> getWorkloadRequestNotApplyReadOnlyMap() {
     	return Collections.unmodifiableMap(this.requestNotApplyMap);    	
     }	
   	
@@ -96,28 +98,75 @@ public class RequestQueue {
     
     //{{ ///////////////////////// RequestWorkloadNode /////////////////////////////////
 
+  	/**
+  	 * 노드선택 알고리즘을 적용한 후에 워크로드 등록하고 및 워크로드에 포함된 모든 컨테이너를 배포전의 노드관리에 등록한다.
+  	 * @param _req
+  	 */
     //각 검색하기 편하게 두개의 키로 동일한 자료를 등록한다. id, clusterId + "_" + nodename
     public void  setWorkloadRequest(WorkloadRequest _req) {
-    	if(_req.getClUid() == null || _req.getNode() == null || _req.getRequest().getId() == null) {
+    	String mlId = _req.getRequest().getRequestKey();
+    	if(_req.getClUid() == null || _req.getNodes() == null || mlId == null) {
     		throw new NullPointerException ("clUid, node, request.id is nullable");
     	}
        	
     	//동일한 키가 있으면 값을 현재 버전으로 수정하고 이전 버전을 리턴한다.(내용물이 틀릴 수 있으므로)
-    	this.requestMap.put(_req.getRequest().getId(),_req);
+    	this.requestMap.put(mlId, _req);
     	
-    	String key = _req.getNodeKey();
-    	Set<WorkloadRequest> list = this.requestNotApplyMap.get(key);
-    	if(list == null) {
-    		//list = new CopyOnWriteArrayList<WorkloadRequest>();
-    		list = ConcurrentHashMap.newKeySet();
-    		this.requestNotApplyMap.put(key, list);
+    	//특정 클러스터의 노드에 등록된 모든 워크로드를 관리
+    	int containerSize = _req.getRequest().getContainers().size();
+    	for(int i=0; i < containerSize; i++) {
+	    	String nodeKey = _req.getNodeKey(i);
+	    	
+	    	ConcurrentHashMap<String, Container> containerMap = this.requestNotApplyMap.get(nodeKey);
+	    	if(containerMap == null) {
+	    		//list = new CopyOnWriteArrayList<WorkloadRequest>();
+	    		// 스레드에 안전한(즉, 여러 스레드에서 동시에 접근해도 안전한) 키 집합을 생성
+	    		containerMap = new ConcurrentHashMap<String, Container>();
+	    		this.requestNotApplyMap.put(nodeKey, containerMap);
+	    	}
+	    	//Set은 Object의 일부를 키로 할때 (hashcode, equals 함수를 통함) 값이 다르지만 키가 같아서 수정하지 않고 false를 리턴한다,
+	    	// 그래서 여기서는 제거하고 다시 등록하도록 한다.
+	    	
+	    	Container container = _req.getRequest().getContainers().get(i);
+	    	String containerKey = container.getContainerKey(mlId); 
+	    	
+	    	containerMap.put(containerKey, container);
     	}
-    	//Set은 Object의 일부를 키로 할때 (hashcode, equals 함수를 통함) 값이 다르지만 키가 같아서 수정하지 않고 false를 리턴한다,
-    	// 그래서 여기서는 제거하고 다시 등록하도록 한다.
-    	if(list.contains(_req)) {
-    		list.remove(_req);
+    }
+    
+    /**
+  	 * 노드선택 알고리즘이 컨테이너에 적용될때 해당하는 컨테이너만 배포전의 노드관리에 등록한다.
+  	 * @param _req
+  	 */
+    //각 검색하기 편하게 두개의 키로 동일한 자료를 등록한다. id, clusterId + "_" + nodename
+    public void  setWorkloadRequest(WorkloadRequest _req, Integer containerIdx) {
+    	String mlId = _req.getRequest().getRequestKey();
+    	if(_req.getClUid() == null || _req.getNodes() == null || mlId == null) {
+    		throw new NullPointerException ("clUid, node, request.id is nullable");
     	}
-    	list.add(_req);
+       	
+    	//동일한 키가 있으면 값을 현재 버전으로 수정하고 이전 버전을 리턴한다.(내용물이 틀릴 수 있으므로)
+    	this.requestMap.put(mlId, _req);
+    	
+    	//특정 클러스터의 노드에 등록된 모든 워크로드를 관리
+    	
+	    	String nodeKey = _req.getNodeKey(containerIdx);
+	    	
+	    	ConcurrentHashMap<String, Container> containerMap = this.requestNotApplyMap.get(nodeKey);
+	    	if(containerMap == null) {
+	    		//list = new CopyOnWriteArrayList<WorkloadRequest>();
+	    		// 스레드에 안전한(즉, 여러 스레드에서 동시에 접근해도 안전한) 키 집합을 생성
+	    		containerMap = new ConcurrentHashMap<String, Container>();
+	    		this.requestNotApplyMap.put(nodeKey, containerMap);
+	    	}
+	    	//Set은 Object의 일부를 키로 할때 (hashcode, equals 함수를 통함) 값이 다르지만 키가 같아서 수정하지 않고 false를 리턴한다,
+	    	// 그래서 여기서는 제거하고 다시 등록하도록 한다.
+	    	
+	    	Container container = _req.getRequest().getContainers().get(containerIdx);
+	    	
+	    	String containerKey = container.getContainerKey(mlId); //mlId + "_" + container name
+	    	containerMap.put(containerKey, container);
+    	
     }
     
     /**
@@ -143,7 +192,7 @@ public class RequestQueue {
     	WorkloadRequest req = this.requestMap.get(_mlUid);
     	if(req != null) {
     		reomveNotApplyWorkloadRequest(req);
-    		this.requestMap.remove(req.getNodeKey());
+    		this.requestMap.remove(_mlUid);
     	}
     }
     
@@ -151,31 +200,39 @@ public class RequestQueue {
      * Metric에 나타나면 배포된 것으로 보고, notapplyMapt에서 삭제
      * @param WrokloadRequest 
      */
-    public void  reomveNotApplyWorkloadRequest(WorkloadRequest _req) {
+    private void  reomveNotApplyWorkloadRequest(WorkloadRequest _req) {
     	if(_req == null) 
     		return;
     	
-    	String key = _req.getNodeKey();
-    	Set<WorkloadRequest> list = this.requestNotApplyMap.get(key);
-    	if(list != null ) {
-    		list.remove(_req);
+    	String mlId = _req.getRequest().getRequestKey();
+    	
+    	//노드에 배포할려고하는 모든 워크로드 리스트를 관리하는 HashMap를 가지고 와서, 그 안에 있는 것 중에서 나의 워크로드에 속한 요청을 가지고 온다. 
+    	int containerSize = _req.getRequest().getContainers().size();
+    	for(int i=0; i < containerSize; i++) {
+	    	String nodeKey = _req.getNodeKey(i);
+	    	Map<String, Container> containerMap = this.requestNotApplyMap.get(nodeKey);
+	    	if(containerMap != null ) {
+	    		Container container = _req.getRequest().getContainers().get(i);
+		    	String containerKey = container.getContainerKey(mlId); 
+	    		containerMap.remove(containerKey);
+	    	}
     	}
     }
     
     
     
     /**
-     * 해당 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 워크로드 Set을 제공한다.
+     * 해당 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 워크로드 Container을 제공한다.
      * @param _clUid 클러스터 아이디
      * @param _node  노드 명
      * @return
      */
-    public Set<WorkloadRequest> getNotApplyWorkloadRequestSetForNode(Integer _clUid, String _node) {
-    	Set<WorkloadRequest> list = this.requestNotApplyMap.get(_clUid + StringConstant.STR_UNDERBAR + _node);
-    	if(list == null) return null;
+    public Map<String, Container> getNotApplyWorkloadRequestSetForNode(Integer _clUid, String _node) {
+    	Map<String, Container> containerMap = this.requestNotApplyMap.get(_clUid + StringConstant.STR_UNDERBAR + _node);
+    	if(containerMap == null) return null;
     	
     	//readonly로 변경해서 보낸다.
-    	return Collections.unmodifiableSet(list); 
+    	return Collections.unmodifiableMap(containerMap); 
     }
     /**
      * 해당 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 워크로드 List을 제공한다.
@@ -183,12 +240,12 @@ public class RequestQueue {
      * @param String _node  노드 명
      * @return
      */
-    public List<WorkloadRequest> getNotApplyWorkloadRequestListForNode(Integer _clUid, String _node) {
-    	Set<WorkloadRequest> set = this.requestNotApplyMap.get(_clUid + StringConstant.STR_UNDERBAR + _node);
+    public List<Container> getNotApplyWorkloadRequestListForNode(Integer _clUid, String _node) {
+    	Map<String, Container> map = this.requestNotApplyMap.get(_clUid + StringConstant.STR_UNDERBAR + _node);
     	
-    	if(set == null) return null;
+    	if(map == null) return null;
     	
-    	List<WorkloadRequest> list = new ArrayList<>(set);
+    	List<Container> list = new ArrayList<>(map.values());
     	
     	return list;
     }

@@ -1,12 +1,15 @@
 package com.kware.policy.task.selector.service.vo;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kware.policy.task.common.constant.StringConstant;
 
@@ -23,7 +26,8 @@ public class WorkloadRequest {
     @JsonIgnore
     private Integer clUid = null;
     @JsonIgnore
-    private String  node  = null;
+    private List<String>  nodes  = new ArrayList();
+    
     @JsonIgnore
     private Integer totalRequestCpu = 0;
     @JsonIgnore
@@ -41,17 +45,22 @@ public class WorkloadRequest {
     @JsonIgnore
     private Long    totalLimitDisk = 0L;
     
-    public enum WorkloadType{
-    	ML, DL, INF    //이 특성에 맞는 가중치를 적용해야하나?
-    }
     
-    public enum DevOpsType{
-    	DEV, TEST, PROD //클러스터 설정, 값이 있을 경우만 처리하는 로직
-    }
+	/*   public enum WorkloadType{
+		ML, DL, INF    //이 특성에 맞는 가중치를 적용해야하나?
+	}
+	
+	public enum DevOpsType{
+		DEV, TEST, PROD //클러스터 설정, 값이 있을 경우만 처리하는 로직
+	}*/
         
     @JsonIgnore
-    public String getNodeKey() {
-    	return this.clUid + StringConstant.STR_UNDERBAR + this.node;
+    public String getNodeKey(int i) {
+    	if(nodes.size() <= i) {
+    		return null;
+    	}
+    	
+    	return this.clUid + StringConstant.STR_UNDERBAR + this.nodes.get(i);
     }
 
     @Data
@@ -64,10 +73,11 @@ public class WorkloadRequest {
          * workload mlId
          */
         private String id;    //db:ml_uid
+        
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
         private Date date;
-        private List<Container> container;
-        private RequestAttributes requestAttributes;
+        private List<Container> containers;
+        private RequestWorkloadAttributes attribute;
         
         @JsonIgnore
         private String info;  //db:info json String
@@ -78,20 +88,75 @@ public class WorkloadRequest {
          */
         private Long uid;     //db:uid
         
+        private String status;
+        
+        
         @JsonIgnore
         private Timestamp regDt;
+
+        
+        @JsonIgnore //DB상에는 id가 ml_id로 되어있음
+        public String getMlId() {
+        	return this.id;
+        }
+        
+        public void setMlId(String mlId) {
+        	this.id = mlId;
+        }
+        
+        @JsonIgnore
+        public String getRequestKey() {
+        	return this.id;
+        }
+        
+        public void setContainers( List<Container> _containers) {
+        	this.containers = _containers;
+        	for(Container t: containers) {
+        		t.setMlId(this.id);
+        	}
+        };
     }
 
     @Data
     public static class Container {
-        private String image;
+        private String name;
+        
+        @JsonInclude(Include.NON_NULL) // null 값을 제외
+        private String podId; //이건 프로메테우스 메트릭에 포함된 정보를 넣으면 어떤가?
+        
+        private RequestContainerAttributes attribute;
         private Resources resources;
+        
+        @JsonIgnore
+        public String getContainerKey(String _mlId) {
+        	return _mlId + StringConstant.STR_UNDERBAR + name;
+        }
+        
+        @JsonIgnore
+        private String mlId;
+        
+        
     }
 
     @Data
     public static class Resources {
-        private ResourceDetail request;
+        private ResourceDetail requests;
         private ResourceDetail limits;
+        
+        
+        public void setRequests(ResourceDetail requests) {
+        	this.requests= requests;
+        	if(this.limits != null) {
+        		
+        	}
+        }
+        
+        public void setLimitss(ResourceDetail limits) {
+        	this.limits = limits;
+        	if(this.requests != null) {
+        		
+        	}
+        }
     }
 
     @Getter
@@ -121,56 +186,106 @@ public class WorkloadRequest {
 			this.ephemeralStorage = convertMetricToLong(_ephemeralStorage);
 			//this.ephemeralStorage = _ephemeralStorage;
 		}
+		
+		
+		public void setCpu(Integer _cpu) {
+			this.cpu = _cpu;
+		}
+		
+		public void setMemory(Long _memory) {
+			this.memory = _memory;
+		}
+		
+		public void setGpu(Integer _gpu) {
+			this.gpu = _gpu;
+		}
+		
+		public void setEphemeralStorage(Long _ephemeralStorage) {
+			this.ephemeralStorage = _ephemeralStorage;
+		}
     }
 
     @Data
-    public static class RequestAttributes {
-        //private String     workloadType;
-        private WorkloadType workloadType;  //enum   ML|DL|INF
-        private Boolean      isCronJob;
-        //private String     devOpsType;
-        private DevOpsType   devOpsType;    //enum    DEV|TEST|PROD
-        private String       cudaVersion;
-        private String       gpuDriverVerion;
+    public static class RequestContainerAttributes {
         private Integer      maxReplicas;
-        private Boolean      isNetworking;
-        private Integer      containerImageSize;
+        private Integer      totalSize;
         private Integer      predictedExecutionTime;
-        private UserInfo     userInfo;
     }
-
+    
     @Data
-    public static class UserInfo {
-        private String id;
+    public static class RequestWorkloadAttributes {
+        private String     workloadType;
+//        private WorkloadType workloadType;  //enum   ML|DL|INF
+        private Boolean      isCronJob;
+        private String     devOpsType;
+//      private DevOpsType   devOpsType;    //enum    DEV|TEST|PROD
+        private String       cudaVersion;
+        private String       gpuDriverVersion;
+        private String       userId;
+        private String       yaml;
     }
-    
-   
-    
     
     /**
-     * 다중컨테이너가 있을때 request, limit을 합산 처리 
+     * 다중컨테이너가 있을때 request, limit을 합산 처리
+     * 워크플로우나, job의 parallelism 등으로 인하여 순차 처리시에는 맥스 값으로 처리해야 할 수 있다.
      */
-    public void aggregate() {
-        for (Container container : request.getContainer()) {
-            Resources resources = container.getResources();
-            if(resources.getRequest() != null) {
-	            totalRequestCpu    += resources.getRequest().getCpu();
-	            totalRequestMemory += resources.getRequest().getMemory();
-	            totalRequestGpu    += resources.getRequest().getGpu();
-	            totalRequestDisk   += resources.getRequest().getEphemeralStorage();
-            }
-            if(resources.getLimits() != null) {
-	            totalLimitCpu      += resources.getLimits().getCpu();
-	            totalLimitMemory   += resources.getLimits().getMemory();
-	            totalLimitGpu      += resources.getLimits().getGpu();
-	            totalLimitDisk     += resources.getLimits().getEphemeralStorage();
-            }
-        }
-        //스코어 여산이나 스케줄링에 필요함
+    public void aggregate(boolean isSum) {
+    	if(isSum) {
+	        for (Container container : request.getContainers()) {
+	            Resources resources = container.getResources();
+	            if(resources.getRequests() != null) {
+		            totalRequestCpu    += resources.getRequests().getCpu();
+		            totalRequestMemory += resources.getRequests().getMemory();
+		            totalRequestGpu    += resources.getRequests().getGpu();
+		            totalRequestDisk   += resources.getRequests().getEphemeralStorage();
+	            }
+	            if(resources.getLimits() != null) {
+		            totalLimitCpu      += resources.getLimits().getCpu();
+		            totalLimitMemory   += resources.getLimits().getMemory();
+		            totalLimitGpu      += resources.getLimits().getGpu();
+		            totalLimitDisk     += resources.getLimits().getEphemeralStorage();
+	            }
+	        }
+    	}else {
+    		for (Container container : request.getContainers()) {
+	            Resources resources = container.getResources();
+	            if(resources.getRequests() != null) {
+		            totalRequestCpu    = Math.max(totalRequestCpu   , resources.getLimits().getCpu());
+		            totalLimitMemory   = Math.max(totalRequestMemory, resources.getLimits().getMemory());
+		            totalLimitGpu      = Math.max(totalRequestGpu   , resources.getLimits().getGpu());
+		            totalLimitDisk     = Math.max(totalRequestDisk  , resources.getLimits().getEphemeralStorage());
+	            }
+	            if(resources.getLimits() != null) {
+		            totalLimitCpu      = Math.max(totalLimitCpu   , resources.getLimits().getCpu());
+		            totalLimitMemory   = Math.max(totalLimitMemory, resources.getLimits().getMemory());
+		            totalLimitGpu      = Math.max(totalLimitGpu   , resources.getLimits().getGpu());
+		            totalLimitDisk     = Math.max(totalLimitDisk  , resources.getLimits().getEphemeralStorage());
+	            }
+	        }
+    	}
+        //스코어 연산이나 스케줄링에 필요함
         if(totalLimitCpu    < totalRequestCpu)    totalLimitCpu    = totalRequestCpu;
         if(totalLimitMemory < totalRequestMemory) totalLimitMemory = totalRequestMemory;
         if(totalLimitGpu    < totalRequestGpu)    totalLimitGpu    = totalRequestGpu;
         if(totalLimitDisk   < totalRequestDisk)   totalLimitDisk   = totalRequestDisk;
+    }
+    
+    /**
+     * 해당컨테이너의 리소스의 limit, request중에 최대값을 가져오는 함수
+     */
+    public void getContainerMaxResourceDetail(int containerIndex) {
+    	Resources resources = this.request.getContainers().get(containerIndex).getResources();
+    	//제한 값과 요청 값 비교 후 더 큰 값으로 설정
+    	totalLimitCpu    = Math.max(resources.getLimits().getCpu()             , resources.getRequests().getCpu());
+    	totalLimitMemory = Math.max(resources.getLimits().getMemory()          , resources.getRequests().getMemory());
+    	totalLimitGpu    = Math.max(resources.getLimits().getGpu()             , resources.getRequests().getGpu());
+    	totalLimitDisk   = Math.max(resources.getLimits().getEphemeralStorage(), resources.getRequests().getEphemeralStorage());
+    	
+    	totalRequestCpu    = totalLimitCpu;    
+        totalRequestMemory = totalLimitMemory;
+        totalRequestGpu    = totalLimitGpu;   
+        totalRequestDisk   = totalLimitDisk;  
+
     }
     
     
@@ -186,7 +301,7 @@ public class WorkloadRequest {
         if (metricValue.endsWith("m")) {
             factor = 1L; //cpu는 밀리코어로
             metricValue = metricValue.substring(0, metricValue.length() - 1);
-        } else if (metricValue.endsWith("mi") || metricValue.endsWith("MI")) {
+        } else if (metricValue.toUpperCase().endsWith("MI")) {
         	// 1 MiB = 2^20 bytes
             factor = 1048576; //(long) Math.pow(2, 20);
             metricValue = metricValue.substring(0, metricValue.length() - 2);
@@ -278,12 +393,12 @@ public class WorkloadRequest {
 		if (getClass() != obj.getClass())
 			return false;
 		WorkloadRequest other = (WorkloadRequest) obj;
-		return Objects.equals(request.id, other.request.id);
+		return Objects.equals(request.uid, other.request.uid);
 	}
 
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(request.id);
+		return Objects.hash(request.uid);
 	}  
 }

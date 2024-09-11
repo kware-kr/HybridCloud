@@ -6,9 +6,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.kware.policy.task.common.constant.APIConstant;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -25,55 +23,52 @@ public class ClusterWorkloadResource extends ClusterDefault {
 	private Integer clUid;
 	private Integer id;  //기본 ID
 	private String nm;
-	private String userId;
-	private String info;
-	private String memo;
-	
-	@JsonIgnore
-	private String hashVal;
-	
-	private String mlId;
-	private String namespace;
+	private String kind;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp   createdAt;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp   updatedAt;
-	private APIConstant.WorkloadStatus status;
+	
+	private String uid;
+	//private APIConstant.WorkloadStatus status;
+	private String status;
+	private String resourceId;
+	
+	private int totalPodCount;
+	private int runningPodCount;
+
+	
+	@Override
+	public void clear() {
+		podMap.clear();
+		podMap = null;
+	}
 	
 	@JsonIgnore
 	@Override
 	public String getUniqueKey() {
-		return mlId;
+		//uid를 프로메테우스에서는 가져올 수 없고 name정보만 가져올 수 있다.
+		return nm;
 	}
-	
-	@Override
-	public void clear() {
-		mPods.clear();
-		mPods = null;
-	}
-	
+		
 	// @Setter(AccessLevel.NONE)
-	@Getter(AccessLevel.NONE)
+	//@Getter(AccessLevel.NONE)
 	//pod uid를 key로 함
-	private Map<String, ClusterWorkloadPod> mPods = new HashMap<String, ClusterWorkloadPod>();
-	
-	@Getter(AccessLevel.NONE)
-	//resource name을 키로함: 이 키를 기반으로 
-	private Map<String, ClusterWorkloadPod> mResources = new HashMap<String, ClusterWorkloadPod>();
-	
+	@JsonIgnore
+	private Map<String, ClusterWorkloadPod> podMap = new HashMap<String, ClusterWorkloadPod>();
 
 	public Map<String, ClusterWorkloadPod> getPods(){
-		return this.mPods;
+		return this.podMap;
 	}
 	
 	public ClusterWorkloadPod getPod(String _podUid) {
-		return mPods.get(_podUid);
+		return podMap.get(_podUid);
 	}
 
 	public Boolean containsPod(String _podUid) {
-		return mPods.containsKey(_podUid);
+		return podMap.containsKey(_podUid);
 	}
 
 	/**
@@ -81,10 +76,11 @@ public class ClusterWorkloadResource extends ClusterDefault {
 	 * @param _podUid
 	 * @param _pod
 	 */
-	public void addPod(String _podUid, ClusterWorkloadPod _pod) {
-		mPods.put(_podUid, _pod);
+	public void addPod(ClusterWorkloadPod _pod) {
+		podMap.put(_pod.getUid(), _pod);
 	}
 	
+	/*
 	public void setStatusString(String status) {
 		if (status != null && !status.isEmpty()) {
             try {
@@ -102,4 +98,5 @@ public class ClusterWorkloadResource extends ClusterDefault {
         }
         return null;
     }
+	*/
 }

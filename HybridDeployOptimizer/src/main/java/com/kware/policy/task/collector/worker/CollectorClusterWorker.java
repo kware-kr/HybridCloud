@@ -94,10 +94,17 @@ public class CollectorClusterWorker extends Thread {
 		this.api_base_url = api_base_url;
 	}
 	
+
+	boolean isFirst = false; //처음 실행인지 여부확인, api가 없으면
+	
+	public void setIsFirst(boolean isFirst) {
+		this.isFirst = isFirst;
+	}
+	
 	@Override
 	public void run() {
 		this.isRunning = true;
-		
+
 		try {
 			
 			/**
@@ -163,8 +170,14 @@ public class CollectorClusterWorker extends Thread {
 			
 			//여기서 SESSIONID와 비교해서 제거해야한다. this.nodeMap, this.clusterMap:: 기존에 수집했는데, 이번에는 수집되지 않는 데이터 제거
 			//Map에 사용하는 객체는 모두 ClusterDefault를 상속받아서 사용해야 정상작동한다.
-			apiQ.removeNotIfSessionId(APIMapsName.CLUSTER, SESSIONID );
-			apiQ.removeNotIfSessionId(APIMapsName.NODE, SESSIONID);
+			HashMap removedMap = null; //앞 처리과정에서 상태를 확인해서 삭제하지만, 큐에서 제거되는 경우에도 DB 삭제
+			removedMap = apiQ.removeNotIfSessionId(APIMapsName.CLUSTER, SESSIONID );
+			delete(removedMap);
+			removedMap.clear();
+			
+			removedMap = apiQ.removeNotIfSessionId(APIMapsName.NODE, SESSIONID);
+			delete(removedMap);
+			removedMap.clear();
 			
 			if(log.isDebugEnabled()) {
 				log.debug("current {} map size={}", APIMapsName.CLUSTER.toString(), apiQ.getApiQueueSize(APIMapsName.CLUSTER));
@@ -173,6 +186,21 @@ public class CollectorClusterWorker extends Thread {
 		}catch(Exception e) {
 			log.error("ClusterWorkerThread Error:", e);
 		}
+	}
+	
+	/**
+	 * DB에서 삭제함
+	 * @param _removedMap
+	 */
+	private void delete(HashMap<String, Object> _removedMap) {
+		
+		for(Object obj: _removedMap.values()) {
+			if(obj instanceof Cluster) {
+				this.service.deleteCluster((Cluster)obj);
+			}else if(obj instanceof ClusterNode) {
+				this.service.deleteClusterNode((ClusterNode)obj);
+			}
+		}		
 	}
 	
 	/**
@@ -286,11 +314,18 @@ public class CollectorClusterWorker extends Thread {
 		cluster.setHashVal(sHashVal);
 		
 		try {
+			Cluster oldObj = this.apiQ.getApiClusterMap().get(cluster.getUniqueKey());
 			
-			if(this.apiQ.getApiClusterMap().containsKey(_cl_uid.toString())) {
-				this.service.updateClusterAndInsertHistory(cluster);
+			if(oldObj != null) {
+				if(!oldObj.getHashVal().equals(cluster.getHashVal()))
+					this.service.updateClusterAndInsertHistory(cluster);
 			}else {				
-				this.service.insertCluster(cluster);
+				oldObj = null;
+				if(this.isFirst) {
+					oldObj = this.service.selectCluster(cluster);
+				}
+				if(oldObj == null)
+					this.service.insertCluster(cluster);
 			}
 			
 		} catch (Exception e) {
@@ -306,10 +341,10 @@ public class CollectorClusterWorker extends Thread {
 	private void insertClusterNode(Cluster _cl, Map<String, Object> _nodeMap) {
 		ClusterNode node = new ClusterNode();
 		String sTmp = null;		
-		String sUid    = (String)_nodeMap.get(StringConstant.STR_uid);
-		String sStatus = (String)_nodeMap.get(StringConstant.STR_status);
+		String sUuid       = (String)_nodeMap.get(StringConstant.STR_uid);
+		String sStatus     = (String)_nodeMap.get(StringConstant.STR_status);
 		
-		node.setUid(sUid);
+		node.setNoUuid(sUuid);
 		node.setClUid(_cl.getUid());
 		
 		if(StringConstant.STR_true.equals(sStatus)) {
@@ -351,7 +386,7 @@ public class CollectorClusterWorker extends Thread {
 			labels.putIfAbsent(entry.getKey(), entry.getValue());
         }
 		
-		//{{metirc노드의 GPU를 가져올려고
+		//{{프로메테우스 metric 수집중 노드의 GPU를 가져올려고
 		String gpuJsonString = null;
 		PromMetricNodes mNodes = (PromMetricNodes)this.promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		if(mNodes != null) {
@@ -376,10 +411,19 @@ public class CollectorClusterWorker extends Thread {
 		node.setHashVal(sHashVal);
 		
 		try {
-			if(this.apiQ.getApiClusterNodeMap().containsKey(node.getUniqueKey())) {
-				this.service.updateClusterNodeAndInsertHistory(node);
-			}else {				
-				this.service.insertClusterNode(node);
+			ClusterNode oldObj = this.apiQ.getApiClusterNodeMap().get(node.getUniqueKey());
+			if(oldObj != null) {
+				node.setUid(oldObj.getUid());
+				if(!oldObj.getHashVal().equals(node.getHashVal()))
+					this.service.updateClusterNodeAndInsertHistory(node);
+			}else {			
+				oldObj = null;
+				if(this.isFirst) {
+					oldObj = this.service.selectClusterNode(node); // 키값이 DB에서 생성되었기에 unique 인덱스로 쿼리를 진행함
+					node.setUid(oldObj.getUid());
+				}
+				if(oldObj == null)
+					this.service.insertClusterNode(node);
 			}
 		} catch (Exception e) {
 			log.error("데이터 Insert 에러 ClusterNode:\n{}", node, e);

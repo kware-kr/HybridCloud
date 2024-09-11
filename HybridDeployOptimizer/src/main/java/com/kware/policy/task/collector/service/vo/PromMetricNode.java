@@ -29,10 +29,10 @@ public class PromMetricNode extends PromMetricDefault{
 		DiskPressure,MemoryPressure,NetworkUnavailable,PIDPressure,Ready
 	};
 
-	//private String  uid;     //DB에 저장된 key값
+	private Integer  uid;     //DB에 저장된 key값
 	//private Integer prqlUid; //메트릭을위해 만든 promQl 아이디 
 	private Integer clUid;
-	private String  noUid;   //API에 있는 정보를 설정
+	private String noUuid;   //API에 있는 정보를 설정
 	private Boolean status;  //API에 있는 정보 설정
 
 //	private String metricKeys; //jsondata
@@ -337,7 +337,7 @@ public class PromMetricNode extends PromMetricDefault{
 //        	mMap.put("node"                , c.getMethod("setNode"              , String.class)); //공통
 //        	mMap.put("instance"            , c.getMethod("setInstance"          , String.class));
 //        	mMap.put("clUid"               , c.getMethod("setClUid"             , Integer.class));
-//        	mMap.put("noUid"               , c.getMethod("setNoUid"             , String.class));
+        	mMap.put("noUuid"              , c.getMethod("setNoUuid"            , String.class));
         	mMap.put("role"                , c.getMethod("setRole"              , String.class));
         	mMap.put("labels"              , c.getMethod("setLabels"            , Map.class));
         	mMap.put("collect_dt"          , c.getMethod("setCollectDt"         , Timestamp.class));
@@ -376,7 +376,7 @@ public class PromMetricNode extends PromMetricDefault{
 
 	@Override
 	public String toString() {
-		return "PromMetricNode [clUid=" + clUid + ", noUid=" + noUid + ", status=" + status + ", promTimestamp="
+		return "PromMetricNode [clUid=" + clUid + ", noUuid=" + noUuid + ", status=" + status + ", promTimestamp="
 				+ promTimestamp + ", collectDt=" + collectDt + ", node=" + node + ", unscheduable=" + unscheduable
 				+ ", kubeVer=" + kubeVer + ", role=" + role + ", capacityCpu=" + capacityCpu + ", capacityGpu="
 				+ capacityGpu + ", capacityDisk=" + capacityDisk + ", capacityMemory=" + capacityMemory

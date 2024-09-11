@@ -47,6 +47,9 @@ public class APIQueue {
     }
 
     
+    public boolean isEmpty() {
+    	return this.apiMap.isEmpty();
+    }
 
   //---------------------------------------------------------------------------------------------------
   	/**
@@ -92,7 +95,7 @@ public class APIQueue {
   	
   	public <T extends ClusterDefault>  void putApiMap(APIMapsName name, T obj) {
   		Map<String, T> map = (Map<String, T>)apiMap.get(name);
-  		map.put(obj.getUniqueKey(), obj);
+  		map.put((String)obj.getUniqueKey(), obj);
   	}
   	
   	public <T extends ClusterDefault>  void putApiMap(T obj) {
@@ -137,11 +140,12 @@ public class APIQueue {
     }
     
     //API 입력중에서 현재세션에서 제공한 데이터가 아닌 데이터를 즉 이전 세션에서 생성된 데이터를 제거함
-    public void removeNotIfSessionId(APIMapsName name, String sessionId) {
+    public HashMap removeNotIfSessionId(APIMapsName name, String sessionId) {
     	ConcurrentHashMap<String, ?> map = apiMap.get(name);
     	
     	String key = null;
     	Iterator<String> iterator =  map.keySet().iterator();
+    	HashMap<String, Object> removedMap = new HashMap<String, Object>();
     	while (iterator.hasNext()) {
     	    key = iterator.next();
     	    ClusterDefault value = (ClusterDefault)map.get(key);
@@ -164,10 +168,13 @@ public class APIQueue {
     	    */
     	    // 여기에 조건을 넣어서 조건이 맞으면 제거합니다.
     	    if (!sessionId.equals(temp)) {
+    	    	removedMap.put(key, map.get(key));
+    	    	
     	    	value.clear();
     	        iterator.remove(); // 현재 엔트리를 안전하게 제거합니다.
     	    }
     	}
+    	return removedMap;
     }
     //}}API END	
 }

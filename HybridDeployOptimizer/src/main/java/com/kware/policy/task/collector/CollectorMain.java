@@ -68,6 +68,8 @@ public class CollectorMain {
 	APIQueue  apiQ  = qm.getApiQ();
 	PromQueue promQ = qm.getPromQ();
 	
+	boolean isFirst = false;
+	
 	@PostConstruct  // 애플리케이션 시작 시 한 번 실행할 로직
 	@SuppressWarnings("unchecked")
     public void runOnceOnStartup() {
@@ -86,6 +88,7 @@ public class CollectorMain {
 		}
 		*/
 		try {//초기에 5초간의 여유를 주가 실행한다.
+			isFirst = true;
 			collectClusterTask();
 			
 			Thread.sleep(5000);
@@ -93,6 +96,8 @@ public class CollectorMain {
 			
 			Thread.sleep(5000);
 			collectMetricTaskUnified();
+			
+			isFirst = false;
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -116,6 +121,7 @@ public class CollectorMain {
 		worker.setClusterManagerService(cmService);
 		worker.setApiBaseUrl(api_base_url);
 		worker.setAuthorizationToken(api_authorization_token);
+		worker.setIsFirst(isFirst);
 		worker.start();
 		
 	}
@@ -138,6 +144,7 @@ public class CollectorMain {
 		worker.setAuthorizationToken(api_authorization_token);
 		worker.setPropertyForAPI(this.api_finish_enable, this.api_delete_enable);
 		worker.setName(worker.getClass().getName());
+		worker.setIsFirst(isFirst);
 		worker.start();
 	}
 		
@@ -245,6 +252,7 @@ public class CollectorMain {
 		//{{ 통합된 프로메테우스 활용
 		CollectorUnifiedPromMetricWorker worker = new CollectorUnifiedPromMetricWorker(current_millitime);
 		worker.setPrometheusService(this.ptService);
+		worker.setClusterManagerService(this.cmService);
 
 		worker.setPrometheusUrl(this.api_prometheus_unified_url);
 		//worker.setThreadsNumber(this.col_threads_nu);

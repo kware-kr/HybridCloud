@@ -1,8 +1,10 @@
 package com.kware.policy.task.collector.service.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
+
 
 @Getter
 @Setter

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kware.common.config.serializer.HumanReadableSizeSerializer;
+import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.common.openapi.vo.APIPagedResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.common.util.JSONUtil;
@@ -77,6 +78,22 @@ public class CollectorRestController {
 		}
     }
 	
+	/**
+	 * 개발할때만 편의상 잘 보도록 하기 위함
+	 * @param config
+	 * @return
+	 */
+	@GetMapping("/config/set/jsonignore/{val}")
+    public ResponseEntity<Boolean> setIgnorDynamic(@PathVariable("val") Integer val) {
+		if(val == 1) {
+			JsonIgnoreDynamicSerializer.setIgnoreDynamic(true);
+			return ResponseEntity.ok(true);
+		}else {
+			JsonIgnoreDynamicSerializer.setIgnoreDynamic(false);
+			return ResponseEntity.ok(false);
+		}
+    }
+	
 	
 	@GetMapping("/api/clusters")
     public ResponseEntity<Map> getCluster() {
@@ -110,7 +127,7 @@ public class CollectorRestController {
 	
 	@GetMapping("/api/workload/{id}/pods")
     public ResponseEntity<Map> getWorkloadIdPods(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadMap().get(id).getPods());
+    	return ResponseEntity.ok(apiQ.getApiWorkloadMap().get(id).getResourceMap());
     }
 	
 	@GetMapping("/api/workload/pods")

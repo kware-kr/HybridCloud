@@ -57,6 +57,11 @@ public class JSONUtil {
         return objectMapper.readValue(json, clazz);
     }
     
+ // Generic Method to Create Object from JSON
+    public static <T> T fromJsonToEmptyFromNull(String json, Class<T> clazz) throws Exception {
+        return notNullMapper.readValue(json, clazz);
+    }
+    
     //Map을 임의의 클래스 객체로 변환하는 static 제네릭 메서드
     public static <T> T convertMapToObject(Map<String, Object> map, Class<T> clazz) {
         return objectMapper.convertValue(map, clazz);

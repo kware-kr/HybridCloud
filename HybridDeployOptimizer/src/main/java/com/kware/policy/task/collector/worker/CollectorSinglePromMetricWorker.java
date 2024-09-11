@@ -160,7 +160,7 @@ public class CollectorSinglePromMetricWorker extends Thread {
 				//{{API에만 있는 데이터 추가 처리.
 				this.prom_nodes.getAllNodeList().forEach(k->{
 					ClusterNode cnode = this.apiQ.getApiClusterNodeMap().get(k.getClUid() + "_" + k.getNode());
-					k.setNoUid(cnode.getUid());  //node uid 설정
+					k.setNoUuid(cnode.getNoUuid());  //node uid 설정
 					k.setStatus(cnode.getStatus());  // 상태 설정
 					k.addLabels(cnode.getLabels());  // labels 추가
 				});

@@ -61,7 +61,7 @@ public class BestFitDecreasingBinPacking {
      * @return boolean 수용 가능 여부
      */
     private boolean canAccommodatePendingRequests(PromMetricNode node, WorkloadRequest request) {
-        String key = node.getClUid() + "-" + node.getNoUid();
+        String key = node.getClUid() + "-" + node.getUid();
         Set<WorkloadRequest> pendingRequests = requestNodeMap.getOrDefault(key, new HashSet<>());
 
         long totalPendingCpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitCpu).sum();
@@ -95,7 +95,7 @@ public class BestFitDecreasingBinPacking {
 
         // 최적 노드에 요청을 추가
         if (!bestNodes.isEmpty()) {
-            String key = bestNodes.get(0).getClUid() + "-" + bestNodes.get(0).getNoUid();
+            String key = bestNodes.get(0).getClUid() + "-" + bestNodes.get(0).getUid();
             requestNodeMap.computeIfAbsent(key, k -> new HashSet<>()).add(request);
         }
     }

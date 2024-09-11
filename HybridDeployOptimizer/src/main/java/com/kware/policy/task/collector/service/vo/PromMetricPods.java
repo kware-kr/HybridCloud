@@ -15,22 +15,24 @@ public class PromMetricPods extends PromMetricDefault{
 	final static String key_spliter = "_";
 	
 	//key:clUid + _+ podUid
-	Map<String, PromMetricPod> mPodList = new ConcurrentHashMap<String, PromMetricPod>();
+	Map<String, PromMetricPod> mPodMap = new ConcurrentHashMap<String, PromMetricPod>();
 
 	public void setMetricPod(PromMetricPod _value) {
-		mPodList.put(_value.getClUid() + key_spliter + _value.getPodUid(), _value);
+		mPodMap.put(_value.getClUid() + key_spliter + _value.getPodUid(), _value);
 	}
 	
 	public PromMetricPod getMetricPod(Integer _clUid, String _podUid) {
-		return mPodList.get(_clUid + key_spliter + _podUid);
+		if(_clUid == null || _podUid == null)
+			return null;
+		return mPodMap.get(_clUid + key_spliter + _podUid);
 	}
 	
 	public PromMetricPod getMetricPod(String _id) {
-		return mPodList.get(_id);
+		return mPodMap.get(_id);
 	}
 	
 	public Map<String, PromMetricPod> getPodsMap(){
-		return this.mPodList;
+		return this.mPodMap;
 	}
 	
 	/**
@@ -38,11 +40,11 @@ public class PromMetricPods extends PromMetricDefault{
 	 * @return
 	 */
 	public List<PromMetricPod> getAllPodList(){
-		return new ArrayList<>(mPodList.values());
+		return new ArrayList<>(mPodMap.values());
 	}
 	
 	public List<PromMetricPod> getUnmodifiableAllPodList(){
-		return Collections.unmodifiableList(new ArrayList<>(mPodList.values()));
+		return Collections.unmodifiableList(new ArrayList<>(mPodMap.values()));
 	}
 	
 	/**
@@ -51,7 +53,7 @@ public class PromMetricPods extends PromMetricDefault{
 	 * @return
 	 */
 	public List<PromMetricPod> getPodListIfEquals(Integer _clUid){
-		 List<PromMetricPod> resultList = mPodList.values().stream()
+		 List<PromMetricPod> resultList = mPodMap.values().stream()
                 .filter(node -> node.getClUid() == _clUid)
                 .collect(Collectors.toList());
 		
@@ -64,7 +66,7 @@ public class PromMetricPods extends PromMetricDefault{
 	 * @return
 	 */
 	public List<PromMetricPod> getPodListIfNotEquals(Integer _clUid){
-		 List<PromMetricPod> resultList = mPodList.values().stream()
+		 List<PromMetricPod> resultList = mPodMap.values().stream()
                 .filter(node -> node.getClUid() != _clUid)
                 .collect(Collectors.toList());
 		
@@ -77,7 +79,7 @@ public class PromMetricPods extends PromMetricDefault{
 	 * @return
 	 */
 	public List<PromMetricPod> getPodListIfEquals(Integer _clUid, String _node  ){
-		 List<PromMetricPod> resultList = mPodList.values().stream()
+		 List<PromMetricPod> resultList = mPodMap.values().stream()
                 .filter(p -> p.getClUid() == _clUid)
                 .filter(p -> p.getNode().equals(_node))
                 .collect(Collectors.toList());
@@ -91,7 +93,7 @@ public class PromMetricPods extends PromMetricDefault{
 	 * @return
 	 */
 	public List<PromMetricPod> getPodListIfNotEquals(Integer _clUid , String _node){
-		 List<PromMetricPod> resultList = mPodList.values().stream()
+		 List<PromMetricPod> resultList = mPodMap.values().stream()
                 .filter(p -> p.getClUid() != _clUid)
                 .filter(p -> !p.getNode().equals(_node))
                 .collect(Collectors.toList());
@@ -100,10 +102,10 @@ public class PromMetricPods extends PromMetricDefault{
 	}
 	
 	public void clear() {
-		if(mPodList != null) {
-			mPodList.forEach((key, value) -> value.clear());
-			mPodList.clear();
+		if(mPodMap != null) {
+			mPodMap.forEach((key, value) -> value.clear());
+			mPodMap.clear();
 		}
-		mPodList = null;		
+		mPodMap = null;		
 	}
 }

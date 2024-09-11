@@ -8,6 +8,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.kware.common.config.serializer.HumanReadableSizeSerializer;
+import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.policy.task.common.constant.StringConstant;
 
 import lombok.AccessLevel;
@@ -19,10 +20,14 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ClusterNode extends ClusterDefault {
-	private String  uid;
+	private Integer uid;
+	private String  noUuid;
 	private Integer clUid;
 	private String  nm;
+	
+	@JsonSerialize(using = JsonIgnoreDynamicSerializer.class) //필요에 따라서 처리함
 	private String  info;
+	
 	private String  memo;
 	@JsonIgnore
 	private String  hashVal;

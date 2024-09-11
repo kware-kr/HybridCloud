@@ -15,7 +15,7 @@ import lombok.ToString;
 public class ClusterWorkloadPod extends ClusterDefault {
 	private String uid;  // pod uid
 	private String kind; // kind 이름
-	private String pod;  // pod이름
+	private String pod;  // pod이름 name
 	private String node; // 노드이름
 	private String mlId; // ml이름
 	private Integer clUid;

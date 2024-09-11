@@ -1,17 +1,21 @@
 package com.kware.policy.task.selector.service.algo;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
+import java.util.function.ToLongFunction;
 
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest.ResourceDetail;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,27 +29,28 @@ import lombok.extern.slf4j.Slf4j;
 public class BestFitBinPacking {
 
 	
-    private List<PromMetricNode> nodes; // 사용 가능한 노드들의 리스트
+    private List<PromMetricNode> nodes; // 사용 가능한 노드들의 리스트(필터링이된)
     private int defaultBestNodeCount = 5;
     
     //key: clid_node(getNodeKey)
-    private Map<String, Set<WorkloadRequest>> notApplyRequestNodeMap; // 노드가 선택되었지만 미반영된 할당된 요청들을 관리
+    private Map<String, Map<String, Container>> notApplyRequestNodeMap; // 노드가 선택되었지만 미반영된 할당된 요청들을 관리
     
     private ResourceWeight weight;
 
     // 생성자: 노드 리스트와 요청 맵을 초기화
-    public BestFitBinPacking(List<PromMetricNode> nodes, Map<String, Set<WorkloadRequest>> requestNodeMap, ResourceWeight weight) {
+    public BestFitBinPacking(List<PromMetricNode> nodes, Map<String, Map<String, Container>> requestNodeMap, ResourceWeight weight) {
         this.nodes = nodes;
         this.notApplyRequestNodeMap = requestNodeMap;
         this.weight = weight;
     }
 
     /**
-     * 주어진 요청을 처리할 때 가장 적합한 5개의 노드를 찾아 반환
-     * @param request WorkloadRequest
+     * 주어진 요청을 처리할 때 가장 적합한 5개의 노드를 찾아 반환,하고, 클러스터 아이디가 있으면 해당하는 클러스터에있는 노드를 대상으로 처리한다.
+     * @param WorkloadRequest.Container
+     * 
      * @return List<PromMetricNode> 최적의 노드 리스트
      */
-    public List<PromMetricNode> allocate(WorkloadRequest request, int maxCount) {
+    public List<PromMetricNode> allocate(WorkloadRequest.Container curContainer, int maxCount, Integer _clUid) {
     	if(this.nodes == null)
     		return null;
     	
@@ -54,14 +59,16 @@ public class BestFitBinPacking {
 
         // 각 노드를 순회하며 요청을 처리할 수 있는지 확인하고 스코어를 계산하여 우선순위 큐에 추가
         for (PromMetricNode node : nodes) {
-            if (node.canHandle() && canAccommodatePendingRequests(node, request)) {
-                double score = calculateScore(node, request);
-                node.setBetFitScore(score); //스코어를 저장해보자
-                priorityQueue.add(new NodeScore(node, score));
-            }
+        	if(_clUid == null || _clUid == node.getClUid()) {
+	            if (node.canHandle() && canAccommodatePendingRequests(node, curContainer)) {
+	                double score = calculateScore(node, curContainer);
+	                node.setBetFitScore(score); //스코어를 저장해보자
+	                priorityQueue.add(new NodeScore(node, score));
+	            }
+        	}
         }
 
-        // 우선순위 큐에서 전체 노드를 추출하여 PromMetricNode 리스트로 반환
+        // 우선순위 큐에서 전체 노드를 추출하여 PromMetricNode 리스트로 반환 즉 정렬수행
         List<PromMetricNode> bestFitNodes = new ArrayList<>();
         if(maxCount == 0) //전체를 가져오고 싶을때
         	maxCount = Integer.MAX_VALUE;
@@ -77,8 +84,8 @@ public class BestFitBinPacking {
     }
     
     
-    public List<PromMetricNode> allocate(WorkloadRequest request) {
-    	return allocate(request, defaultBestNodeCount);
+    public List<PromMetricNode> allocate(WorkloadRequest.Container curContainer, Integer _clUid) {
+    	return allocate(curContainer, defaultBestNodeCount, _clUid);
     }
 
     /**
@@ -87,20 +94,58 @@ public class BestFitBinPacking {
      * @param request WorkloadRequest
      * @return boolean 수용 가능 여부
      */
+   /*
     private boolean canAccommodatePendingRequests(PromMetricNode node, WorkloadRequest request) {
-        String key = node.getKey();
-        Set<WorkloadRequest> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashSet<>());
+		String key = node.getKey();
+		
+//		Map<String, WorkloadRequest.Container> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashMap<>());
+//		
+//		long totalPendingCpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitCpu).sum();
+//		long totalPendingMemory = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitMemory).sum();
+//		long totalPendingGpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitGpu).sum();
+//		long totalPendingDisk   = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitDisk).sum();
 
-        long totalPendingCpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitCpu).sum();
-        long totalPendingMemory = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitMemory).sum();
-        long totalPendingGpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitGpu).sum();
-        long totalPendingDisk   = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitDisk).sum();
-
+    	Map<String, WorkloadRequest.Container> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashMap<>());
+        
+        Collection<Container> containers =  pendingRequests.values();
+        
+        long totalPendingCpu    = sumResource(containers, ResourceDetail::getCpu);
+        long totalPendingMemory = sumResource(containers, ResourceDetail::getMemory);
+        long totalPendingGpu    = sumResource(containers, ResourceDetail::getGpu);
+        long totalPendingDisk   = sumResource(containers, ResourceDetail::getEphemeralStorage);
+        
         return node.getAvailableCpu()    >= request.getTotalLimitCpu()    + totalPendingCpu    &&
                node.getAvailableMemory() >= request.getTotalLimitMemory() + totalPendingMemory &&
                node.getAvailableGpu()    >= request.getTotalLimitGpu()    + totalPendingGpu    &&
                node.getAvailableDisk()   >= request.getTotalLimitDisk()   + totalPendingDisk;
     }
+    */
+    /**
+     * 노드가 이미 할당된 요청과 새로운 요청을 수용할 수 있는지 확인
+     * WorkloadRequest가 여러개의 파드를 실행하도록 되어 있어서, 실제 배포는 해당 컨테이너가 담당함
+     * @param node
+     * @param curContainer
+     * @return
+     */
+    private boolean canAccommodatePendingRequests(PromMetricNode node, Container curContainer) {
+		String key = node.getKey();
+
+    	Map<String, WorkloadRequest.Container> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashMap<>());
+        
+        Collection<Container> containers =  pendingRequests.values();
+        
+        long totalPendingCpu    = sumResource(containers, ResourceDetail::getCpu);
+        long totalPendingMemory = sumResource(containers, ResourceDetail::getMemory);
+        long totalPendingGpu    = sumResource(containers, ResourceDetail::getGpu);
+        long totalPendingDisk   = sumResource(containers, ResourceDetail::getEphemeralStorage);
+        
+        ResourceDetail detail = curContainer.getResources().getLimits();
+        return node.getAvailableCpu()    >= detail.getCpu()    + totalPendingCpu    &&
+               node.getAvailableMemory() >= detail.getMemory() + totalPendingMemory &&
+               node.getAvailableGpu()    >= detail.getGpu()    + totalPendingGpu    &&
+               node.getAvailableDisk()   >= detail.getEphemeralStorage()   + totalPendingDisk;
+    }
+
 
     /**
      * 현 노드 상태와 ML요청 간의 할당 스코어를 계산
@@ -108,15 +153,17 @@ public class BestFitBinPacking {
      * @param request WorkloadRequest
      * @return double 스코어
      */
-    private double calculateScore(PromMetricNode node, WorkloadRequest request) {
+    private double calculateScore(PromMetricNode node, WorkloadRequest.Container curContainer) {
         String key = node.getKey();
-        Set<WorkloadRequest> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashSet<>());
-
-        long totalPendingCpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitCpu).sum();
-        long totalPendingMemory = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitMemory).sum();
-        long totalPendingGpu    = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitGpu).sum();
-        long totalPendingDisk   = pendingRequests.stream().mapToLong(WorkloadRequest::getTotalLimitDisk).sum();
-
+        Map<String, WorkloadRequest.Container> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashMap<>());
+        
+        Collection<Container> containers =  pendingRequests.values();
+        
+        long totalPendingCpu    = sumResource(containers, ResourceDetail::getCpu);
+        long totalPendingMemory = sumResource(containers, ResourceDetail::getMemory);
+        long totalPendingGpu    = sumResource(containers, ResourceDetail::getGpu);
+        long totalPendingDisk   = sumResource(containers, ResourceDetail::getEphemeralStorage);
+        
         //최대값 정규화
         /*
         double cpuScore    = (node.getAvailableCpu()    - (request.getTotalLimitCpu()    + totalPendingCpu))    / (double) node.getCapacityCpu();
@@ -134,10 +181,12 @@ public class BestFitBinPacking {
         */
         
         //로그정규화
-        double cpuScore    = Math.log( (node.getAvailableCpu()    - (request.getTotalLimitCpu()    + totalPendingCpu))   + 1) ;
-        double memoryScore = Math.log( (node.getAvailableMemory() - (request.getTotalLimitMemory() + totalPendingMemory))+ 1) ;
-        double diskScore   = Math.log( (node.getAvailableDisk()   - (request.getTotalLimitDisk()   + totalPendingDisk))  + 1) ;
-        double gpuScore    = Math.log( (node.getAvailableGpu()    - (request.getTotalLimitGpu()    + totalPendingGpu))   + 1) ;
+        ResourceDetail detail = curContainer.getResources().getLimits();
+        
+        double cpuScore    = Math.log( (node.getAvailableCpu()    - (detail.getCpu()    + totalPendingCpu))   + 1) ;
+        double memoryScore = Math.log( (node.getAvailableMemory() - (detail.getMemory() + totalPendingMemory))+ 1) ;
+        double gpuScore    = Math.log( (node.getAvailableGpu()    - (detail.getGpu()    + totalPendingGpu))   + 1) ;
+        double diskScore   = Math.log( (node.getAvailableDisk()   - (detail.getEphemeralStorage() + totalPendingDisk))  + 1) ;
         
         //20240718 스코어 계산에만 사용중인 networkIO, diskIO 정보를 추가
         double diskIoScore    = node.getUsageDiskRead1m() + node.getUsageDiskWrite1m();
@@ -153,6 +202,15 @@ public class BestFitBinPacking {
         return ds.getScore();
 
         //return Math.abs(cpuScore) + Math.abs(memoryScore) + Math.abs(diskScore) + Math.abs(gpuScore);
+    }
+    
+    private static long sumResource(Collection<Container> containers, ToLongFunction<ResourceDetail> mapper) {
+        return containers.stream()
+                .map(Container::getResources)
+                .map(WorkloadRequest.Resources::getLimits)
+                .filter(Objects::nonNull) // null 체크
+                .mapToLong(mapper)
+                .sum();
     }
 
     // 노드와 해당 노드에 대한 스코어를 저장하는 내부 클래스

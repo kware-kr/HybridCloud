@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadPod;
+import com.kware.policy.task.collector.service.vo.ClusterWorkloadResource;
 import com.kware.policy.task.collector.service.vo.PromMetricContainer;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
@@ -94,7 +96,7 @@ public class MetricResultAnalyzer {
 	final Timestamp timestamp;
 	final PromMetricNodes prom_nodes;
 	final PromMetricPods prom_pods;
-
+	
 	public MetricResultAnalyzer(PromMetricNodes _nodes, PromMetricPods _pods, Long _current_millitime) {
 		this.prom_nodes = _nodes;
 		this.prom_pods = _pods;
@@ -104,7 +106,7 @@ public class MetricResultAnalyzer {
 
 	PromQLManager mp = PromQLManager.getInstance();
 	HashMap<String, Object> clusterInfo = null;
-
+	
 	// int clUid;
 	int prqlUid;
 
@@ -180,14 +182,22 @@ public class MetricResultAnalyzer {
 					} else {
 						mlId = wpod.getMlId();
 
-						// {{ workload api에는 클러스터 uid가 없어서 여기에서 처리한다.
+						// {{ workload api에는 클러스터 uid가 없어서 여기에서 처리한다.::20240905에 API에 추가됨
 						ClusterWorkload clWorkload = apiWorkloadMap.get(mlId);
-						clWorkload.setClUid(clUid);
+						/*
+						if(clWorkload.getClUid() == null){
+							clWorkload.setClUid(clUid);
+						}
+						*/
 
-						
-						for (Map.Entry<String, ClusterWorkloadPod> entry : clWorkload.getPods().entrySet()) { 
-							entry.getValue().setClUid(clUid);
-						}					
+						for(Map.Entry<String, ClusterWorkloadResource> resourceE : clWorkload.getResourceMap().entrySet() ) {
+							resourceE.getValue().setClUid(clUid);
+							
+							Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
+							for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
+								entry.getValue().setClUid(clUid);
+							}
+						}
 					}
 					// }}
 
@@ -201,7 +211,7 @@ public class MetricResultAnalyzer {
 						pod.setPod(sExtPath_pod);
 						pod.setPodUid(sExtPath_puid);
 						pod.setCollectDt(this.timestamp);
-						//pod.setTimestamp(current_millitime); // timestamp와 동일한 값인데
+						pod.setTimemillisecond(current_millitime); // timestamp와 동일한 값인데
 						pod.setMlId(mlId); // api에서 수집한 mlid 등록
 						pod.setPromTimestamp(new Timestamp(sExtPath_timestamp.longValue() * 1000));
 						this.prom_pods.setMetricPod(pod);
@@ -238,6 +248,7 @@ public class MetricResultAnalyzer {
 						// pod.setNoUid(sExtPath_node); //테스트로 일단 node값과 동일한 값
 						pod.setPod(sExtPath_pod);
 						pod.setPodUid(sExtPath_puid);
+						pod.setTimemillisecond(current_millitime);
 						pod.setCollectDt(this.timestamp);
 						pod.setPromTimestamp(new Timestamp(sExtPath_timestamp.longValue() * 1000));// 크게 의미 없는 정보
 						this.prom_pods.setMetricPod(pod);

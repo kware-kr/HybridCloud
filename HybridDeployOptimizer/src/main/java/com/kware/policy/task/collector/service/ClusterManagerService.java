@@ -94,12 +94,8 @@ public class ClusterManagerService {
 		return clusterManagerDao.selectClusterWorkloadList(workload);
 	}
 	
-	public ClusterNode selectClusterWorkload(ClusterWorkload workload) {
+	public ClusterWorkload selectClusterWorkload(ClusterWorkload workload) {
 		return clusterManagerDao.selectClusterWorkload(workload);
-	}
-
-	public int selectClusterWorkloadCount(ClusterWorkload workload) {
-		return clusterManagerDao.selectClusterWorkloadCount(workload);
 	}
 
 	/******************** Cluster history *********************/

@@ -3,6 +3,7 @@ package com.kware.policy.task.common.constant;
 public class StringConstant {
 
 	public final static String STR_mlId          = "mlId";
+	public final static String STR_clusterIdx    = "clusterIdx";
 	public final static String STR_uid           = "uid";
 	public final static String STR_name          = "name";
 	public final static String STR_status        = "status";
@@ -33,6 +34,8 @@ public class StringConstant {
 	public final static String STR_ownerName     = "ownerName";
 	public final static String STR_ownerKind     = "ownerKind";
 	public final static String STR_restart       = "restart";
+	public final static String STR_totalPodCount   = "totalPodCount";
+	public final static String STR_runningPodCount = "runningPodCount";
 	
 	public final static String STR_Y             = "Y";
 	public final static String STR_N             = "N";
@@ -47,6 +50,11 @@ public class StringConstant {
 	public final static String STR_UNDERBAR      = "_";
 	public final static String STR_COMMA         = ",";
 	
+	
+	public static enum RequestStatus{
+		request,
+	    complete
+	};
 	
 	public static enum PodStatusPhase{
 		PENDING,

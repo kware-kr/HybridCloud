@@ -21,13 +21,14 @@ public class ClusterManagerDao {
 	/************************ mo_cluster ***********************************/
 	
 	public void updateClusterAndInsertHistory(Cluster cluster) {
-		int cnt = selectClusterCount(cluster); //hash값이 같은 데이터를 찾아서 있으면 변경안된것이고, 없으면 데이터가 변경된 것임  
-		if(cnt == 0) { // 없거나, 변경되었거나(hash_val)
+		Cluster old = selectCluster(cluster); //hash값이 같은 데이터를 찾아서 있으면 변경안된것이고, 없으면 데이터가 변경된 것임  
+		if(old != null && !old.getHashVal().equals(cluster.getHashVal())) { // 없거나, 변경되었거나(hash_val)
 			insertHistoryFromCluster(cluster);//기존것 백업받고
 			updateCluster(cluster);			
-		}else {
-			; //변경이 안되어서 처리안함
+		}else if(old == null) {
+			this.insertCluster(cluster);
 		}
+		old = null;
 	}
 	
 	
@@ -51,20 +52,25 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectCluster", cluster);
 	}
 
-	public int selectClusterCount(Cluster cluster) {
-		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterCount", cluster);
-	}
+	/*	public int selectClusterCount(Cluster cluster) {
+			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterCount", cluster);
+		}*/
 	
 	/************************ mo_cluster_node ***********************************/
 	
 	public void updateClusterNodeAndInsertHistory(ClusterNode node) {
-		int cnt = selectClusterNodeCount(node);
-		if(cnt == 0) { // 없거나, 변경되었거나(hash_val)		
+		ClusterNode old = selectClusterNode(node);
+		if(old != null && !old.getHashVal().equals(node.getHashVal())) { // 없거나, 변경되었거나(hash_val)	
+			if(node.getUid() == null) {
+				Integer a = old.getUid();
+				node.setUid(a);
+			}
 			insertHistoryFromClusterNode(node);
 			updateClusterNode(node);
-		}else {
-			; //변경이 안되어서 처리안함
+		}else if(old == null) {
+			this.insertClusterNode(node);
 		}
+		old = null;
 	}
 	
 	public int insertClusterNode(ClusterNode node) {
@@ -79,6 +85,10 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.delete("clusterManagerMapper.deleteClusterNode", node);
 	}
 
+	/*	public Integer selectUidFromClusterNode(ClusterNode node) {
+			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectUidFromClusterNode", node);
+		}*/
+	
 	public List selectClusterNodeList(ClusterNode node) {
 		return sqlSessionTemplate.selectList("clusterManagerMapper.selectClusterNodeList", node);
 	}
@@ -87,19 +97,19 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterNode", node);
 	}
 
-	public int selectClusterNodeCount(ClusterNode node) {
-		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterNodeCount", node);
-	}
-
+	/*	public int selectClusterNodeCount(ClusterNode node) {
+			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterNodeCount", node);
+		}
+	*/
 /************************ mo_cluster_workload ***********************************/
 	
 	public void updateClusterWorkloadAndInsertHistory(ClusterWorkload workload) {
-		int cnt = selectClusterWorkloadCount(workload);
-		if(cnt == 0) { // 없거나, 변경되었거나(hash_val)		
+		ClusterWorkload old = selectClusterWorkload(workload);
+		if(old != null && !old.getHashVal().equals(workload.getHashVal()) || old.getClUid() != workload.getClUid()) { //변경(hash_val, cluid가 나중에 등록된 경우)		
 			insertHistoryFromClusterWorkload(workload);
 			updateClusterWorkload(workload);
-		}else {
-			; //변경이 안되어서 처리안함
+		}else if(old == null){ //없으면 입력
+			this.insertClusterWorkload(workload);
 		}
 	}
 	
@@ -119,14 +129,15 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.selectList("clusterManagerMapper.selectClusterWorkloadList", workload);
 	}
 	
-	public ClusterNode selectClusterWorkload(ClusterWorkload workload) {
+	public ClusterWorkload selectClusterWorkload(ClusterWorkload workload) {
 		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterWorkload", workload);
 	}
 
-	public int selectClusterWorkloadCount(ClusterWorkload workload) {
-		return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterWorkloadCount", workload);
-	}
-	
+	/*
+		public int selectClusterWorkloadCount(ClusterWorkload workload) {
+			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterWorkloadCount", workload);
+		}
+	*/	
 	/************************ mo_cluster_history ***********************************/
 
 	public int insertHistoryFromCluster(Cluster cluster) {

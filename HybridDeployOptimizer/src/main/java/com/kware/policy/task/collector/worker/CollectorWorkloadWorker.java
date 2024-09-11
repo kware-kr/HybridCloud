@@ -18,7 +18,6 @@
 package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ import java.util.concurrent.BlockingDeque;
 
 import org.jsoup.Jsoup;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
@@ -37,8 +35,11 @@ import com.kware.common.util.HttpSSLFactory;
 import com.kware.common.util.JSONUtil;
 import com.kware.common.util.StringUtil;
 import com.kware.policy.task.collector.service.ClusterManagerService;
+import com.kware.policy.task.collector.service.vo.Cluster;
+import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadPod;
+import com.kware.policy.task.collector.service.vo.ClusterWorkloadResource;
 import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.QueueManager;
@@ -129,13 +130,18 @@ public class CollectorWorkloadWorker extends Thread {
 		//String status;
 	}
 	
-
+	boolean isFirst = false; //처음 실행인지 여부확인, api가 없으면
+	
+	public void setIsFirst(boolean isFirst) {
+		this.isFirst = isFirst;
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
 		this.isRunning = true;
 		try {
-		
+			
 			/**
 			 * 1. api get clusterlist => clusterInfo
 			 * 2. api get clusterDetail => ClusterNode, prometheus
@@ -208,14 +214,21 @@ public class CollectorWorkloadWorker extends Thread {
 				Map<String, Object> workloadDetailMap = this.annlyApiResultFromWorkloadDetail(detail_ctx);
 				
 				//{{DB입력
-				ClusterWorkload workload = this.insertClusterWorkload(mlId, workloadDetailMap, apiWorkloadMap);
-				//}}
+				ClusterWorkload workload = this.makeClusterWorkload(mlId, workloadDetailMap, apiWorkloadMap);
+				ClusterWorkload oldWorkload = (ClusterWorkload)apiWorkloadMap.get(workload.getUniqueKey());
+				
 				
 				//{{전역 큐에 등록
 				workload.setSessionId(SESSIONID);
-				//{{ workload에 속해있는 파드 리스트 저장
-				Map<String, ClusterWorkloadPod> pods = this.getPodsFromDetail(workloadDetailMap);
-				workload.setMPods(pods);
+				//{{ workload에 속해있는 리소스와 파드 리스트 파드 리스트 저장
+				this.makeResourceAndPodsFromDetail(workload, workloadDetailMap);
+				//workload.setResourcePodClUidAll();
+			
+				this.insertWorklod(oldWorkload, workload);//DB 입력					
+				//}}
+				
+				 
+				
 				
 				//{{ ---------------여기에서 pods의 리스트들의 완료여부를 확인해서 모두 완료상태이면 종료API 발신한다.
 				/**
@@ -240,15 +253,31 @@ public class CollectorWorkloadWorker extends Thread {
 					if(isFinishEnable && workload.getDeleteAt().equals(StringConstant.STR_N)) { //상태가 미완료: finished가 아니면
 						boolean isCompleteWorkload = true;
 						PromMetricPods mPods = promPodsDeque.peek();
-						for (Map.Entry<String, ClusterWorkloadPod> entry : pods.entrySet()) {
-						    PromMetricPod mPod = mPods.getMetricPod(workload.getClUid(), entry.getValue().getUid());
-						    if(mPod == null) { 
-						    	isCompleteWorkload = false; 
-						    	break;
-						    }else if (!mPod.isCompleted()) {
-						        isCompleteWorkload = false;
-						        break;
-						    }
+						if(mPods != null) {
+							for(Map.Entry<String, ClusterWorkloadResource> resourceE : workload.getResourceMap().entrySet() ) {
+								Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
+								for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
+									String wPodUid = null;
+									ClusterWorkloadPod wPod =  entry.getValue();
+									if(wPod != null)
+										wPodUid = wPod.getUid();
+									
+								    PromMetricPod mPod = mPods.getMetricPod(workload.getClUid(), wPodUid);
+								    if(mPod == null) { 
+								    	isCompleteWorkload = false; 
+								    	break;
+								    }else if (!mPod.isCompleted()) {
+								        isCompleteWorkload = false;
+								        break;
+								    }
+								}
+								
+								//한개라도 false면
+								if(!isCompleteWorkload)
+									break;
+							}
+						}else {
+							isCompleteWorkload = false;
 						}
 						
 						//프로메테우스에서는 완료되었다고 나온다.
@@ -264,7 +293,10 @@ public class CollectorWorkloadWorker extends Thread {
 				//}}-----------------------------
 				
 				//별도의 map에 podUid를 통해서 mlId를 찾을 수 있도록 등록함
-				apiWorkloadPodMap.putAll(pods);
+				for(Map.Entry<String, ClusterWorkloadResource> resourceE : workload.getResourceMap().entrySet() ) {
+					Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
+					apiWorkloadPodMap.putAll(podMap);
+				}
 				//}}파드리스트
 				apiWorkloadMap.put(mlId, workload);
 				//}} 전역큐 등록
@@ -282,8 +314,13 @@ public class CollectorWorkloadWorker extends Thread {
 			
 			//여기서 SESSIONID와 비교해서 제거해야한다. this.workloadMap:: 기존에 수집했는데, 이번에는 수집되지 않는 데이터 제거
 			//Map에 사용하는 객체는 모두 ClusterDefault를 상속받아서 사용해야 정상작동한다.
-			apiQ.removeNotIfSessionId(APIMapsName.WORKLOAD   , SESSIONID);
-			apiQ.removeNotIfSessionId(APIMapsName.WORKLOADPOD, SESSIONID);
+			HashMap removedMap = null;
+			removedMap = apiQ.removeNotIfSessionId(APIMapsName.WORKLOAD   , SESSIONID);
+			delete(removedMap);//앞 처리과정에서 완료되어도 삭제하지만, 큐에서 제거되는 경우에도 DB 삭제
+			removedMap.clear();
+			
+			removedMap = apiQ.removeNotIfSessionId(APIMapsName.WORKLOADPOD, SESSIONID);
+			removedMap.clear();
 	
 			if(log.isDebugEnabled())
 				log.debug("current {} maps size={}", APIMapsName.WORKLOAD.toString(), apiQ.getApiQueueSize(APIMapsName.WORKLOAD));
@@ -291,6 +328,16 @@ public class CollectorWorkloadWorker extends Thread {
 			log.error("WorkloadWorker Thread Error:" , e);
 		}
 
+	}
+	
+	/**DB 삭제
+	 */
+	private void delete(HashMap<String, Object> _removedMap) {
+		for(Object obj: _removedMap.values()) {
+			if(obj instanceof ClusterWorkload) {
+				this.service.deleteClusterWorkload((ClusterWorkload)obj);
+			}
+		}
 	}
 	
 	private List<Map<String, Object>> annlyApiResultFromWorkloadList(DocumentContext _ctx) {
@@ -325,12 +372,21 @@ public class CollectorWorkloadWorker extends Thread {
 	final static SimpleDateFormat formatterpod = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	final static SimpleDateFormat formatter    = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 	
-	private ClusterWorkload insertClusterWorkload(String _ml_uid, Map<String, Object> _workloadMap, Map<String, Object> _apiWorkloadMap) {
+	private ClusterWorkload makeClusterWorkload(String _ml_uid, Map<String, Object> _workloadMap, Map<String, Object> _apiWorkloadMap) {
 		ClusterWorkload workload = new ClusterWorkload();
 		Integer nId       = (Integer)_workloadMap.get(StringConstant.STR_id);
 		String sStatus    = (String)_workloadMap.get(StringConstant.STR_status);
 		String sCreatedAt = (String)_workloadMap.get(StringConstant.STR_createdAt);
 		String sUpdatedAt = (String)_workloadMap.get(StringConstant.STR_updatedAt);
+
+		
+		Integer nClusterIdx = (Integer)_workloadMap.get(StringConstant.STR_clusterIdx); // clustertId 추가 요청으로 인해 2024 추가
+		
+		workload.setMlId(_ml_uid);
+		workload.setId(nId);
+		//workload.setClUid(_cl_uid); //정보가 없어서 메트릭에서 추가해야한다.:MetricResultAnalyzer
+	    workload.setClUid(nClusterIdx);
+
 		
 		workload.setCreatedAt(StringUtil.getTimestamp(formatter, sCreatedAt));
 		workload.setUpdatedAt(StringUtil.getTimestamp(formatter, sUpdatedAt));
@@ -338,9 +394,7 @@ public class CollectorWorkloadWorker extends Thread {
 		//workload.setCreatedAt(StringUtil.getMilliseconds(formatter, sCreatedAt));
 		//workload.setUpdatedAt(StringUtil.getMilliseconds(formatter, sUpdatedAt));
 		
-		workload.setMlId(_ml_uid);
-		workload.setId(nId);
-		//workload.setClUid(_cl_uid); //정보가 없어서 메트릭에서 추가해야한다.:MetricResultAnalyzer
+
 		
 		workload.setStatusString(sStatus);
 		if(StringConstant.STR_finished.equalsIgnoreCase(sStatus)) {  //Started | finished
@@ -359,40 +413,71 @@ public class CollectorWorkloadWorker extends Thread {
 		workload.setInfo(sJson);
 		workload.setHashVal(sHashVal);
 		
-		try {
-			//기존에 이미 등록되어 있으면. 
-			ClusterWorkload t = (ClusterWorkload)_apiWorkloadMap.get(_ml_uid);
-			if(t != null) {
-				workload.setClUid(t.getClUid());
-				this.service.updateClusterWorkloadAndInsertHistory(workload);
-			}else {				
-				this.service.insertClusterWorkload(workload);
-			}
-		} catch (Exception e) {
-			log.error("데이터 Insert 에러 Wrokload:\n{}", workload, e);
-		}
 		
 		return workload;
+	}
+	
+	private void insertWorklod(ClusterWorkload oldWorkload, ClusterWorkload cruWorkload) {
+		try {
+			//기존에 이미 등록되어 있으면. 
+			//ClusterWorkload oldObj = (ClusterWorkload)_apiWorkloadMap.get(workload.getUniqueKey());
+			if(oldWorkload != null) {
+				cruWorkload.setClUid(oldWorkload.getClUid());
+				//if(!oldWorkload.getHashVal().equals(cruWorkload.getHashVal()) || oldWorkload.getClUid() != cruWorkload.getClUid())
+					this.service.updateClusterWorkloadAndInsertHistory(cruWorkload);
+			}else {
+				oldWorkload = null;
+				if(this.isFirst) {
+					oldWorkload = this.service.selectClusterWorkload(cruWorkload);
+				}
+				if(oldWorkload == null)				
+					this.service.insertClusterWorkload(cruWorkload);
+				else this.service.updateClusterWorkload(cruWorkload);
+			}
+		} catch (Exception e) {
+			log.error("데이터 Insert 에러 Wrokload:\n{}", cruWorkload, e);
+		}
+		
 	}
 	
 	/**
 	 * worklaod detail정보에서 pods관련 정보를 분리하는 함수
 	 * @return
 	 */
-	private Map<String, ClusterWorkloadPod> getPodsFromDetail(Map<String, Object> resultMap){
-		Map<String, ClusterWorkloadPod> wpMap = new HashMap<String, ClusterWorkloadPod>();	
-		String mlId = (String)resultMap.get(StringConstant.STR_mlId);
+	private void makeResourceAndPodsFromDetail(ClusterWorkload _workload, Map<String, Object> _detailResultMap){
+		String mlId = (String)_detailResultMap.get(StringConstant.STR_mlId);
 				
-		JSONArray resourcesArray = (JSONArray)resultMap.get(StringConstant.STR_resources);
+		ClusterWorkloadResource cwResource = null;
+		JSONArray resourcesArray = (JSONArray)_detailResultMap.get(StringConstant.STR_resources);
+		Map<String, ClusterWorkloadPod> wpMap = null;
 		for(int i = 0 ; i < resourcesArray.size(); i++) {
 			Map resource = (Map)resourcesArray.get(i);
 			
+			cwResource = new ClusterWorkloadResource();
+			cwResource.setClUid(_workload.getClUid());
+			cwResource.setKind((String)resource.get(StringConstant.STR_kind));
+			cwResource.setNm(  (String)resource.get(StringConstant.STR_name));
+			cwResource.setUid( (String)resource.get(StringConstant.STR_uid));
+			
+			cwResource.setStatus(         (String)resource.get(StringConstant.STR_status));
+			cwResource.setId(             (Integer)resource.get(StringConstant.STR_id));
+			cwResource.setTotalPodCount(  (Integer)resource.get(StringConstant.STR_totalPodCount));
+			cwResource.setRunningPodCount((Integer)resource.get(StringConstant.STR_runningPodCount));
+			
+			String sCreatedAt = (String)resource.get(StringConstant.STR_createdAt);
+			String sUpdatedAt = (String)resource.get(StringConstant.STR_updatedAt);
+			
+			cwResource.setCreatedAt(StringUtil.getTimestamp(sCreatedAt));
+			cwResource.setUpdatedAt(StringUtil.getTimestamp(sUpdatedAt));
 			
 			
 			JSONArray podsArray = (JSONArray)resource.get(StringConstant.STR_pods);
+			wpMap = new HashMap<String, ClusterWorkloadPod>();
 			for(int j = 0 ; j < podsArray.size(); j++) {
 				Map pod = (Map)podsArray.get(j);
 				ClusterWorkloadPod wPod = new ClusterWorkloadPod();
+				
+				wPod.setClUid(_workload.getClUid());
 				wPod.setUid((String)pod.get(StringConstant.STR_uid));
 				wPod.setKind((String)pod.get(StringConstant.STR_kind));
 				wPod.setNode((String)pod.get(StringConstant.STR_node));
@@ -405,8 +490,8 @@ public class CollectorWorkloadWorker extends Thread {
 				wPod.setOwnerKind((String)pod.get(StringConstant.STR_ownerKind));
 				wPod.setRestart( (Integer)pod.get(StringConstant.STR_restart));
 				
-				String sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
-				String sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
+				sCreatedAt = (String)pod.get(StringConstant.STR_createdAt);
+				sUpdatedAt = (String)pod.get(StringConstant.STR_updatedAt);
 				
 				wPod.setCreatedAt(StringUtil.getTimestamp(sCreatedAt));
 				wPod.setUpdatedAt(StringUtil.getTimestamp(sUpdatedAt));
@@ -418,9 +503,11 @@ public class CollectorWorkloadWorker extends Thread {
 				wPod.setSessionId(SESSIONID);
 				wpMap.put(wPod.getUid(), wPod);
 			}
+			
+			//동일한 owner를 기반으로 등록된다.
+			_workload.addResource(cwResource);
+			cwResource.setPodMap(wpMap);			
 		}
-		
-		return wpMap;
 	}
 	
 	/**

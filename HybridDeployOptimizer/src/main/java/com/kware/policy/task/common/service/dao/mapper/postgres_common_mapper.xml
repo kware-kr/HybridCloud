@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
+<mapper namespace="ptCommonMapper">
+	<!--  mo_common_config_group -->
+	<select id="selectCommonConfigGroupList" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
+	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_config_group
+        WHERE delete_at = 'N'
+	</select>
+	<select id="selectCommonConfigGroup" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
+	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_config_group
+        WHERE delete_at = 'N'
+          AND cfg_name = #{cfgName}
+	</select>
+</mapper>
+

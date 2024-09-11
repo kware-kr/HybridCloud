@@ -1,5 +1,6 @@
 package com.kware.policy.task.selector.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import com.kware.policy.task.selector.service.config.ResourceWeightProperties;
 import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.dao.WorkloadRequestDao;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Request;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse.Response;
@@ -54,49 +56,117 @@ public class WorkloadRequestService {
 	//}}db 관련 서비스
 	
 	//{{노드 셀렉터
-	public WorkloadResponse getNodesSelector(WorkloadRequest wlRequest) {
+	public WorkloadResponse getNodesSelector(WorkloadRequest wlRequest) {	
 		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
-		Map<String, Set<WorkloadRequest>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
+		Map<String, Map<String, Container>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
 		
+		
+		wlRequest.aggregate(true);
 
-		WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getRequestAttributes().getWorkloadType();
+		//{{Workload Type
+	//	WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getAttribute().getWorkloadType();
 		ResourceWeight resoruceWeight = null;
 		//null이면 defaul 값을 리턴한다.
-		resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
+		//resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
+		resoruceWeight = this.rwProperties.getResourceWeight(null);
+		//}}
 
 		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyRequestMap, resoruceWeight);
-
-		List<PromMetricNode>  sel_nodes = bbp.allocate(wlRequest);
-		log.info("select node list: {}", sel_nodes);
-
-		PromMetricNode node = sel_nodes.size() > 0 ? sel_nodes.get(0):null;
-		sel_nodes.clear();
-
+		
 		WorkloadRequest.Request req = wlRequest.getRequest();
+
+		List<Container> containers = req.getContainers();
+		List<PromMetricNode> sel_nodes = new ArrayList<PromMetricNode>();
+		Integer clUid = null;
+		for(int i = 0 ; i < containers.size(); i++) {
+			Container container =  containers.get(i);
+			
+			List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);
+			log.info("select node list: {}", tempNodes);
+
+			PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
+			tempNodes.clear();
+			
+			if(node != null) {
+				clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
+				//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
+				wlRequest.getNodes().add(node.getNode());
+				wlRequest.setClUid(clUid);
+				
+				
+				//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
+				requestQ.setWorkloadRequest(wlRequest, i);
+			}
+			
+			sel_nodes.add(node); //null이어도 등록한다.
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		//배포전의 데이터는 배포완료가 되면 반영해야하나? 배포도 안했는데, 요청을 등록해야하나?
+		//아니 노드를 찾으면 결과를 주고 모두 제거하고, 배포완료 명령이 오면 처리해야겠다.
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
 
 		WorkloadResponse wlResponse = new WorkloadResponse();
     	wlResponse.setVersion(WorkloadRequestService.interface_version);
     	
     	//{{응답 생성
     	WorkloadResponse.Response res = new WorkloadResponse.Response();
-    	res.setUid(req.getUid());
-    	res.setId(req.getId());
+    	
+    	res.setReqUid(req.getUid());
+    	res.setMlId(req.getMlId());
     	//res.setName(req.getName());    	
     	res.setDate(new Date());
     	
-    	WorkloadResponse.Response.ResponseResult rsResult = new WorkloadResponse.Response.ResponseResult();
     	//rsResult.setClusterName("Workload-cluster-01");
     	WorkloadResponseStatus status = null;
-    	if(node != null) {
-	    	rsResult.setClusterId(node.getClUid().toString());
-	    	rsResult.setNodeName(node.getNode());
-	    	rsResult.setNodeId(node.getNoUid());
+    	boolean isOK = true;
+    	if(sel_nodes != null) {	
+    		res.setClUid(clUid.toString());//clUid는 null일 수 없다.
+    		for(int i = 0 ; i < containers.size(); i++) {
+    			Container container =  containers.get(i);
+    			PromMetricNode node = sel_nodes.get(i);
+	    	/*
+	    	//{{이게 for loop 돌아야 한다.
+	    	WorkloadResponse.Response.ContainerResult crResult = new WorkloadResponse.Response.ContainerResult();
+	    	
+	    	crResult.setNode(node.getNode());
+	    	//crResult.setNoUuid(node.getNoUuid());
 
 	    	//{{이건 어떻게 해야하나
-	    	rsResult.setPreemptionPolicy(null);
-	    	rsResult.setPriority(null);
+	    	crResult.setPreemptionPolicy(null);
+	    	crResult.setPriorityClass(null);
 	    	//}}
-
+	    	*/
+    			//한개라도 null이 있으면 어떻게 하나?????
+    			if(node != null) {
+    				res.addContainers(container.getName(), res.getClUid(), node.getNode(), null, null);
+    			}else {
+    				isOK = false;
+    			}
+	    	//}}
+    		}
+    	}
+    	
+    	//1개라도 선택하지 못하면
+    	if(isOK) {
 	    	status = WorkloadResponseStatus.SUCCESS;
     	}else {
     		status = WorkloadResponseStatus.SUCCESS_NO_NODE;    		
@@ -105,13 +175,14 @@ public class WorkloadRequestService {
     	res.setCode(status.getCode());
     	res.setMessage(status.getMessage());
     	//}}
-    	res.setResult(rsResult);
+    	   	
+    	//res.setResult(rsResult);
     	wlResponse.setResponse(res);
     	
     	//qm.
     	
     	try {
-			res.setInfo(JSONUtil.getJsonstringFromObject(wlResponse));
+    		res.setInfo(JSONUtil.getJsonstringFromObject(wlResponse));
 		} catch (JsonProcessingException e) {
 			log.error("결과 변환에러:{}", e, wlResponse);
 		}
@@ -120,6 +191,7 @@ public class WorkloadRequestService {
 	}
 	//}}
 	
+	
 	//{{노드 셀렉터
 	/**
 	 * 요청 리퀘스트에 대한 노드의 스코어를 요청한 갯수 만큼 리턴 
@@ -127,19 +199,47 @@ public class WorkloadRequestService {
 	 * @param nodeConnt
 	 * @return
 	 */
-	public List<PromMetricNode> getNodeScore(WorkloadRequest wlRequest, int nodeConnt) {
+	public List<PromMetricNode> getNodeScore(WorkloadRequest wlRequest, int nodeCount) {
 		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
-		Map<String, Set<WorkloadRequest>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
+		Map<String,Map<String, Container>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
 		
 
-		WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getRequestAttributes().getWorkloadType();
+		//WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getAttribute().getWorkloadType();
 		ResourceWeight resoruceWeight = null;
 		//null이면 defaul 값을 리턴한다.
-		resoruceWeight = this.rwProperties.getResourceWeight(workloadtype);
+		resoruceWeight = this.rwProperties.getResourceWeight(null);
 
 		BestFitBinPacking bbp = new BestFitBinPacking(nodes, notApplyRequestMap, resoruceWeight);
 
-		List<PromMetricNode>  sel_nodes = bbp.allocate(wlRequest, nodeConnt); //
+		WorkloadRequest.Request req = wlRequest.getRequest();
+
+		List<Container> containers = req.getContainers();
+		List<PromMetricNode> sel_nodes = new ArrayList<PromMetricNode>();
+		Integer clUid = null;
+		for(int i = 0 ; i < containers.size(); i++) {
+			Container container =  containers.get(i);
+			
+			List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);
+			log.info("select node list: {}", sel_nodes);
+
+			PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
+			tempNodes.clear();
+			
+			//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
+			wlRequest.getNodes().add(node.getNode());
+		
+			sel_nodes.add(node);
+			
+			if(node != null)
+				clUid = node.getClUid();
+			//한개의 워크로드는 동일한 클러스터에서 수행한다.
+			
+			//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
+			requestQ.setWorkloadRequest(wlRequest, i);
+		}
+		
+		//테스트 이므로 모두 삭제한다.
+		requestQ.reomveWorkloadRequest(wlRequest.getRequest().getMlId());
 
 		return sel_nodes;
 	}

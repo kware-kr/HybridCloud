@@ -43,7 +43,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE uid     = #{uid}
-      AND hash_val != #{hashVal}
   </update>
 
   <!-- Delete -->
@@ -89,23 +88,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     WHERE uid = #{uid}
   </select>
 
- <select id="selectClusterCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.Cluster">
-    SELECT count(*)
-    FROM mo_cluster
-    WHERE uid = #{uid}
-    <if test="hashVal != null">
-      AND hash_val = #{hashVal} 
-    </if>
-  </select>
-
-
 <!-- ************************ cluster node*************************************  -->
 	<!-- Insert -->
-  <insert id="insertClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
+  <insert id="insertClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode" useGeneratedKeys="true" keyProperty="uid">
     INSERT INTO mo_cluster_node (
-          uid
-        , cl_uid
+          cl_uid
         , nm
+        , no_uuid
         , info
         , gpuinfo
         , memo
@@ -114,9 +103,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         , reg_uid
         , updt_uid 
     )VALUES (
-    	  #{uid}
-    	, #{clUid}
+    	  #{clUid}
     	, #{nm}
+    	, #{noUuid}
     	, #{info}::jsonb
     	, #{gpuinfo}::jsonb
     	, #{memo}
@@ -127,10 +116,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     )
   </insert>
 
+  <select id="selectUidFromClusterNode" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
+    SELECT uid FROM mo_cluster_node WHERE cl_uid = #{clUid} AND nm = #{nm}
+  </select>
+  
   <!-- Update -->
   <update id="updateClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     UPDATE mo_cluster_node
-    SET nm        = #{nm}
+    SET no_uuid   = #{noUuid}
       , info      = #{info}::jsonb
       , gpuinfo   = #{gpuinfo}::jsonb
       , memo      = #{memo}
@@ -139,8 +132,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE uid     = #{uid} 
-      AND cl_uid  = #{clUid}
-      AND hash_val != #{hashVal}
   </update>
 
   <!-- Delete -->
@@ -150,12 +141,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE uid     = #{uid} 
-      AND cl_uid  = #{clUid}
   </delete>
 
 <!-- Select -->
   <select id="selectClusterNodeList" resultType="com.kware.policy.task.collector.service.vo.ClusterNode">
     SELECT uid
+         , no_uuid 
          , cl_uid
          , nm
          , info
@@ -174,6 +165,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   <!-- Select -->
   <select id="selectClusterNode" resultType="com.kware.policy.task.collector.service.vo.ClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     SELECT uid
+         , no_uuid
          , cl_uid
          , nm
          , info
@@ -186,21 +178,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          , updt_uid
          , updt_dt
     FROM mo_cluster_node
-    WHERE uid    = #{uid} 
-      AND cl_uid = #{clUid}
-  </select>
-  
-  <select id="selectClusterNodeCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
-    SELECT count(*)
-    FROM mo_cluster_node
-    WHERE uid = #{uid}
-      AND cl_uid = #{clUid}
-    <if test="hashVal != null">
-      AND hash_val = #{hashVal} 
+    WHERE 1 = 1 
+    <if test="uid != null">
+      AND uid    = #{uid}
     </if>
+    <if test="uid == null">
+      AND cl_uid = #{clUid} 
+      AND nm     = #{nm} 
+     </if>
   </select>
   
-  
+   
   <!-- ************************ cluster workload *************************************  -->
 	<!-- Insert -->
   <insert id="insertClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
@@ -240,7 +228,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE ml_id   = #{mlId} 
-      AND hash_val != #{hashVal}
   </update>
 
   <!-- Delete -->
@@ -294,15 +281,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     FROM mo_cluster_workload
     WHERE ml_id    = #{mlId} 
   </select>
-  
-  <select id="selectClusterWorkloadCount" resultType="int" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
-    SELECT count(*)
-    FROM mo_cluster_workload
-    WHERE ml_id = #{mlId}
-    <if test="hashVal != null">
-      AND hash_val = #{hashVal} 
-    </if>
-  </select>
+
   
   <!--     ************************ mo_cluster_history *********************************** -->
   

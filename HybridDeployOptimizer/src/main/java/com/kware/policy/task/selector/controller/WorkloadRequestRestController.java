@@ -1,30 +1,38 @@
 package com.kware.policy.task.selector.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
+import com.kware.common.util.JSONUtil;
 import com.kware.common.util.StringUtil;
 import com.kware.common.util.YAMLUtil;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.constant.StringConstant.RequestStatus;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.common.service.CommonService;
+import com.kware.policy.task.common.service.vo.CommonConfigGroup;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
@@ -43,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WorkloadRequestRestController {
 	private final WorkloadRequestService wlService;
+	private final CommonService cmService;
 
 	QueueManager qm = QueueManager.getInstance();
 	// APIQueue apiQ = qm.getApiQ();
@@ -92,20 +101,23 @@ public class WorkloadRequestRestController {
 	 * @throws Exception
 	 */
 	@PostMapping("/do/schedule/nodeselect")
-	public ResponseEntity<?> getNodeBFBP(@RequestBody String yamlstring) throws Exception {
+	public ResponseEntity<?> getNodeBFBP(@RequestBody String requestString) throws Exception {
 		APIResponseCode status = null;
-		WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
+		//WorkloadRequest wlRequest = YAMLUtil.read(requestString, WorkloadRequest.class);
+		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
 			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage(), null);
 			return ResponseEntity.ok(ares);
 		}
-		wlRequest.aggregate();
+		wlRequest.aggregate(true);
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		req.setInfo(YAMLUtil.convertYamlToJson(yamlstring));
+		//req.setInfo(YAMLUtil.convertYamlToJson(requestString));
+		req.setInfo(requestString);
+		req.setStatus(RequestStatus.request.toString());
 		wlService.insertMoUserRequest(req);
 		// }}
 
@@ -119,7 +131,7 @@ public class WorkloadRequestRestController {
 		// WorkloadRequest에 Response 입력
 		wlRequest.setResponse(wlResponse.getResponse());
 		String res_yamlstring = YAMLUtil.writeString(wlRequest, false);
-		wlResponse.getResponse().setOriginRequest(StringUtil.encodebase64(yamlstring));
+		wlResponse.getResponse().setOriginRequest(StringUtil.encodebase64(requestString));
 
 		/*
 		 * WorkloadResponse.Response wlResponseRes =wlResponse.getResponse();
@@ -144,21 +156,22 @@ public class WorkloadRequestRestController {
 	 * @throws Exception
 	 */
 	@PostMapping("/do/schedule/nodeselect/complete")
-	public ResponseEntity<?> getNodeScheduleComplete(@RequestBody String yamlstring) throws Exception {
+	public ResponseEntity<?> getNodeScheduleComplete(@RequestBody String requestString) throws Exception {
 
 		APIResponseCode status = null;
-		WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
+		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
 			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage(), null);
 			return ResponseEntity.ok(ares);
 		}
-		wlRequest.aggregate();
+		wlRequest.aggregate(true);
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		req.setInfo(YAMLUtil.convertYamlToJson(yamlstring));
+		req.setInfo(requestString);
+		req.setStatus(RequestStatus.complete.toString());
 		wlService.insertMoUserRequest(req);
 		// }}
 
@@ -175,16 +188,17 @@ public class WorkloadRequestRestController {
 	 * @return
 	 */
 	@PostMapping("/do/schedule/node_score_bfbp")
-	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String yamlstring) {
+	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String requestString) {
 		try {
 
-			WorkloadRequest wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
-			wlRequest.aggregate();
+			WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+			wlRequest.aggregate(true);
 
 			// {{ WorkloadRequest DB저장
 			WorkloadRequest.Request req = wlRequest.getRequest();
 			// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-			req.setInfo(YAMLUtil.convertYamlToJson(yamlstring));
+			req.setInfo(requestString);
+			req.setStatus(RequestStatus.request.toString());
 			wlService.insertMoUserRequest(req);
 			// }}
 
@@ -203,26 +217,67 @@ public class WorkloadRequestRestController {
 	 * 
 	 * @param yamlstring
 	 * @return
+	 * @throws Exception 
 	 */
 	// @PostMapping("/do/schedule/node_score_for_capacity")
 	@RequestMapping(value = "/do/schedule/node_score_for_capacity", method = { RequestMethod.POST, RequestMethod.GET })
-	public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String yamlstring) {
+	public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String requestString) throws Exception {
 		List<PromMetricNode> nodes = null;
 		WorkloadRequest wlRequest = null;
-		if (yamlstring == null) {
+		if (requestString == null) {
 			nodes = promQ.getLastPromMetricNodesReadOnly();
 		} else {
-			wlRequest = YAMLUtil.read(yamlstring, WorkloadRequest.class);
-			wlRequest.aggregate();
+			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+			wlRequest.aggregate(true);
 			nodes = promQ.getAppliablePromMetricNodesReadOnly(wlRequest);
 		}
 
 		for (PromMetricNode node : nodes) {
 			double a = node.getScore();
 			node.setBetFitScore(a);
-			log.info("NodeScore: {} , cl: {}, node:[{}, {}]", a, node.getClUid(), node.getNode(), node.getNoUid());
+			log.info("NodeScore: {} , cl: {}, node:[{}, {}]", a, node.getClUid(), node.getNode(), node.getUid());
 		}
 
 		return ResponseEntity.ok(nodes);
+	}
+	
+	/**
+	 * 워크로드 특성에 특정 설정에 해당하는 config name을 통해서 상세정보를 확인함
+	 * @param cfgName config name
+	 * @return
+	 * @throws Exception
+	 */
+	@GetMapping("/config/workloadfeature")
+	public ResponseEntity<?> getConfigGroup() throws Exception {
+		CommonConfigGroup.ConfigName cfgname= CommonConfigGroup.ConfigName.workload_feature;
+		CommonConfigGroup ccGroup = null;
+		ccGroup = cmService.selectCommonConfigGroup(cfgname);
+
+		List<Map> rsList = new ArrayList<Map>();
+		JsonNode node = ccGroup.getContent();
+		if (node.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) node; // JsonNode를 ArrayNode로 캐스팅
+
+            // 배열의 각 요소를 순회
+            Map map = null;
+            String sName = "name";
+            String sLevel = "level";
+            String name;
+            Integer level;
+            for (JsonNode element : arrayNode) {
+            	name  = (String)element.get(sName).asText();
+            	level = (Integer)(element.get(sLevel).asInt());
+            	
+            	map = new HashMap<String, Object>();
+            	map.put(sName, name);
+            	map.put(sLevel, level);
+            	rsList.add(map);
+            }
+        } 
+		
+		APIResponseCode status = APIResponseCode.SUCCESS;
+		APIResponse<List> response = new APIResponse(status.getCode(), status.getMessage(), rsList);
+		
+		return ResponseEntity.ok(response);
 	}
 }
