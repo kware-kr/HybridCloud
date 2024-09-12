@@ -3,8 +3,8 @@ spring:
     active: local
    #main.web-application-type: none   #웹서버실행하지 않기
   devtools:
-    restart.enabled: true
-    livereload.enabled: true
+    restart.enabled: false
+    livereload.enabled: false
   mvc.pathmatch.matching-strategy: ant-path-matcher
   thymeleaf:
     prefix: classpath:templates/
@@ -14,14 +14,17 @@ spring:
     cache: false
   #shutdown  
   pid:
-    file: .\.app.pid
+    file: .\.app.dev.pid
   jackson:
     time-zone: Asia/Seoul
+    #serialization.WRITE_DATES_AS_TIMESTAMPS: false
+    date-format: yyyy-MM-dd HH:mm:ss
+
 
   rabbitmq:
-    enable: true  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
-    host: 183.109.110.211   # 172.30.1.243
-    port: 9510   # 5672
+    enable: false  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
+    host: 172.30.1.35
+    port: 5672
     username: admin
     password: admin123!
     exchange:
@@ -33,9 +36,25 @@ spring:
       policy_req.key: po_req_key
       policy_res.key: po_res_key
 
+  security:
+    user:
+      name: admin
+      password: admin123!
+      roles: ACTUATOR
+#actuator를 활성화
+management:
+  server.port: 8899
+  endpoints:
+    web.exposure:
+        include: "*"
+    #jmx.exposure.exclude: "*" 
+  security:
+    enabled: true
+  basic:
+    enabled: true
 
 server:
-  port: 8889
+  port: 8898
   servlet:
     context-path: /
     session:
@@ -62,8 +81,8 @@ hybrid:
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
         unified_url: http://10.10.30.60:30138/
-      finish-enalbe: false
-      delete-enalbe: false
+      finish-enalbe: true
+      delete-enalbe: true
     threads: 5
   scheduler:
     threads: 2
@@ -77,7 +96,7 @@ hybrid:
       password: ENC(/MbRwpHCgQGTORq4/DsIej4lS47MVzdzdW8TPWEthKH+h6P/sCqbru9aLMqV+iQp)
       #password: postgresql!@
       pool-name: hikari-cp
-      maximum-pool-size: 10
+      maximum-pool-size: 5
       minimum-idle: 2
       data-source-properties: 
           cachePrepStmts: true
@@ -85,6 +104,23 @@ hybrid:
           prepStmtCacheSqlLimit: 2048
           useServerPrepStmts: true  
   policy:
+    resource-weights:
+      ml:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 4
+      dl:
+        cpu: 3
+        gpu: 5
+        disk: 3
+        memory: 4
+      inf:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 3
+    exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator"
     server:
       h2:
         enable: false
@@ -106,3 +142,4 @@ hybrid:
             prepStmtCacheSize: 250
             prepStmtCacheSqlLimit: 2048
             useServerPrepStmts: true 
+            

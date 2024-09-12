@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" monitorInterval="30">
+	<property name="LOG_PATTERN" value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %p %class{10}.%method[%line] - %m%n" />
+	<property name="METRIC_PATTERN" value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %p - %m%n" />
+	<property name="APP_LOG_ROOT" value="H:/home/logs/metrics" />
+
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${LOG_PATTERN}</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="applicationLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/hybrid.log</file>
+		<encoder>
+			<pattern>${LOG_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/hybrid-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>200MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+
+	<appender name="metricLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/metric.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/metric-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+	<appender name="requestLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/request.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/request-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+	<appender name="parseLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/parse.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/parse-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+	<appender name="queueLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/queue.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/queue-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+	<appender name="mqLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/messagequeue.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/messagequeue-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+	<!-- File appender for error logs -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${APP_LOG_ROOT}/error.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${APP_LOG_ROOT}/backup/error-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+            <maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+	
+
+	<logger name="com.zaxxer.hikari" level="ERROR" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	<logger name="org.springframework.cloud.stream" level="DEBUG" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	<logger name="com.kware" level="DEBUG" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	<logger name="jdbc.resultsettable" level="ERROR" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	<logger name="jdbc.sqlonly" level="DEBUG" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	<logger name="jdbc.sqltiming" level="ERROR" additivity="false">
+		<appender-ref ref="applicationLog" />
+	</logger>
+	<logger name="org.springframework" level="ERROR" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="ERROR_FILE" />
+	</logger>
+	
+	<logger name="com.kware.policy.task.selector" level="DEBUG" additivity="false">
+		<appender-ref ref="applicationLog" />
+		<appender-ref ref="requestLog" />
+	</logger>
+	
+	<logger name="metric-log" level="INFO" additivity="false">
+		<appender-ref ref="metricLog" />
+		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	
+	<logger name="parse-log" level="INFO" additivity="false">
+		<appender-ref ref="parseLog" />
+		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	
+	<logger name="queue-log" level="DEBUG" additivity="false">
+		<appender-ref ref="queueLog" />
+		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	<logger name="com.kware.rabbitmq" level="DEBUG" additivity="false">
+		<appender-ref ref="mqLog" />
+	</logger>
+
+	<root level="WARN">
+		<appender-ref ref="applicationLog" />
+	</root>
+
+</configuration>

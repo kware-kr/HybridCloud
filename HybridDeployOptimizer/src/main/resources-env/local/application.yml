@@ -14,7 +14,7 @@ spring:
     cache: false
   #shutdown  
   pid:
-    file: .\.app.pid
+    file: .\.app.loc.pid
   jackson:
     time-zone: Asia/Seoul
     #serialization.WRITE_DATES_AS_TIMESTAMPS: false
@@ -96,7 +96,7 @@ hybrid:
       password: ENC(/MbRwpHCgQGTORq4/DsIej4lS47MVzdzdW8TPWEthKH+h6P/sCqbru9aLMqV+iQp)
       #password: postgresql!@
       pool-name: hikari-cp
-      maximum-pool-size: 10
+      maximum-pool-size: 5
       minimum-idle: 2
       data-source-properties: 
           cachePrepStmts: true
