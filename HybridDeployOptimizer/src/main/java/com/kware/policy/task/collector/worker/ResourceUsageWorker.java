@@ -84,14 +84,14 @@ public class ResourceUsageWorker extends Thread {
 		Collections.addAll(labelFilterSet, "labels");
 	}
 
-	
+	/*
 	@Data
 	public static class WorkloadRequest{
 		int page;
 		int size = 20;
 		//String status;
 	}
-	
+	*/
 
 	@Override
 	public void run() {

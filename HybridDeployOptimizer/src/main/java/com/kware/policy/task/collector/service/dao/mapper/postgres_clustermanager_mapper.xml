@@ -26,7 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , #{memo}
       , #{promUrl}
       , #{hashVal}
-      , #{deleteAt}
+      , 'N'
       , #{regUid}
       , #{updtUid}
     )
@@ -109,7 +109,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     	, #{info}::jsonb
     	, #{gpuinfo}::jsonb
     	, #{memo}
-    	, #{deleteAt}
+    	, 'N'
     	, #{hashVal}
     	, #{regUid}
     	, #{updtUid}
@@ -127,7 +127,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , info      = #{info}::jsonb
       , gpuinfo   = #{gpuinfo}::jsonb
       , memo      = #{memo}
-      , delete_at = #{deleteAt}
+<!--       , delete_at = #{deleteAt} --> 
       , hash_val  = #{hashVal}
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
@@ -137,7 +137,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   <!-- Delete -->
   <delete id="deleteClusterNode" parameterType="com.kware.policy.task.collector.service.vo.ClusterNode">
     UPDATE mo_cluster_node
-    SET delete_at = #{deleteAt}
+    SET delete_at = 'Y'
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE uid     = #{uid} 
@@ -223,7 +223,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , nm        = #{nm}
       , info      = #{info}::jsonb
       , memo      = #{memo}
-      , delete_at = #{deleteAt}
+<!--       , delete_at = #{deleteAt} -->
       , hash_val  = #{hashVal}
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
@@ -233,7 +233,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   <!-- Delete -->
   <delete id="deleteClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     UPDATE mo_cluster_workload
-    SET delete_at = #{deleteAt}
+    SET ml_id     = TO_CHAR(NOW(),'YYMMDDHH24MISS') || '_' || ml_id 
+      , delete_at = 'Y'
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE ml_id     = #{mlId} 

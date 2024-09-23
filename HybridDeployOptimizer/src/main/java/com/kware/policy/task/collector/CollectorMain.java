@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling // 스케줄링 활성화
 @Component
 public class CollectorMain {
+	
+	private final TaskScheduler taskScheduler;
+
+    @Autowired
+    public CollectorMain(TaskScheduler taskScheduler) {
+        this.taskScheduler = taskScheduler;
+    }
     
 	@Autowired
 	private PromQLService ptService;
@@ -65,6 +73,7 @@ public class CollectorMain {
 	private String api_prometheus_unified_url;
 	
 	final QueueManager qm = QueueManager.getInstance();
+	
 	APIQueue  apiQ  = qm.getApiQ();
 	PromQueue promQ = qm.getPromQ();
 	
@@ -87,6 +96,9 @@ public class CollectorMain {
 			nodeApiMap.put(n.getUniqueKey(), n);
 		}
 		*/
+		
+		qm.setScheduler(taskScheduler);
+		
 		try {//초기에 5초간의 여유를 주가 실행한다.
 			isFirst = true;
 			collectClusterTask();

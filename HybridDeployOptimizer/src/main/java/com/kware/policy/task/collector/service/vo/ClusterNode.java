@@ -71,6 +71,7 @@ public class ClusterNode extends ClusterDefault {
 	    private double memoryRequestsFraction;
 	}
 	
+	@JsonSerialize(using = JsonIgnoreDynamicSerializer.class) //필요에 따라서 처리함
 	private Map<String, String> labels = new HashMap<String, String>();
 
 	public void setStatus(String _status) {

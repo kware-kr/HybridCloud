@@ -122,9 +122,10 @@ public class CollectorWorkloadWorker extends Thread {
 		this.isFinishEnable = _isFinish;
 		this.isDeleteEnable = _isDelete;
 	}
+
 	
 	@Data
-	public static class WorkloadRequest{
+	public static class WorkloadAPIRequest{
 		int page;
 		int size = 20;
 		//String status;
@@ -159,10 +160,10 @@ public class CollectorWorkloadWorker extends Thread {
 			while(!isLast) {
 				pageNumber++;
 				try {
-					WorkloadRequest pageRequest = new WorkloadRequest();
+					WorkloadAPIRequest pageRequest = new WorkloadAPIRequest();
 					pageRequest.page = pageNumber;
 					
-					Map<String, WorkloadRequest> bodyparm  = new HashMap<String, WorkloadRequest>();
+					Map<String, WorkloadAPIRequest> bodyparm  = new HashMap<String, WorkloadAPIRequest>();
 					bodyparm.put("pageRequest", pageRequest);
 					
 					String bodyString = JSONUtil.getJsonStringFromMap(bodyparm);

@@ -1,6 +1,6 @@
 package com.kware.policy.task.collector.service.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kware.policy.task.common.service.vo.CommonQueueDefault;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,8 +8,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PromMetricDefault {
-  @JsonIgnore
-  private Long      timemillisecond = 0L;
-  public void clear() { }
+public class PromMetricDefault extends CommonQueueDefault {
+   public void clear() { }
 }

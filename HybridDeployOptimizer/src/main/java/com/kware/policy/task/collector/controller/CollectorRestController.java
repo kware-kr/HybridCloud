@@ -6,8 +6,6 @@ import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,18 +31,22 @@ import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.collector.service.vo.ResourceUsageNode;
 import com.kware.policy.task.collector.service.vo.ResourceUsagePod;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 외부에 서비스가 필요할때 사용할 용도 
  */
 @SuppressWarnings("rawtypes")
+@Slf4j
 @RestController
 @RequestMapping("/queue")
 public class CollectorRestController {
-	static Logger logger = LoggerFactory.getLogger(CollectorRestController.class);
 	QueueManager qm = QueueManager.getInstance();
 	APIQueue     apiQ = null;
 	PromQueue    promQ = null;
@@ -94,7 +96,7 @@ public class CollectorRestController {
 		}
     }
 	
-	
+///////////////////////////////////////// apiQ /////////////////////////////////////////	
 	@GetMapping("/api/clusters")
     public ResponseEntity<Map> getCluster() {
     	return ResponseEntity.ok(apiQ.getApiClusterMap());
@@ -139,7 +141,10 @@ public class CollectorRestController {
     public ResponseEntity<ClusterWorkloadPod> getWorkloadPodId(@PathVariable String id) {
     	return ResponseEntity.ok(apiQ.getApiWorkloadPodMap().get(id));
     }
-		
+	
+	
+/////////////////////////////// promQ //////////////////////////////////////////////////
+	
 	@GetMapping("/metric/nodes")
     public ResponseEntity<Map> getMetricdNodes() {
 		PromMetricNodes pmns = promQ.getPromNodesDeque().peekFirst();
@@ -176,6 +181,31 @@ public class CollectorRestController {
 		return ResponseEntity.ok(pmps.getMetricPod(id));
     }
 	
+/////////////////////////////// rquestQ //////////////////////////////////////////////////
+	
+	@GetMapping("/request/workloads")
+	public ResponseEntity<Map> getRequestMap() {
+		return ResponseEntity.ok(requestQ.getWorkloadRequestMap());
+	}
+	
+	@GetMapping("/request/workload/{id}")
+	public ResponseEntity<WorkloadRequest> getRequestMap(@PathVariable("id") String id) {
+		WorkloadRequest wlRequest = requestQ.getWorkloadRequestMap().get(id);
+		return ResponseEntity.ok(wlRequest);
+	}
+
+	@GetMapping("/request/workload/containers")
+	public ResponseEntity<Map> getNoqAppliedMap() {
+		return ResponseEntity.ok(requestQ.getWorkloadRequestNotApplyMap());
+	}
+	
+	@GetMapping("/request/workload/container/{clId}/{node}")
+	public ResponseEntity<Map> getNoqAppliedMap(@PathVariable Integer clId, @PathVariable String node) {
+		String key = clId + StringConstant.STR_UNDERBAR + node;
+		Map map = requestQ.getWorkloadRequestNotApplyMap().get(key);
+		return ResponseEntity.ok(map);
+	}
+
 	/**
 	 * DB상의 사용량을 가져오는 쿼리
 	 * requestbody에 값이 없으면 최근 30분의 데이터를 조회

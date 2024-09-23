@@ -391,16 +391,18 @@ public class CollectorClusterWorker extends Thread {
 		PromMetricNodes mNodes = (PromMetricNodes)this.promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		if(mNodes != null) {
 			PromMetricNode mNode = mNodes.getMetricNode(_cl.getUid(), node.getNm());
-			node.setPromMetricNode(mNode);
-			
-			Map<Integer, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
-			
-			try {
-				gpuJsonString = JSONUtil.getJsonstringFromObject(gpulist,this.gpuFilterSet);
-			} catch (JsonProcessingException e) {
-				e.printStackTrace();
+			if(mNode != null) {
+				node.setPromMetricNode(mNode);
+				
+				Map<Integer, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
+				
+				try {
+					gpuJsonString = JSONUtil.getJsonstringFromObject(gpulist,this.gpuFilterSet);
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
+				node.setGpuinfo(gpuJsonString);
 			}
-			node.setGpuinfo(gpuJsonString);			
 		}
 		//}}GPU 리스트
 		

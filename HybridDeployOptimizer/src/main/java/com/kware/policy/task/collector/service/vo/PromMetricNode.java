@@ -11,18 +11,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.kware.common.config.serializer.HumanReadableSizeSerializer;
+import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 
 @Getter
 @Setter
-@ToString
+//@ToString
 @Slf4j
 public class PromMetricNode extends PromMetricDefault{
 	public static enum Condition_TYPE {
@@ -84,7 +84,10 @@ public class PromMetricNode extends PromMetricDefault{
 
 	//이건 맵이 아니면 좋겠는데..
 	private Map<Condition_TYPE, Boolean> statusConditions = new HashMap<Condition_TYPE, Boolean>(); //DiskPressure,MemoryPressure,NetworkUnavailable,PIDPressure,Ready
+	
+	@JsonSerialize(using = JsonIgnoreDynamicSerializer.class) //필요에 따라서 처리함
 	private Map<String, String>  labels = new HashMap<String, String>();
+	
 	private Set<String> taintEffects = new HashSet<String>();
 	
 	@JsonIgnore
@@ -111,6 +114,15 @@ public class PromMetricNode extends PromMetricDefault{
     public double getScore() {
     	return getScore(null, false);
     }
+    
+/** 20240920 현재 적용 안됨: 
+Disk  : 남은 공간 5~10% 또는 5GiB~10GiB 유지.
+CPU   : 남은 1~2코어 이하로 줄어들지 않도록 설정.
+Memory: 남은 메모리 5~10% 또는 4GiB~8GiB 유지.
+inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 수집하지 않고 있음
+
+정적으로 적용해야겠다.
+     */
     
     /**
      * 리소스 요청을 반영한 스코어 계산
