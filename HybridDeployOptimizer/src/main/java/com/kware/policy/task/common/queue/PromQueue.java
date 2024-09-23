@@ -1,5 +1,7 @@
 package com.kware.policy.task.common.queue;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.TaskScheduler;
 
 import com.kware.policy.task.collector.service.vo.PromMetricDefault;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
@@ -28,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @SuppressWarnings({"unchecked","rawtypes"})
-public class PromQueue {
+public class PromQueue extends DefaultQueue{
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
 
     //{{Prometheus
@@ -43,9 +46,14 @@ public class PromQueue {
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
 
         promDequesMap = new HashMap<>();
-        //스케줄러 생성
-        checkingScheduleForManager();
     }
+    
+    @Override
+    public void setScheduler(TaskScheduler scheduler) {
+        this.scheduler = scheduler;
+        //스케줄러 생성
+        this.createClenaSchedulerForPromQueue();
+    }  
     
     
     //{{ //////////////deque LIFO, FIFO모두 사용가능 ==> LIFO로 사용하자. //////////////////////
@@ -188,6 +196,8 @@ public class PromQueue {
     	long cutoffTime = System.currentTimeMillis() - _miliseconds;
     	BlockingDeque<?> q = promDequesMap.get(name);
     	
+    	
+    	//{{데이터 로그 생성
     	if(queueLog.isDebugEnabled()) {
     		queueLog.debug("**********************************************************************************");
     		queueLog.debug("Deque-{}: remove before: size: {}",name,  q.size());
@@ -218,6 +228,7 @@ public class PromQueue {
     	    			
     	Iterator<?> iterator = q.descendingIterator();
         
+    	//오래된 데이터 제거
         while (iterator.hasNext()) {
         	PromMetricDefault element = (PromMetricDefault)iterator.next();
             if (element.getTimemillisecond() < cutoffTime) {
@@ -237,10 +248,7 @@ public class PromQueue {
     long expired_time = 30 * 60 * 1000;
     //내부 스케줄링을 통해 제거작업등을 수행하도록 함
     //1.시간지난 promDeques 정리작업 진행
-	private void checkingScheduleForManager() {
-		// ScheduledExecutorService 생성
-		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
+	private void createClenaSchedulerForPromQueue() {
 		// 10분마다 수행할 작업 정의
 		Runnable periodicTask = new Runnable() {
 			@Override
@@ -253,18 +261,7 @@ public class PromQueue {
 		};
 
 		// 초기 지연 시간 없이 5분마다 작업을 실행
-		scheduler.scheduleAtFixedRate(periodicTask, 0, 5, TimeUnit.MINUTES);
-
-		// 프로그램 종료 후 스케줄러 종료
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			scheduler.shutdown();
-			try {
-				if (!scheduler.awaitTermination(60, TimeUnit.SECONDS)) {
-					scheduler.shutdownNow();
-				}
-			} catch (InterruptedException e) {
-				scheduler.shutdownNow();
-			}
-		}));
+		scheduler.scheduleAtFixedRate(periodicTask, Instant.now(), Duration.ofMinutes(5)); // 처음 실행 시간을 약간 지연시킬 수 있음
+			             // 5분 간격 (밀리초));
 	}
 }

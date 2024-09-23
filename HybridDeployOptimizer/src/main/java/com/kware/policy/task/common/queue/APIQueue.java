@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @SuppressWarnings("unchecked")
-public class APIQueue {
+public class APIQueue extends DefaultQueue{
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
  
     //{{API
@@ -176,5 +176,5 @@ public class APIQueue {
     	}
     	return removedMap;
     }
-    //}}API END	
+    //}}API END
 }

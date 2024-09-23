@@ -1,14 +1,17 @@
 package com.kware.policy.task.common.queue;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.TaskScheduler;
 
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
@@ -23,7 +26,7 @@ not
 요청에 응답했지만 prometheus metric에 발견되지 않을때 얼마동안 가지고 있다가 없엘지 확인
  */
 @Slf4j
-public class RequestQueue {
+public class RequestQueue  extends DefaultQueue{
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
     
 	//{{ISSUE
@@ -45,6 +48,13 @@ public class RequestQueue {
         requestMap = new ConcurrentHashMap<String, WorkloadRequest>();
         requestNotApplyMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, Container>>();
     }
+    
+    @Override
+    public void setScheduler(TaskScheduler scheduler) {
+        this.scheduler = scheduler;
+        //스케줄러 생성
+        this.createCleanSchedulerForRequestQueue();//requestMap clean
+    }  
     
     //---------------------------------------------------------------------------------------------------
   	/**
@@ -108,6 +118,9 @@ public class RequestQueue {
     	if(_req.getClUid() == null || _req.getNodes() == null || mlId == null) {
     		throw new NullPointerException ("clUid, node, request.id is nullable");
     	}
+    	
+    	long timemilis = System.currentTimeMillis(); //등록시간을 저장해서 나중에 expierd time을 적용하기 위함
+    	_req.setTimemillisecond(timemilis);
        	
     	//동일한 키가 있으면 값을 현재 버전으로 수정하고 이전 버전을 리턴한다.(내용물이 틀릴 수 있으므로)
     	this.requestMap.put(mlId, _req);
@@ -128,6 +141,7 @@ public class RequestQueue {
 	    	// 그래서 여기서는 제거하고 다시 등록하도록 한다.
 	    	
 	    	Container container = _req.getRequest().getContainers().get(i);
+	    	container.setTimemillisecond(timemilis);
 	    	String containerKey = container.getContainerKey(mlId); 
 	    	
 	    	containerMap.put(containerKey, container);
@@ -144,6 +158,10 @@ public class RequestQueue {
     	if(_req.getClUid() == null || _req.getNodes() == null || mlId == null) {
     		throw new NullPointerException ("clUid, node, request.id is nullable");
     	}
+    	
+    	long timemilis = System.currentTimeMillis(); //등록시간을 저장해서 나중에 expierd time을 적용하기 위함
+    	if(_req.getTimemillisecond() == 0L)
+    		_req.setTimemillisecond(timemilis);
        	
     	//동일한 키가 있으면 값을 현재 버전으로 수정하고 이전 버전을 리턴한다.(내용물이 틀릴 수 있으므로)
     	this.requestMap.put(mlId, _req);
@@ -163,6 +181,7 @@ public class RequestQueue {
 	    	// 그래서 여기서는 제거하고 다시 등록하도록 한다.
 	    	
 	    	Container container = _req.getRequest().getContainers().get(containerIdx);
+	    	container.setTimemillisecond(timemilis);
 	    	
 	    	String containerKey = container.getContainerKey(mlId); //mlId + "_" + container name
 	    	containerMap.put(containerKey, container);
@@ -191,9 +210,13 @@ public class RequestQueue {
     public void  reomveWorkloadRequest(String _mlUid) {
     	WorkloadRequest req = this.requestMap.get(_mlUid);
     	if(req != null) {
-    		reomveNotApplyWorkloadRequest(req);
-    		this.requestMap.remove(_mlUid);
+    		reomveWorkloadRequest(req);
     	}
+    }
+    
+    public void  reomveWorkloadRequest(WorkloadRequest _req) {
+   		reomveNotApplyWorkloadRequest(_req);
+   		this.requestMap.remove(_req.getRequest().getMlId());
     }
     
     /**
@@ -218,8 +241,6 @@ public class RequestQueue {
 	    	}
     	}
     }
-    
-    
     
     /**
      * 해당 노드에 배포요청이 완료되었지만, 실제 서버에 배포되지않는 워크로드 Container을 제공한다.
@@ -249,4 +270,50 @@ public class RequestQueue {
     	
     	return list;
     }
+    
+    //_miliseconds가 지난 데이터를 삭제하는 루틴
+    public boolean isExpiredElements(String _mlId, long _expried_militime) {
+    	
+    	WorkloadRequest element = this.requestMap.get(_mlId);
+    	
+    	long cutoffTime = System.currentTimeMillis() - _expried_militime;
+    	long noti_complete_time = element.getComplete_notice_militime();
+    	long create_time = element.getTimemillisecond();
+    	
+    	if(noti_complete_time == 0L) {
+    		if(create_time < cutoffTime) {
+    	        if(queueLog.isDebugEnabled()) {
+    	        	queueLog.debug("RequestMap-{}: remove mlId: {}, 나머지 갯수:{}", element.getRequest().getMlId(), requestMap.size() );
+    	        	queueLog.debug("**********************************************************************************");
+    	        }
+    	        return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    long expired_time = 10 * 60 * 1000;//10분 
+    //내부 스케줄링을 통해 제거작업등을 수행하도록 함
+    //1.시간지난 promDeques 정리작업 진행
+	private void createCleanSchedulerForRequestQueue() {
+	
+		// 5분마다 수행할 작업 정의
+		Runnable periodicTask = new Runnable() {
+			@Override
+			public void run() {
+				Iterator<String> iterator = requestMap.keySet().iterator();
+				while (iterator.hasNext()) { // 큐 내부의 모든 요소를 순회하면서 제거
+					String mlId = iterator.next();
+					if(isExpiredElements(mlId, expired_time)) {
+						reomveNotApplyWorkloadRequest(requestMap.get(mlId));
+						iterator.remove();
+					}
+				}
+			}
+		};
+		
+		// 초기 지연 시간 없이 5분마다 작업을 실행
+		scheduler.scheduleAtFixedRate(periodicTask, Instant.now(), Duration.ofMinutes(5)); // 처음 실행 시간을 약간 지연시킬 수 있음
+	             // 5분 간격 (밀리초));
+	}
 }
