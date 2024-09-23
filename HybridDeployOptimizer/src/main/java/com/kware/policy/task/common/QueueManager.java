@@ -1,5 +1,8 @@
 package com.kware.policy.task.common;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
@@ -26,6 +29,16 @@ public class QueueManager {
 		requestQ = new RequestQueue();
 	}
 
+	
+	TaskScheduler taskScheduler = null;
+
+    
+    public void setScheduler(TaskScheduler taskScheduler) {
+        this.taskScheduler = taskScheduler;
+        apiQ.setScheduler(taskScheduler);
+        promQ.setScheduler(taskScheduler);
+        requestQ.setScheduler(taskScheduler);
+    }
 	
 	public APIQueue getApiQ() {
 		return apiQ;

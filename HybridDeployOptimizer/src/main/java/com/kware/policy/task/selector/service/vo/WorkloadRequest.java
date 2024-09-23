@@ -12,21 +12,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kware.policy.task.common.constant.StringConstant;
+import com.kware.policy.task.common.service.vo.CommonQueueDefault;
 
 import lombok.Data;
 import lombok.Getter;
 
 
 @Data
-public class WorkloadRequest {
+public class WorkloadRequest extends CommonQueueDefault{
     private String  version;
     private Request request;
     private WorkloadResponse.Response response;
     
     @JsonIgnore
-    private Integer clUid = null;
+    private long complete_notice_militime = 0L;  //배포완료 통지 메시지 받은 시간
+    
     @JsonIgnore
-    private List<String>  nodes  = new ArrayList();
+    private Integer clUid = null;
+    
+    @JsonIgnore
+    private List<String>  nodes  = new ArrayList(); //요청 컨테이너의 순서대로 노드선택알고리즘의 결과를 등록
     
     @JsonIgnore
     private Integer totalRequestCpu = 0;
@@ -118,7 +123,7 @@ public class WorkloadRequest {
     }
 
     @Data
-    public static class Container {
+    public static class Container extends CommonQueueDefault{
         private String name;
         
         @JsonInclude(Include.NON_NULL) // null 값을 제외
@@ -221,6 +226,7 @@ public class WorkloadRequest {
 //      private DevOpsType   devOpsType;    //enum    DEV|TEST|PROD
         private String       cudaVersion;
         private String       gpuDriverVersion;
+        private String       workloadFeature;
         private String       userId;
         private String       yaml;
     }

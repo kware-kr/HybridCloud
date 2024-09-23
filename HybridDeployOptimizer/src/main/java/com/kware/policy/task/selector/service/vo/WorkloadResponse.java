@@ -81,6 +81,7 @@ public class WorkloadResponse {
         @Data
         public static class ContainerResult {
             private String  name;//container
+            @JsonIgnore
         	private String  cluster;  //db: cl_uid
             private String  node;
 

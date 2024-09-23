@@ -105,6 +105,9 @@ public class WorkloadRequestRestController {
 	public ResponseEntity<?> getNodeBFBP(@RequestBody String requestString) throws Exception {
 		APIResponseCode status = null;
 		//WorkloadRequest wlRequest = YAMLUtil.read(requestString, WorkloadRequest.class);
+		if(log.isDebugEnabled())
+			log.debug("배포요청 전문: {}", requestString);
+		
 		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
@@ -123,7 +126,7 @@ public class WorkloadRequestRestController {
 		// }}
 
 		// {{노드 셀렉터
-		WorkloadResponse wlResponse = wlService.getNodesSelector(wlRequest);
+		WorkloadResponse wlResponse = wlService.getResponseToSelectedNode(wlRequest);
 		// }}
 
 		// DB 저장
@@ -158,7 +161,9 @@ public class WorkloadRequestRestController {
 	 */
 	@PostMapping("/do/schedule/nodeselect/complete")
 	public ResponseEntity<?> getNodeScheduleComplete(@RequestBody String requestString) throws Exception {
-
+		if(log.isDebugEnabled())
+			log.debug("배포완료 통지 전문:{}", requestString);
+		
 		APIResponseCode status = null;
 		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
 		if (wlRequest == null) {
@@ -166,7 +171,8 @@ public class WorkloadRequestRestController {
 			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage(), null);
 			return ResponseEntity.ok(ares);
 		}
-		wlRequest.aggregate(true);
+		if(log.isInfoEnabled())
+			log.info("배포완료 통지 ID:{}", wlRequest.getRequest().getMlId() );
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
@@ -189,9 +195,8 @@ public class WorkloadRequestRestController {
 	 * @return
 	 */
 	@PostMapping("/do/schedule/node_score_bfbp")
-	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String requestString) {
-		try {
-
+	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String requestString) throws Exception {
+		//try {
 			WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
 			wlRequest.aggregate(true);
 
@@ -208,9 +213,10 @@ public class WorkloadRequestRestController {
 			// }}
 
 			return ResponseEntity.ok(sel_nodes);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process YAML");
-		}
+		/*} catch (Exception e) {
+			throw new HttpMessageNotReadableException("Failed to process JSON", null, null);
+			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process JSON");
+		}*/
 	}
 
 	/**

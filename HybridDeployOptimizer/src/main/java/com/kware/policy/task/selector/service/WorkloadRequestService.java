@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,8 +54,18 @@ public class WorkloadRequestService {
 	}
 	//}}db 관련 서비스
 	
+	
+	/**
+	 * 
+	 * @param wlRequest
+	 */
+	public void setCompleteNoti(WorkloadRequest wlRequest) {
+		
+	}
+	
+	
 	//{{노드 셀렉터
-	public WorkloadResponse getNodesSelector(WorkloadRequest wlRequest) {	
+	public WorkloadResponse getResponseToSelectedNode(WorkloadRequest wlRequest) {	
 		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
 		Map<String, Map<String, Container>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
 		
@@ -198,7 +207,7 @@ public class WorkloadRequestService {
 	//}}
 	
 	
-	//{{노드 셀렉터
+	//{{노드 셀렉터 테스트
 	/**
 	 * 요청 리퀘스트에 대한 노드의 스코어를 요청한 갯수 만큼 리턴 
 	 * @param wlRequest
@@ -231,23 +240,35 @@ public class WorkloadRequestService {
 			PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
 			tempNodes.clear();
 			
-			//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
-			wlRequest.getNodes().add(node.getNode());
-		
+			if(node != null) {
+				clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
+				//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
+				wlRequest.getNodes().add(node.getNode());
+				wlRequest.setClUid(clUid);
+				
+				//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
+				requestQ.setWorkloadRequest(wlRequest, i);
+			}
 			sel_nodes.add(node);
-			
-			if(node != null)
-				clUid = node.getClUid();
-			//한개의 워크로드는 동일한 클러스터에서 수행한다.
-			
-			//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
-			requestQ.setWorkloadRequest(wlRequest, i);
 		}
 		
 		//테스트 이므로 모두 삭제한다.
 		requestQ.reomveWorkloadRequest(wlRequest.getRequest().getMlId());
 
 		return sel_nodes;
+	}
+	//}}
+	
+	//{{배포완료 통지
+	/**
+	 * 리퀘스트 배포 완료 통지 처리 
+	 * @param wlRequest
+	 * @param nodeConnt
+	 * @return
+	 */
+	public void completeRequest(WorkloadRequest wlRequest) {
+		WorkloadRequest memoryWlRequest = requestQ.getWorkloadRequestMap().get(wlRequest.getRequest().getMlId());
+		memoryWlRequest.setComplete_notice_militime(System.currentTimeMillis()); //통지시간 설정
 	}
 	//}}
 }
