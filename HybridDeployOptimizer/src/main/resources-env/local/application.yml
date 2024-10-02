@@ -54,7 +54,7 @@ management:
     enabled: true
 
 server:
-  port: 8888
+  port: 8898 #8888
   servlet:
     context-path: /
     session:
