@@ -61,6 +61,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'    
     
     testImplementation 'org.springframework.boot:spring-boot-starter-test'  //junit 등 테스터
+    
+    // https://mvnrepository.com/artifact/net.minidev/json-smart
+	implementation group: 'net.minidev', name: 'json-smart', version: '2.5.0'
+    
 //}}SpringBoot	
 
 //{{lombok
