@@ -16,8 +16,9 @@ import com.kware.policy.task.common.service.vo.CommonQueueDefault;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 
-
+@SuppressWarnings("unchecked")
 @Data
 public class WorkloadRequest extends CommonQueueDefault{
     private String  version;
@@ -122,7 +123,8 @@ public class WorkloadRequest extends CommonQueueDefault{
         };
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Container extends CommonQueueDefault{
         private String name;
         
