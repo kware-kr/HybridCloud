@@ -60,7 +60,7 @@ hybrid:
       authorization: 9ed36fd5-4c9b-4fba-827c-84edac08637c 
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
-        unified_url: http://10.10.30.60:30138/
+        unified_url: ${PROMETHEUS_URL}
       finish-enalbe: false
       delete-enalbe: false
     threads: 5
