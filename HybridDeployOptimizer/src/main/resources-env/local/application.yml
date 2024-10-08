@@ -42,7 +42,7 @@ spring:
       password: admin123!
       roles: ACTUATOR
 
-#actuator를 활성화
+#actuator를 활성화 local 및 dev에서만
 management:
   server.port: 8889
   endpoints:
@@ -76,8 +76,8 @@ jasypt:
 
 hybrid:
   init-sql-location:
-    ddl: classpath:db/init/ddl.sql
-    insert-data: classpath:db/init/insert*.sql
+    ddl: classpath:/db/init/ddl.sql
+    insert-data: classpath:/db/init/insert*.sql
   collector:
     portal-api:
       url: http://10.10.30.60

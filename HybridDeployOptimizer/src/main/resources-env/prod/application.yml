@@ -52,8 +52,8 @@ jasypt:
 
 hybrid:
   init-sql-location:
-    ddl: classpath:db/init/ddl.sql
-    insert-data: classpath:db/init/insert*.sql
+    ddl: classpath:/db/init/ddl.sql
+    insert-data: classpath:/db/init/insert*.sql
   collector:
     portal-api:
       url: ${PORTAL_API_URL}
