@@ -9,7 +9,7 @@ plugins {
 group = 'kware'
 version = '0.9.20'
 
-sourceCompatibility = '1.8'
+sourceCompatibility = '11'
 mainClassName = "com.kware.ApplicationMain"
 
 ext.profile = (!project.hasProperty('profile') || !profile)?'local':profile
@@ -118,3 +118,4 @@ bootJar {
     exclude '/*.yml'
 }
 */
+

@@ -5,7 +5,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import com.kware.policy.task.collector.service.PromQLService;
@@ -14,7 +13,7 @@ import com.kware.policy.task.scalor.worker.ProcessWorker;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@EnableScheduling // 스케줄링 활성화
+//@EnableScheduling // 스케줄링 활성화
 @Component
 public class ProcessMain { //extends Thread
 	

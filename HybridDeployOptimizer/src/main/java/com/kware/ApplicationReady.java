@@ -24,6 +24,8 @@ public class ApplicationReady {
 	
 	ProcessMain pm = null;
 	
+	public static boolean isApplicationReady = false;
+	
 	public ApplicationReady() {
 	}
 
@@ -35,6 +37,8 @@ public class ApplicationReady {
 			
 			if(!init())
 				return;
+			
+			isApplicationReady = true;
 			
 		}catch(Exception e) {
 			return;
@@ -52,6 +56,8 @@ public class ApplicationReady {
         }
         */
 		
+		//여기서 DB를 초기화 할 수 있지만, 최기화 보다 더 빨리 수행하도록 하기 위해서 collect 스케줄러에서 진행하도록 한다.
+
 		pm = new ProcessMain();
 		pm.start();
 		        

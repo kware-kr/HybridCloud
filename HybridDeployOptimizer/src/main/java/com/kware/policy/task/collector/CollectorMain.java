@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
+import com.kware.common.db.InitDatabase;
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.ResourceUsageService;
@@ -38,7 +40,7 @@ public class CollectorMain {
 	
 	private final TaskScheduler taskScheduler;
 
-    @Autowired
+ //   @Autowired
     public CollectorMain(TaskScheduler taskScheduler) {
         this.taskScheduler = taskScheduler;
     }
@@ -79,6 +81,9 @@ public class CollectorMain {
 	
 	boolean isFirst = false;
 	
+	@Autowired
+	InitDatabase initDatabase;
+	
 	@PostConstruct  // 애플리케이션 시작 시 한 번 실행할 로직
 	@SuppressWarnings("unchecked")
     public void runOnceOnStartup() {
@@ -96,6 +101,20 @@ public class CollectorMain {
 			nodeApiMap.put(n.getUniqueKey(), n);
 		}
 		*/
+		
+		//{{Database 초기 테이블 생성하고, 초기 데이터를 등록 
+		// applicationready event는 WAS가 준비되었다는 거고, Web과 일반 application이 혼재하게 구성되어 있으며, web은 sub구성임. 
+		try {
+			initDatabase.initializeDatabase();
+		} catch (Exception e) {
+			ThreadPoolTaskScheduler a = (ThreadPoolTaskScheduler)this.taskScheduler;
+			a.shutdown();
+			log.error("Database 초기화 오류", e);
+			return;
+		}
+		//}}
+		
+		
 		
 		qm.setScheduler(taskScheduler);
 		
@@ -125,6 +144,7 @@ public class CollectorMain {
 	 */
 	@Scheduled(cron = "0 * * * * *") // 1분 스케줄링
 	public void collectClusterTask() {
+		
 		if(log.isDebugEnabled()) {
 			log.debug("CollectClusterTask 시작");
 		}
@@ -146,6 +166,7 @@ public class CollectorMain {
 	 */
 	@Scheduled(cron = "20 * * * * *") // 1분 스케줄링
 	public void collectWorkloadTask() {
+		
 		if(log.isDebugEnabled()) {
 			log.debug("collectWorkloadTask 시작");
 		}
@@ -163,6 +184,7 @@ public class CollectorMain {
 	//클러스터별 프로메테우스 운영: 통합으로 변경되면서 사용안함.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
 	public void collectMetricTaskSingle() {
+		
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTask 시작");
 		}
@@ -227,6 +249,7 @@ public class CollectorMain {
 	
 	@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
 	public void collectMetricTaskUnified() {
+		
 		if(log.isDebugEnabled()) {
 			log.debug("collectMetricTaskUnified 시작");
 		}
@@ -282,6 +305,7 @@ public class CollectorMain {
 	
 	@Scheduled(cron = "50 * * * * *") // 30초마다 스케줄링
 	public void ResourceUsageTask() {
+		
 		if(log.isDebugEnabled()) {
 			log.debug("ResourceUsageTask 시작");
 		}

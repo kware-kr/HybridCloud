@@ -41,6 +41,7 @@ spring:
       name: admin
       password: admin123!
       roles: ACTUATOR
+
 #actuator를 활성화
 management:
   server.port: 8889
@@ -74,6 +75,9 @@ jasypt:
     bean: jasyptStringEncryptor
 
 hybrid:
+  init-sql-location:
+    ddl: classpath:db/init/ddl.sql
+    insert-data: classpath:db/init/insert*.sql
   collector:
     portal-api:
       url: http://10.10.30.60
@@ -87,7 +91,8 @@ hybrid:
   scheduler:
     threads: 2
   datasource:
-    url: jdbc:log4jdbc:postgresql://172.30.1.35:5433/postgres?currentSchema=k_hybrid
+    #url: jdbc:log4jdbc:postgresql://172.30.1.35:5433/postgres?currentSchema=k_hybrid
+    url: jdbc:log4jdbc:postgresql://172.30.1.30:30007/postgres?currentSchema=k_hybrid
     hikari: 
       jdbcUrl: ${hybrid.datasource.url}
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
