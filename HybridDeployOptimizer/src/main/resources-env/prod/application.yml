@@ -14,12 +14,12 @@ spring:
     cache: false
   #shutdown  
   pid:
-    file: .\.app.pid
+    file: /app/bin/.app.pid
   jackson:
     time-zone: Asia/Seoul
 
   rabbitmq:
-    enable: true  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
+    enable: false  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
     host: 10.10.30.68
     port: 5672
     username: admin
@@ -32,8 +32,7 @@ spring:
     routing:
       policy_req.key: po_req_key
       policy_res.key: po_res_key
-
-
+    
 server:
   port: 8889
   servlet:
@@ -55,9 +54,12 @@ jasypt:
     bean: jasyptStringEncryptor
 
 hybrid:
+  init-sql-location:
+    ddl: classpath:db/init/ddl.sql
+    insert-data: classpath:db/init/insert*.sql
   collector:
     portal-api:
-      url: http://10.10.30.60
+      url: ${PORTAL_API_URL}
       authorization: 9ed36fd5-4c9b-4fba-827c-84edac08637c 
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
@@ -68,14 +70,12 @@ hybrid:
   scheduler:
     threads: 2
   datasource:
-    url: jdbc:log4jdbc:postgresql://10.10.30.68:5433/postgres?currentSchema=k_hybrid
+    url: jdbc:log4jdbc:postgresql://${POSTGRES_IP_PORT}/postgres?currentSchema=k_hybrid
     hikari: 
       jdbcUrl: ${hybrid.datasource.url}
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      username: ENC(HrVw3fiyCLDR948tKQhAejZAT9wpchPEpFFoJG3Y38HWipO+iLHob1pXaX1N+pXg)
-      #username: postgres
-      password: ENC(/MbRwpHCgQGTORq4/DsIej4lS47MVzdzdW8TPWEthKH+h6P/sCqbru9aLMqV+iQp)
-      #password: postgresql!@
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
       pool-name: hikari-cp
       maximum-pool-size: 10
       minimum-idle: 2
@@ -85,6 +85,23 @@ hybrid:
           prepStmtCacheSqlLimit: 2048
           useServerPrepStmts: true  
   policy:
+    resource-weights:
+      ml:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 4
+      dl:
+        cpu: 3
+        gpu: 5
+        disk: 3
+        memory: 4
+      inf:
+        cpu: 4
+        gpu: 2
+        disk: 3
+        memory: 3
+    exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator"
     server:
       h2:
         enable: false
@@ -106,3 +123,4 @@ hybrid:
             prepStmtCacheSize: 250
             prepStmtCacheSqlLimit: 2048
             useServerPrepStmts: true 
+            
