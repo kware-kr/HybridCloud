@@ -1,5 +1,9 @@
 package com.kware.common.db;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -65,11 +69,26 @@ public class InitDatabase {
     }
 
     private void executeSqlFromFile(JdbcTemplate jdbcTemplate, Resource resource) {
+    	
+    	try (InputStream inputStream = resource.getInputStream()) {
+    	    String sql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+    	    jdbcTemplate.execute(sql);
+    	    //log.info("SQL Content: {}", sql);
+    	} catch (IOException e) {
+    	    //log.error("Error reading resource file", e);
+    	    throw new RuntimeException("Failed to execute SQL file: " + resource.getFilename(), e);
+    	}
+    	
+    	/* jar에 있는 파일이 아닐때
         try {
-            String sql = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+        	URI uri = resource.getURI();
+        	log.info("Resource URI: {}",uri.toString());
+        	
+            String sql = new String(Files.readAllBytes(Paths.get(uri)));
             jdbcTemplate.execute(sql);
         } catch (Exception e) {
             throw new RuntimeException("Failed to execute SQL file: " + resource.getFilename(), e);
         }
+        */
     }
 }
