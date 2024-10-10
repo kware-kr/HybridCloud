@@ -1,0 +1,104 @@
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kware-product
+---
+# Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  storageClassName: hybrid-storage
+  capacity:
+    storage: 30Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/postgres"
+---
+# Persistent Volume Claim (네임스페이스 설정)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: kware-product
+spec:
+  storageClassName: hybrid-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+---
+# Secret (네임스페이스 설정)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: kware-product
+type: Opaque
+data:
+  POSTGRES_USER: cG9zdGdyZXM=   # 'postgres'
+  POSTGRES_PASSWORD: cG9zdGdyZXNxbCFA  # 'postgresql!@'
+---
+# StatefulSet (네임스페이스 설정)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: kware-product
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      containers:
+        - name: postgres
+          image: timescale/timescaledb:latest-pg15
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            #- name: POSTGRES_DB
+            #  value: mydb
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+---
+# Service (네임스페이스 설정)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: kware-product
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 30007
+  type: NodePort

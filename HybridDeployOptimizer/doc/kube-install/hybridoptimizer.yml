@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hybridoptimizer
+  namespace: kware-product
+  labels:
+    app: hybridoptimizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hybridoptimizer
+  template:
+    metadata:
+      labels:
+        app: hybridoptimizer
+    spec:
+      containers:
+        - name: hybridoptimizer
+          image: rnd.kware.co.kr/hybridoptimizer:0.9.21
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8889
+          env:
+            - name: POSTGRES_IP_PORT
+              value: "postgres-service:5432"
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: PORTAL_API_URL
+              value: 'http://10.10.30.60'
+            - name: PROMETHEUS_URL
+              value: 'http://10.10.30.60:30138/'
+          volumeMounts:
+            - name: app-logs
+              mountPath: /app/logs
+      volumes:
+        - name: app-logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kware-product
+  name: hybridoptimizer-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8889
+      targetPort: 8889
+      nodePort: 30008
+  selector:
+    app: hybridoptimizer
