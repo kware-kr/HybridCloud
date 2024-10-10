@@ -2,8 +2,14 @@ package com.kware.common.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -67,21 +73,52 @@ public class SecurityConfig {
         // 인증이 되어 있으면 접근 허용
         return new AuthorizationDecision(authentication != null);
     };
+    
+    //String permitAddress[] = {"183.109.110.211", "172.30.1"};
+    
+    @Value("${spring.security.permit-addresses:}")
+    private String[] permitAddresses;
+    
+    private List<String> finalPermitAddresses;
+    
+    @PostConstruct
+    public void init() {
+        // 기본값 127.0.0.1을 포함하도록 배열 처리
+        finalPermitAddresses = new ArrayList<>(Arrays.asList(permitAddresses));
+        if (!finalPermitAddresses.contains("127.0.0.1")) {
+            finalPermitAddresses.add("127.0.0.1");
+        }
+    }
 
-    // AuthorizationManager for /actuator/**
+    // AuthorizationManager for /actuator/** 
+    //허용된 IP 이거나, 허용된 사용자일 경우에 통과
     private AuthorizationManager<RequestAuthorizationContext> actuatorAccessManager = (authc, context) -> {
         String ipAddress = context.getRequest().getRemoteAddr(); // 요청의 IP 주소
-        boolean hasValidIp = ipAddress.equals("172.30.1.251") || ipAddress.equals("172.30.1.28");
+        //boolean hasValidIp = ipAddress.equals("172.30.1.251") || ipAddress.equals("172.30.1.28");
+        boolean hasValidIp = false; 
+        
+        for (String permitAddress : finalPermitAddresses) {
+            hasValidIp = ipAddress.startsWith(permitAddress);
+        	if(hasValidIp) {
+        		break;
+        	}
+        }
+        
+        if(log.isDebugEnabled())
+        	log.debug("Has ROLE_IP: {}", hasValidIp);
+        
+        if(hasValidIp)
+        	return new AuthorizationDecision(hasValidIp);
         
         Authentication authentication = authc.get();
-        
         boolean hasRoleActuator = authentication.getAuthorities().stream()
                 .peek(authority -> log.debug("Checking authority: {}", authority.getAuthority()))
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ACTUATOR"));
         
-        log.debug("Has ROLE_ACTUATOR: {}", hasRoleActuator);
+        if(log.isDebugEnabled())
+        	log.debug("Has ROLE_ACTUATOR: {}", hasRoleActuator);
         
         // IP 주소와 역할 조건을 모두 만족해야 접근 허용
-        return new AuthorizationDecision(hasValidIp && hasRoleActuator);
+        return new AuthorizationDecision(hasRoleActuator);
     };
 }
