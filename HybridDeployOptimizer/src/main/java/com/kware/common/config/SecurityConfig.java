@@ -105,7 +105,7 @@ public class SecurityConfig {
         }
         
         if(log.isDebugEnabled())
-        	log.debug("Has ROLE_IP: {}", hasValidIp);
+        	log.debug("Has ROLE_IP: {},{}", ipAddress, hasValidIp);
         
         if(hasValidIp)
         	return new AuthorizationDecision(hasValidIp);
