@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -35,16 +36,27 @@ public class JSONUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     
     private static final ObjectMapper jsonWriter = new ObjectMapper();
-    {   //ObjectMapper의 속성이 변경되므로, 별도로 하나 만듬
+    static {   //ObjectMapper의 속성이 변경되므로, 별도로 하나 만듬
     	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
     
     private static final ObjectMapper notNullMapper = new ObjectMapper();
-    {
+    static {
     	//null 값인 필드들이 JSON 출력에서 제외됩니다.
     	notNullMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     	//빈 객체(필드가 없는 객체 또는 모든 필드가 null인 객체)를 직렬화할 때 오류가 발생하지 않고, {}로 표현됩니다
     	notNullMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    	
+    	//JSON 문자열에 포함된 필드가 객체에 정의되어 있지 않을 경우 오류를 발생시키지 않도록 한다.
+    	notNullMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+    
+    public static void printObjectMapperSettings(ObjectMapper objectMapper) {
+        System.out.println("ObjectMapper Settings:");
+        System.out.println("FAIL_ON_EMPTY_BEANS:        " + objectMapper.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS));
+        System.out.println("FAIL_ON_UNKNOWN_PROPERTIES: " + objectMapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
+        System.out.println("INCLUDE_NON_NULL:           " + objectMapper.getSerializationConfig().getSerializationInclusion());
+        // 필요한 다른 설정도 추가할 수 있습니다.
     }
     
     
@@ -59,7 +71,7 @@ public class JSONUtil {
     
  // Generic Method to Create Object from JSON
     public static <T> T fromJsonToEmptyFromNull(String json, Class<T> clazz) throws Exception {
-        return notNullMapper.readValue(json, clazz);
+        return JSONUtil.notNullMapper.readValue(json, clazz);
     }
     
     //Map을 임의의 클래스 객체로 변환하는 static 제네릭 메서드

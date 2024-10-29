@@ -217,6 +217,7 @@ public class WorkloadRequest extends CommonQueueDefault{
         private Integer      maxReplicas;
         private Integer      totalSize;
         private Integer      predictedExecutionTime;
+        private Integer      order;
     }
     
     @Data

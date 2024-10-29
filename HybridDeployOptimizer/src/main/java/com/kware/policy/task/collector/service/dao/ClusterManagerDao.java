@@ -44,7 +44,7 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.delete("clusterManagerMapper.deleteCluster", cluster);
 	}
 
-	public List selectClusterList(Cluster cluster) {
+	public List<?> selectClusterList(Cluster cluster) {
 		return sqlSessionTemplate.selectList("clusterManagerMapper.selectClusterList", cluster);
 	}
 	
@@ -89,7 +89,7 @@ public class ClusterManagerDao {
 			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectUidFromClusterNode", node);
 		}*/
 	
-	public List selectClusterNodeList(ClusterNode node) {
+	public List<?> selectClusterNodeList(ClusterNode node) {
 		return sqlSessionTemplate.selectList("clusterManagerMapper.selectClusterNodeList", node);
 	}
 	
@@ -105,7 +105,7 @@ public class ClusterManagerDao {
 	
 	public void updateClusterWorkloadAndInsertHistory(ClusterWorkload workload) {
 		ClusterWorkload old = selectClusterWorkload(workload);
-		if(old != null && !old.getHashVal().equals(workload.getHashVal()) || old.getClUid() != workload.getClUid()) { //변경(hash_val, cluid가 나중에 등록된 경우)		
+		if(old != null && (!old.getHashVal().equals(workload.getHashVal()) || old.getClUid() != workload.getClUid())) { //변경(hash_val, cluid가 나중에 등록된 경우)		
 			insertHistoryFromClusterWorkload(workload);
 			updateClusterWorkload(workload);
 		}else if(old == null){ //없으면 입력
@@ -125,7 +125,7 @@ public class ClusterManagerDao {
 		return sqlSessionTemplate.delete("clusterManagerMapper.deleteClusterWorkload", workload);
 	}
 
-	public List selectClusterWorkloadList(ClusterWorkload workload) {
+	public List<?> selectClusterWorkloadList(ClusterWorkload workload) {
 		return sqlSessionTemplate.selectList("clusterManagerMapper.selectClusterWorkloadList", workload);
 	}
 	
