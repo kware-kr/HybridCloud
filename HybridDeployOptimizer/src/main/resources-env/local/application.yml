@@ -80,6 +80,7 @@ hybrid:
   init-sql-location:
     ddl: classpath:/db/init/ddl.sql
     insert-data: classpath:/db/init/insert*.sql
+    #change-data: /db/init/change*.sql  # 테이블(삭제, 변경), 데이터(삭제, 변경) 외부경로에서 처리해야겠네, 나중에 고려하자.
   collector:
     portal-api:
       url: http://10.10.30.60

@@ -17,8 +17,8 @@
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/hybrid-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
-			<maxFileSize>200MB</maxFileSize>
-			<maxHistory>30</maxHistory>
+			<maxFileSize>1G</maxFileSize>
+			<maxHistory>60</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
@@ -31,6 +31,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/metric-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
+			<maxHistory>30</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
@@ -43,6 +44,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/request-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
+			<maxHistory>1000</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
@@ -55,6 +57,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/parse-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
+			<maxHistory>30</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
@@ -67,6 +70,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/queue-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
+			<maxHistory>30</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
@@ -92,6 +96,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${APP_LOG_ROOT}/backup/error-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
             <maxFileSize>1GB</maxFileSize>
+            <maxHistory>1000</maxHistory>
 			<totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -103,7 +108,7 @@
 	<logger name="com.zaxxer.hikari" level="ERROR" additivity="false">
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
-		<!-- <appender-ref ref="console" /> -->
+		<appender-ref ref="console" />
 	</logger>
 	<logger name="org.springframework.cloud.stream" level="DEBUG" additivity="false">
 		<appender-ref ref="applicationLog" />
@@ -123,15 +128,18 @@
 	</logger>
 	<logger name="jdbc.sqltiming" level="ERROR" additivity="false">
 		<appender-ref ref="applicationLog" />
+		<appender-ref ref="console" />
 	</logger>
 	<logger name="org.springframework" level="ERROR" additivity="false">
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
+		<appender-ref ref="console" />
 	</logger>
 	
 	<logger name="com.kware.policy.task.selector" level="DEBUG" additivity="false">
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="requestLog" />
+		<appender-ref ref="console" />
 	</logger>
 	
 	<logger name="metric-log" level="INFO" additivity="false">
@@ -146,7 +154,7 @@
 	
 	<logger name="queue-log" level="DEBUG" additivity="false">
 		<appender-ref ref="queueLog" />
-		<!-- <appender-ref ref="console" /> -->
+		<appender-ref ref="console" />
 	</logger>
 	<logger name="com.kware.rabbitmq" level="DEBUG" additivity="false">
 		<appender-ref ref="mqLog" />
@@ -154,6 +162,7 @@
 
 	<root level="WARN">
 		<appender-ref ref="applicationLog" />
+		<appender-ref ref="console" />
 	</root>
 
 </configuration>

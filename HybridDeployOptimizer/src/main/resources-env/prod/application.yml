@@ -63,23 +63,23 @@ hybrid:
     insert-data: classpath:/db/init/insert*.sql
   collector:
     portal-api:
-      url: ${PORTAL_API_URL}
+      url: ${PORTAL_API_URL}  #쿠버네티스 yaml 설정
       authorization: 9ed36fd5-4c9b-4fba-827c-84edac08637c 
       prometheus:
         authorization: "Basic YWRtaW46cXdlcjEyMzQhQCMk"
-        unified_url: ${PROMETHEUS_URL}
+        unified_url: ${PROMETHEUS_URL}  #쿠버네티스 yaml 설정
       finish-enalbe: false
       delete-enalbe: false
     threads: 5
   scheduler:
     threads: 2
   datasource:
-    url: jdbc:log4jdbc:postgresql://${POSTGRES_IP_PORT}/postgres?currentSchema=k_hybrid
+    url: jdbc:log4jdbc:postgresql://${POSTGRES_IP_PORT}/postgres?currentSchema=k_hybrid      #쿠버네티스 yaml 설정
     hikari: 
       jdbcUrl: ${hybrid.datasource.url}
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      username: ${POSTGRES_USERNAME}
-      password: ${POSTGRES_PASSWORD}
+      username: ${POSTGRES_USERNAME}  #쿠버네티스 yaml 설정
+      password: ${POSTGRES_PASSWORD}  #쿠버네티스 yaml 설정
       pool-name: hikari-cp
       maximum-pool-size: 10
       minimum-idle: 2

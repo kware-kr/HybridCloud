@@ -45,4 +45,7 @@
         <package name="spp"/>
     </typeAliases>
  -->
+ 	<typeHandlers>
+        <typeHandler handler="com.kware.common.db.handler.JsonNodeTypeHandler"  javaType="com.fasterxml.jackson.databind.JsonNode" />
+    </typeHandlers>
 </configuration>

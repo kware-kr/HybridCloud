@@ -82,30 +82,30 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_node.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.hash_val IS '무결성검증 해쉬값';
 
 
--- DROP TABLE k_hybrid.mo_cluster_node_config;
+-- DROP TABLE k_hybrid.mo_cluster_node_feature;
 
-CREATE TABLE k_hybrid.mo_cluster_node_config (
-	no_uid serial4 NOT NULL, -- 노드 uid
+CREATE TABLE k_hybrid.mo_cluster_node_feature (
+	no_uid int4 NOT NULL, -- 노드 uid
 	gen_level int2 NULL, -- 일반 성능 레벨 10단계
 	gpu_level int2 NULL, -- GPU 성늘 레벨 10단계
 	sec_level int2 NULL, -- 보안 레벨 5단계
 	cloud_type varchar(3) NULL, -- 클라우드 구분,PRI PUB ONP
 	etc jsonb NULL, -- 추가 설정
-	reg_uid int8 NULL,
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	updt_uid int8 NULL,
-	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	CONSTRAINT mo_cluster_node_config_pkey PRIMARY KEY (no_uid)
+	deleted_dt timestamp NULL, -- 삭제일(NULL이면 활성상태)
+	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL -- 생성일
 );
+CREATE UNIQUE INDEX idx_mo_cluster_node_feature_no_uid_deleted_dt ON k_hybrid.mo_cluster_node_feature USING btree (no_uid, deleted_dt);
 
 -- Column comments
 
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.no_uid IS '노드 uid';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.gen_level IS '일반 성능 레벨 10단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.gpu_level IS 'GPU 성늘 레벨 10단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.sec_level IS '보안 레벨 5단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.cloud_type IS '클라우드 구분,PRI PUB ONP';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_config.etc IS '추가 설정';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.no_uid IS '노드 uid';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.gen_level IS '일반 성능 레벨 10단계';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.gpu_level IS 'GPU 성늘 레벨 10단계';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.sec_level IS '보안 레벨 5단계';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.cloud_type IS '클라우드 구분,PRI PUB ONP';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.etc IS '추가 설정';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.deleted_dt IS '삭제일(NULL이면 활성상태)';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.reg_dt IS '생성일';
 
 -- DROP TABLE k_hybrid.mo_cluster_promql;
 
@@ -153,9 +153,9 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_workload.info IS 'ML 상세 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.hash_val IS '무결성검증 해쉬값';
 
--- DROP TABLE k_hybrid.mo_common_config_group;
+-- DROP TABLE k_hybrid.mo_common_feature_base;
 
-CREATE TABLE k_hybrid.mo_common_config_group (
+CREATE TABLE k_hybrid.mo_common_feature_base (
 	cfg_name varchar(32) NOT NULL, -- 설정 이름
 	cfg_content jsonb NULL, -- 설정 내용
 	cfg_desc varchar(128) NULL, -- 설정 설명
@@ -164,14 +164,14 @@ CREATE TABLE k_hybrid.mo_common_config_group (
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
 	updt_uid int8 NULL,
 	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	PRIMARY KEY (cfg_name)
+	CONSTRAINT mo_common_feature_base_pkey PRIMARY KEY (cfg_name)
 );
 
 -- Column comments
 
-COMMENT ON COLUMN k_hybrid.mo_common_config_group.cfg_name IS '설정 이름';
-COMMENT ON COLUMN k_hybrid.mo_common_config_group.cfg_content IS '설정 내용';
-COMMENT ON COLUMN k_hybrid.mo_common_config_group.cfg_desc IS '설정 설명';
+COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_name IS '설정 이름';
+COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_content IS '설정 내용';
+COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_desc IS '설정 설명';
 
 -- DROP TABLE k_hybrid.mo_promql_result;
 
