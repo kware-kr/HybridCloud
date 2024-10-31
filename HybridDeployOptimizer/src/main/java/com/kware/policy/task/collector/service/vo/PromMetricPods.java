@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 /**
  * 현재 수집 세션(시간)에 수집된 ProMetricPod 전체를 관리하기 위한 그룹 클래스 
+ * 동일한 시간에 수집된 pod를 관리함
  */
 public class PromMetricPods extends PromMetricDefault{
 	

@@ -39,7 +39,6 @@ import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -83,15 +82,6 @@ public class ResourceUsageWorker extends Thread {
 	{
 		Collections.addAll(labelFilterSet, "labels");
 	}
-
-	/*
-	@Data
-	public static class WorkloadRequest{
-		int page;
-		int size = 20;
-		//String status;
-	}
-	*/
 
 	@Override
 	public void run() {

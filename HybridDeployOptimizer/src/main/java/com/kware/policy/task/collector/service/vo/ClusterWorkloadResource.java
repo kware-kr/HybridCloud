@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -87,15 +88,17 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ClusterWorkloadResource extends ClusterDefault {
-	private Integer clUid;
-	private Integer id;  //기본 ID
-	private String nm;
-	private String kind;
+	private Integer clUid; //배포된 클러스터 아이디
+	private Integer id;    //기본 ID
+	private String nm;     //워크로드 이름
+	private String kind;   //워크로드의 종류
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
 	private Timestamp   createdAt;
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
 	private Timestamp   updatedAt;
 	
 	private String uid;

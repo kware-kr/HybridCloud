@@ -40,6 +40,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , memo      = #{memo}
       , prom_url  = #{promUrl}
       , hash_val  = #{hashVal}
+      , delete_at = #{deleteAt} /*다시 갱신되는 경우가 있음*/
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
     WHERE uid     = #{uid}
@@ -127,7 +128,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , info      = #{info}::jsonb
       , gpuinfo   = #{gpuinfo}::jsonb
       , memo      = #{memo}
-<!--       , delete_at = #{deleteAt} --> 
+      , delete_at = #{deleteAt} 
       , hash_val  = #{hashVal}
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
@@ -223,7 +224,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       , nm        = #{nm}
       , info      = #{info}::jsonb
       , memo      = #{memo}
-<!--       , delete_at = #{deleteAt} -->
+      , delete_at = #{deleteAt}
       , hash_val  = #{hashVal}
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP

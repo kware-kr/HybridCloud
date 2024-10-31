@@ -14,6 +14,7 @@ import java.util.stream.IntStream;
 import org.jsoup.Jsoup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.flatbuffers.Constants;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
@@ -168,6 +169,7 @@ public class CollectorClusterWorker extends Thread {
 			clusterList.clear();
 			clusterList = null;
 			
+			//동일한 노드나 클러스터는 해당 키를 갱신하므로 sessionid도 갱신되므로, 없는 애들은 삭제된 것으로 본다.
 			//여기서 SESSIONID와 비교해서 제거해야한다. this.nodeMap, this.clusterMap:: 기존에 수집했는데, 이번에는 수집되지 않는 데이터 제거
 			//Map에 사용하는 객체는 모두 ClusterDefault를 상속받아서 사용해야 정상작동한다.
 			HashMap removedMap = null; //앞 처리과정에서 상태를 확인해서 삭제하지만, 큐에서 제거되는 경우에도 DB 삭제
@@ -196,9 +198,15 @@ public class CollectorClusterWorker extends Thread {
 		
 		for(Object obj: _removedMap.values()) {
 			if(obj instanceof Cluster) {
-				this.service.deleteCluster((Cluster)obj);
+				Cluster cl = (Cluster)obj;
+				cl.setDeleteAt(StringConstant.STR_Y);
+				cl.setStatus(Boolean.FALSE);
+				this.service.deleteCluster(cl);
 			}else if(obj instanceof ClusterNode) {
-				this.service.deleteClusterNode((ClusterNode)obj);
+				ClusterNode cl = (ClusterNode)obj;
+				cl.setDeleteAt(StringConstant.STR_Y);
+				cl.setStatus(Boolean.FALSE);
+				this.service.deleteClusterNode(cl);
 			}
 		}		
 	}
@@ -324,8 +332,11 @@ public class CollectorClusterWorker extends Thread {
 				if(this.isFirst) {
 					oldObj = this.service.selectCluster(cluster);
 				}
-				if(oldObj == null)
+				if(oldObj == null) {
 					this.service.insertCluster(cluster);
+				}else {
+					this.service.updateCluster(cluster);
+				}
 			}
 			
 		} catch (Exception e) {
@@ -424,8 +435,11 @@ public class CollectorClusterWorker extends Thread {
 					oldObj = this.service.selectClusterNode(node); // 키값이 DB에서 생성되었기에 unique 인덱스로 쿼리를 진행함
 					node.setUid(oldObj.getUid());
 				}
-				if(oldObj == null)
+				if(oldObj == null) {
 					this.service.insertClusterNode(node);
+				}else {
+					this.service.updateClusterNode(node);
+				}
 			}
 		} catch (Exception e) {
 			log.error("데이터 Insert 에러 ClusterNode:\n{}", node, e);
@@ -435,7 +449,6 @@ public class CollectorClusterWorker extends Thread {
 		}
 	}
 
-	//private String getPrometheusResult(String url, HashMap<String, String> param) throws IOException {
 	private String getAPIResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString) throws IOException {
 		
 		org.jsoup.Connection connection = Jsoup.connect(url)

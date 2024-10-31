@@ -19,6 +19,7 @@ package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CollectorUnifiedPromMetricWorker extends Thread {
 
 	private static final Logger metricLog = LoggerFactory.getLogger("metric-log");
-	private static String prometheus_uri = "/api/v1/query";
+	private static String prometheus_uri = "api/v1/query";
 	
 	final PromQLManager mp = PromQLManager.getInstance();
 	final QueueManager qm = QueueManager.getInstance();
@@ -126,7 +127,12 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 	public void run() {
 		isRunning = true;
 		try {
-			String prometheus_url = this.prometheus_url + prometheus_uri;
+			String prometheus_url;
+			if(this.prometheus_url.endsWith("/")) {
+				prometheus_url = this.prometheus_url + prometheus_uri;
+			}else {
+				prometheus_url = this.prometheus_url + "/" + prometheus_uri;
+			}
 	
 			ExecutorService executorService = Executors.newFixedThreadPool(this.threadsNubmer);		
 	
@@ -205,9 +211,9 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 			
 			if(log.isDebugEnabled()) {
 				log.info("***********************************************************************************************************");
-				log.debug("프로메테우스 노드:{}", this.prom_nodes.getAllNodeList());
+				log.debug("프로메테우스 전체 노드:{}", this.prom_nodes.getAllNodeList());
 				log.info("-----------------------------------------------------------------------------------------------------------");
-				log.debug("프로메테우스 파드:{}", this.prom_pods.getAllPodList());
+				log.debug("프로메테우스 전체 파드:{}", this.prom_pods.getAllPodList());
 				log.info("***********************************************************************************************************");
 			}
 			
@@ -240,7 +246,8 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 		//}}DB 입력
 	}
 
-	//private String getPrometheusResult(String url, HashMap<String, String> param) throws IOException {
+	private static Instant lastLogTime = Instant.now();
+
 	private String getPrometheusResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString, Integer promqlId) throws IOException {
 		
 		org.jsoup.Connection connection = Jsoup.connect(url)
@@ -275,9 +282,17 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 
 		String json_string = dataPage.body();
 		
-		//별도의 로그 파일에 기록함
-		if (metricLog.isInfoEnabled())
-			metricLog.info("\n##Request:{}?query={}\n##Response:{}", url, logQuery, json_string);
+		Instant now = Instant.now();
+        // 10분(600초) 경과 여부 확인
+        if (now.minusSeconds(600).isAfter(lastLogTime)) {
+        	if (metricLog.isDebugEnabled())
+    			metricLog.debug("\n##Request[id={}]:{}?{}\n##Response:{}",promqlId, url, logQuery, json_string);
+            lastLogTime = now;
+        }else {
+        	if (metricLog.isDebugEnabled())
+    			metricLog.debug("\n##Request[id={}]\n##Response:{}",promqlId, json_string);
+        }
+        
 		return json_string;
 	}
 }

@@ -19,6 +19,7 @@ package com.kware.policy.task.collector.worker;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class CollectorSinglePromMetricWorker extends Thread {
 					Map<String,String> params = new HashMap<String, String>();			
 					try {
 						params.put(this.STR_query, query);
-						result = this.getPrometheusResult(prometheus_url, org.jsoup.Connection.Method.GET, params, null);
+						result = this.getPrometheusResult(prometheus_url, org.jsoup.Connection.Method.GET, params, null, promqlId);
 						
 						//DB입력
 						this.insertResult(clusterInfo.getUid(), promqlInfo, result);
@@ -198,9 +199,12 @@ public class CollectorSinglePromMetricWorker extends Thread {
 		}
 		//}}DB 입력
 	}
+	
+	private static Instant lastLogTime = Instant.now();
 
-	//private String getPrometheusResult(String url, HashMap<String, String> param) throws IOException {
-	private String getPrometheusResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString) throws IOException {
+
+	//promqlId 는 로그 전용
+	private String getPrometheusResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString, Integer promqlId) throws IOException {
 		
 		org.jsoup.Connection connection = Jsoup.connect(url)
 				.method(method)
@@ -234,9 +238,17 @@ public class CollectorSinglePromMetricWorker extends Thread {
 
 		String json_string = dataPage.body();
 		
-		//별도의 로그 파일에 기록함
-		if (metricLog.isInfoEnabled())
-			metricLog.info("\n##Request:{}?query={}\n##Response:{}", url, logQuery, json_string);
+		Instant now = Instant.now();
+        // 10분(600초) 경과 여부 확인
+        if (now.minusSeconds(600).isAfter(lastLogTime)) {
+        	if (metricLog.isDebugEnabled())
+    			metricLog.debug("\n##Request[id={}]:{}?{}\n##Response:{}",promqlId, url, logQuery, json_string);
+            lastLogTime = now;
+        }else {
+        	if (metricLog.isDebugEnabled())
+    			metricLog.debug("\n##Request[id={}]\n##Response:{}",promqlId, json_string);
+        }
+
 		return json_string;
 	}
 }

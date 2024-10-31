@@ -139,10 +139,22 @@ public class CollectorMain {
 //	@Scheduled(cron = "0 0/1 * * * *") // 매 X분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
 	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
 	
+	public final class Cron {
+	    private Cron() {}
+	    private static final String minute = "1/3";    //테스트 중에 변경하기 쉽도록
+	
+	    public static final String collectClusterTask_cron       =  "0 "  + minute + " * * * *"; 
+	    public static final String collectWorkloadTask_cron      =  "20 " + minute + " * * * *";
+	    public static final String collectMetricTaskUnified_cron =  "40 " + minute + " * * * *";
+	    public static final String ResourceUsageTask_cron        =  "50 " + minute + " * * * *";
+	    
+	}
+	
 	/**
 	 * 클러스터, 클러스터 노드 수집
 	 */
-	@Scheduled(cron = "0 * * * * *") // 1분 스케줄링
+	//@Scheduled(cron = "0 * * * * *") // 1분 스케줄링
+	@Scheduled(cron = CollectorMain.Cron.collectClusterTask_cron) // 1분 스케줄링
 	public void collectClusterTask() {
 		
 		if(log.isDebugEnabled()) {
@@ -164,7 +176,7 @@ public class CollectorMain {
 	/**
 	 * 각 클러스터에서 운영되는 워크로드 수집
 	 */
-	@Scheduled(cron = "20 * * * * *") // 1분 스케줄링
+	@Scheduled(cron = CollectorMain.Cron.collectWorkloadTask_cron) 
 	public void collectWorkloadTask() {
 		
 		if(log.isDebugEnabled()) {
@@ -247,7 +259,7 @@ public class CollectorMain {
 	
 	
 	
-	@Scheduled(cron = "40 * * * * *") // 30초마다 스케줄링
+	@Scheduled(cron = CollectorMain.Cron.collectMetricTaskUnified_cron) //
 	public void collectMetricTaskUnified() {
 		
 		if(log.isDebugEnabled()) {
@@ -300,10 +312,9 @@ public class CollectorMain {
 			log.debug("current {} nodeDeque size={}", PromDequeName.METRIC_NODEINFO.toString(), promQ.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
 			log.debug("current {} podDeque size={}" , PromDequeName.METRIC_PODINFO.toString() , promQ.getPromDequesSize(PromDequeName.METRIC_PODINFO));
 		}
-		
 	}
 	
-	@Scheduled(cron = "50 * * * * *") // 30초마다 스케줄링
+	@Scheduled(cron = CollectorMain.Cron.ResourceUsageTask_cron)// 
 	public void ResourceUsageTask() {
 		
 		if(log.isDebugEnabled()) {

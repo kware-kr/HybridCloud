@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -21,6 +22,7 @@ public class PromMetricContainer extends PromMetricDefault{
 	//private String noUid;
 	///////////////////////////////////////////////
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
 	private Timestamp promTimestamp;//쿼리결과마다 존재하는 프로메테우스의 시간정보
 
 	private String node;     //가독성  나중에 지울수 있음
@@ -29,6 +31,7 @@ public class PromMetricContainer extends PromMetricDefault{
 	private String container;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
 	private Timestamp createdTimestamp;
 	
 	private Boolean running;

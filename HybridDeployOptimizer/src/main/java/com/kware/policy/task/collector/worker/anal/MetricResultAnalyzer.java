@@ -422,7 +422,8 @@ public class MetricResultAnalyzer {
 					}
 				}
 			} catch (PathNotFoundException e) {
-				log.error("PathNotFoundException:[{}]", this.prqlUid, e);
+				if(log.isTraceEnabled())
+					log.error("PathNotFoundException:[{}]", this.prqlUid, e);
 				val_obj = null;
 			} catch (InvalidPathException e) {
 				val_obj = InvalidPathExceptionProcess(_ctx, path, e.getMessage());

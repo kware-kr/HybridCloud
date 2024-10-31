@@ -167,10 +167,12 @@ public class CollectorWorkloadWorker extends Thread {
 					bodyparm.put("pageRequest", pageRequest);
 					
 					String bodyString = JSONUtil.getJsonStringFromMap(bodyparm);
-					
+					bodyparm.clear();
+					bodyparm = null;
 					
 					apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.POST, null, bodyString);
 					//apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.POST, null, "{}");
+					
 				} catch (IOException e) {
 					log.error("스레드 종료: 워크로드 리스트 API 호출 에러: {}",url, e);
 					return;
@@ -556,7 +558,6 @@ public class CollectorWorkloadWorker extends Thread {
 		}
 	}
 	
-	//private String getPrometheusResult(String url, HashMap<String, String> param) throws IOException {
 	private String getAPIResult(String url, org.jsoup.Connection.Method method, Map<String, String> params, String bodyString) throws IOException {
 		org.jsoup.Connection connection = Jsoup.connect(url)
 				.method(method)
