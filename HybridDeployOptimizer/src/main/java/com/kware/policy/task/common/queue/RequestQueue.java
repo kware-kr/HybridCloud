@@ -233,6 +233,9 @@ public class RequestQueue  extends DefaultQueue{
     	int containerSize = _req.getRequest().getContainers().size();
     	for(int i=0; i < containerSize; i++) {
 	    	String nodeKey = _req.getNodeKey(i);
+	    	if(nodeKey == null)
+	    		continue;
+	    	
 	    	Map<String, Container> containerMap = this.requestNotApplyMap.get(nodeKey);
 	    	if(containerMap != null ) {
 	    		Container container = _req.getRequest().getContainers().get(i);
