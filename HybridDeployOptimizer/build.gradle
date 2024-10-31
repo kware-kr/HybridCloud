@@ -74,6 +74,10 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
  //}}
+ 
+ //{{swaggger
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0' 
+ //}}swagger
     
 //{{Application     
     implementation 'org.postgresql:postgresql:42.2.5'
