@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.kware.common.openapi.vo.APIResponse;
@@ -93,7 +95,16 @@ public class WorkloadRequestRestController {
 		return ResponseEntity.ok(res);
 	}
 
-	// 추후 RabbitMQ에서 사용하도록 한다.
+	private String extractErrorMessage(Exception e) {
+		if (e instanceof JsonMappingException) {
+			JsonMappingException mappingException = (JsonMappingException) e;
+			JsonLocation jl = mappingException.getLocation();
+			return "[" + jl.offsetDescription() + "]";
+		} else {
+			return null;
+		}
+	}
+
 	/**
 	 * 배포가능한 최적의 노드를 조회(BestFitBinPacking)
 	 * 
@@ -104,14 +115,25 @@ public class WorkloadRequestRestController {
 	@PostMapping("/do/schedule/nodeselect")
 	public ResponseEntity<?> getNodeBFBP(@RequestBody String requestString) throws Exception {
 		APIResponseCode status = null;
-		//WorkloadRequest wlRequest = YAMLUtil.read(requestString, WorkloadRequest.class);
-		if(log.isDebugEnabled())
+		// WorkloadRequest wlRequest = YAMLUtil.read(requestString,
+		// WorkloadRequest.class);
+		if (log.isDebugEnabled())
 			log.debug("배포요청 전문: {}", requestString);
-		
-		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+
+		WorkloadRequest wlRequest = null;
+		String errorMessage = null;
+		try {
+			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+		} catch (Exception e) {
+			errorMessage = extractErrorMessage(e);
+			if (errorMessage != null)
+				log.error("Parser Error: {}", errorMessage, e);
+			else
+				throw e;
+		}
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
-			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage(), null);
+			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
 			return ResponseEntity.ok(ares);
 		}
 		wlRequest.aggregate(true);
@@ -119,7 +141,7 @@ public class WorkloadRequestRestController {
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		//req.setInfo(YAMLUtil.convertYamlToJson(requestString));
+		// req.setInfo(YAMLUtil.convertYamlToJson(requestString));
 		req.setInfo(requestString);
 		req.setStatus(RequestStatus.request.toString());
 		wlService.insertMoUserRequest(req);
@@ -143,9 +165,8 @@ public class WorkloadRequestRestController {
 		 * = YAMLUtil.writeString(wlResponseRes, false);
 		 */
 
-		APIResponse<String> ares = new APIResponse(wlResponse.getResponse().getCode(), wlResponse.getResponse().getMessage()
-				, wlResponse.getResponse()
-				// res_yamlstring
+		APIResponse<String> ares = new APIResponse(wlResponse.getResponse().getCode(),
+				wlResponse.getResponse().getMessage(), wlResponse.getResponse()
 		);
 
 		// return ResponseEntity.ok(wlRequest);
@@ -161,18 +182,29 @@ public class WorkloadRequestRestController {
 	 */
 	@PostMapping("/do/schedule/nodeselect/complete")
 	public ResponseEntity<?> getNodeScheduleComplete(@RequestBody String requestString) throws Exception {
-		if(log.isDebugEnabled())
+		if (log.isDebugEnabled())
 			log.debug("배포완료 통지 전문:{}", requestString);
-		
+
 		APIResponseCode status = null;
-		WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+		WorkloadRequest wlRequest = null;
+		String errorMessage = null;
+		try {
+			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+		} catch (Exception e) {
+			errorMessage = extractErrorMessage(e);
+			if (errorMessage != null)
+				log.error("Parser Error: {}", errorMessage, e);
+			else
+				throw e;
+		}
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
-			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage(), null);
+			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
 			return ResponseEntity.ok(ares);
 		}
-		if(log.isInfoEnabled())
-			log.info("배포완료 통지 ID:{}", wlRequest.getRequest().getMlId() );
+
+		if (log.isInfoEnabled())
+			log.info("배포완료 통지 ID:{}", wlRequest.getRequest().getMlId());
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
@@ -196,27 +228,40 @@ public class WorkloadRequestRestController {
 	 */
 	@PostMapping("/do/schedule/node_score_bfbp")
 	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String requestString) throws Exception {
-		//try {
-			WorkloadRequest wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
-			wlRequest.aggregate(true);
+		// try {
+		APIResponseCode status = null;
+		WorkloadRequest wlRequest = null;
+		String errorMessage = null;
+		try {
+			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+		} catch (Exception e) {
+			errorMessage = extractErrorMessage(e);
+			if (errorMessage != null)
+				log.error("Parser Error: {}", errorMessage, e);
+			else
+				throw e;
+		}
+		if (wlRequest == null) {
+			status = APIResponseCode.INPUT_ERROR;
+			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
+			return ResponseEntity.ok(ares);
+		}
 
-			// {{ WorkloadRequest DB저장
-			WorkloadRequest.Request req = wlRequest.getRequest();
-			// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-			req.setInfo(requestString);
-			req.setStatus(RequestStatus.request.toString());
-			wlService.insertMoUserRequest(req);
-			// }}
+		wlRequest.aggregate(true);
 
-			// {{노드 셀렉터
-			List<PromMetricNode> sel_nodes = wlService.getNodeScore(wlRequest, 0); // 전체 노드의 순서
-			// }}
+		// {{ WorkloadRequest DB저장
+		WorkloadRequest.Request req = wlRequest.getRequest();
+		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
+		req.setInfo(requestString);
+		req.setStatus(RequestStatus.request.toString());
+		wlService.insertMoUserRequest(req);
+		// }}
 
-			return ResponseEntity.ok(sel_nodes);
-		/*} catch (Exception e) {
-			throw new HttpMessageNotReadableException("Failed to process JSON", null, null);
-			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process JSON");
-		}*/
+		// {{노드 셀렉터
+		List<PromMetricNode> sel_nodes = wlService.getNodeScore(wlRequest, 0); // 전체 노드의 순서
+		// }}
+
+		return ResponseEntity.ok(sel_nodes);
 	}
 
 	/**
@@ -224,17 +269,34 @@ public class WorkloadRequestRestController {
 	 * 
 	 * @param yamlstring
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	// @PostMapping("/do/schedule/node_score_for_capacity")
 	@RequestMapping(value = "/do/schedule/node_score_for_capacity", method = { RequestMethod.POST, RequestMethod.GET })
-	public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String requestString) throws Exception {
+	public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String requestString)
+			throws Exception {
 		List<PromMetricNode> nodes = null;
 		WorkloadRequest wlRequest = null;
 		if (requestString == null) {
 			nodes = promQ.getLastPromMetricNodesReadOnly();
 		} else {
-			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+			APIResponseCode status = null;
+			String errorMessage = null;
+			try {
+				wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
+			} catch (Exception e) {
+				errorMessage = extractErrorMessage(e);
+				if (errorMessage != null)
+					log.error("Parser Error: {}", errorMessage, e);
+				else
+					throw e;
+			}
+			if (wlRequest == null) {
+				status = APIResponseCode.INPUT_ERROR;
+				APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
+				return ResponseEntity.ok(ares);
+			}
+
 			wlRequest.aggregate(true);
 			nodes = promQ.getAppliablePromMetricNodesReadOnly(wlRequest);
 		}
@@ -247,44 +309,45 @@ public class WorkloadRequestRestController {
 
 		return ResponseEntity.ok(nodes);
 	}
-	
+
 	/**
 	 * 워크로드 특성에 특정 설정에 해당하는 config name을 통해서 상세정보를 확인함
+	 * 
 	 * @param cfgName config name
 	 * @return
 	 * @throws Exception
 	 */
 	@GetMapping("/config/workloadfeature/{feature}")
-	public ResponseEntity<?> getConfigGroup(@PathVariable("feature") CommonConfigGroup.ConfigName cfgname) throws Exception {
-		//CommonConfigGroup.ConfigName cfgname= CommonConfigGroup.ConfigName.workload_feature;
+	public ResponseEntity<?> getConfigGroup(@PathVariable("feature") CommonConfigGroup.ConfigName cfgname)
+			throws Exception {
 		CommonConfigGroup ccGroup = null;
 		ccGroup = cmService.selectCommonConfigGroup(cfgname);
 
 		List<Map> rsList = new ArrayList<Map>();
 		JsonNode node = ccGroup.getContent();
 		if (node.isArray()) {
-            ArrayNode arrayNode = (ArrayNode) node; // JsonNode를 ArrayNode로 캐스팅
+			ArrayNode arrayNode = (ArrayNode) node; // JsonNode를 ArrayNode로 캐스팅
 
-            // 배열의 각 요소를 순회
-            Map map = null;
-            String sName = "name";
-            String sLevel = "level";
-            String name;
-            Integer level;
-            for (JsonNode element : arrayNode) {
-            	name  = (String)element.get(sName).asText();
-            	level = (Integer)(element.get(sLevel).asInt());
-            	
-            	map = new HashMap<String, Object>();
-            	map.put(sName, name);
-            	map.put(sLevel, level);
-            	rsList.add(map);
-            }
-        } 
-		
+			// 배열의 각 요소를 순회
+			Map map = null;
+			String sName = "name";
+			String sLevel = "level";
+			String name;
+			Integer level;
+			for (JsonNode element : arrayNode) {
+				name = (String) element.get(sName).asText();
+				level = (Integer) (element.get(sLevel).asInt());
+
+				map = new HashMap<String, Object>();
+				map.put(sName, name);
+				map.put(sLevel, level);
+				rsList.add(map);
+			}
+		}
+
 		APIResponseCode status = APIResponseCode.SUCCESS;
 		APIResponse<List> response = new APIResponse(status.getCode(), status.getMessage(), rsList);
-		
+
 		return ResponseEntity.ok(response);
 	}
 }
