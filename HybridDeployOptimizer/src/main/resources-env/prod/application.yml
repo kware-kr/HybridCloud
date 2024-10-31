@@ -36,6 +36,13 @@ spring:
       password: admin123!
       roles: ACTUATOR
     permit-addresses: "183.109.110.211, 172.30.1"  #쿠베 메니페스트 yml파일에서 처리는 나중에 필요에 따라서 처리한다.
+    
+springdoc:
+#  swagger-ui:
+#    enable: true
+#  api-docs:
+#    enabled: true
+  date-time-format: yyyy-MM-dd HH:mm:ss
         
 server:
   port: 8889

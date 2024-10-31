@@ -117,7 +117,7 @@
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
 	</logger>
-	<logger name="jdbc.sqlonly" level="DEBUG" additivity="false">
+	<logger name="jdbc.sqlonly" level="ERROR" additivity="false">
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
 	</logger>
@@ -134,7 +134,7 @@
 		<appender-ref ref="requestLog" />
 	</logger>
 	
-	<logger name="metric-log" level="INFO" additivity="false">
+	<logger name="metric-log" level="DEBUG" additivity="false">
 		<appender-ref ref="metricLog" />
 		<!-- <appender-ref ref="console" /> -->
 	</logger>

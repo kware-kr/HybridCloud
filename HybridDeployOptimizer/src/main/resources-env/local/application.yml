@@ -43,6 +43,7 @@ spring:
       roles: ACTUATOR
     permit-addresses: "183.109.110.211, 172.30.1"
       
+#swagger: "2.0"
 
 #actuator를 활성화 local 및 dev에서만
 management:
@@ -128,7 +129,7 @@ hybrid:
         gpu: 2
         disk: 3
         memory: 3
-    exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator"
+    exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator|mig-exp"
     server:
       h2:
         enable: false
