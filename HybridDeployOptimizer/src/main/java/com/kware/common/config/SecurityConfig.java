@@ -42,6 +42,7 @@ public class SecurityConfig {
 		 RequestMatcher interfaceMatcher = new AntPathRequestMatcher("/interface/**");
 	     RequestMatcher actuatorMatcher  = new AntPathRequestMatcher("/actuator/**");
 	     RequestMatcher queueMatcher     = new AntPathRequestMatcher("/queue/**");
+	     //RequestMatcher swaggerMatcher   = new AntPathRequestMatcher("/swagger-ui/**");
 
 	     http
             .csrf(csrf -> csrf.disable())                               //CSRF 비활성화
@@ -49,6 +50,8 @@ public class SecurityConfig {
                             //.requestMatchers(interfaceMatcher).authenticated()      //   /interface/** 엔드포인트는 인증 필요
                             .requestMatchers(interfaceMatcher).access(interfaceAccessManager)      //   /interface/** 엔드포인트는 인증 필요
                             .requestMatchers(actuatorMatcher, queueMatcher).access(actuatorAccessManager)
+                            .antMatchers("/v3/api-docs/**","/swagger-resources/**", "/swagger-ui/**").access(actuatorAccessManager)
+                            .antMatchers("/error").permitAll()
                             .anyRequest().denyAll()                               // 그 외의 모든 요청은 허용
             )
             .sessionManagement(session -> session
