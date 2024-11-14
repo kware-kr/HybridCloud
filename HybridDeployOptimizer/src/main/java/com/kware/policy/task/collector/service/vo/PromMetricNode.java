@@ -198,10 +198,31 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 		}
 	}
 	
-	public void setCapacityGpuMemory(String _val) {
+	
+	private String[] getGpuArrayVals(String _val) {
 		String[] vals = _val.split(":");
+		int len = vals.length;
+		
+		if(len < 2)
+			return null;
+		
+		StringBuilder result = new StringBuilder();
+        for (int i = 0; i < len - 1; i++) {
+        	if (i != 0) result.append("_");
+            result.append(vals[i]);
+        }
+        
+        String[] rst = new String[2];
+        rst[0] = result.toString();
+        rst[1] = vals[len - 1];
+		
+        return rst;
+	}
+	
+	public void setCapacityGpuMemory(String _val) {
+		String[] vals = getGpuArrayVals(_val);
 		try {
-			Integer gpuId = Integer.parseInt(vals[0]);
+			String gpuId = vals[0];
 			
 			PromMetricNodeGPU gpu = mGpuList.get(gpuId);
 			if(gpu == null) {
@@ -215,9 +236,9 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 	}
 	
 	public void setGpuModel(String _val) {
-		String[] vals = _val.split(":");
+		String[] vals = getGpuArrayVals(_val);
 		try {
-			Integer gpuId = Integer.parseInt(vals[0]);
+			String gpuId = vals[0];
 			
 			PromMetricNodeGPU gpu = mGpuList.get(gpuId);
 			if(gpu == null) {
@@ -231,9 +252,9 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 	}
 	
 	public void setGpuTemp(String _val) {
-		String[] vals = _val.split(":");
+		String[] vals = getGpuArrayVals(_val);
 		try {
-			Integer gpuId = Integer.parseInt(vals[0]);
+			String gpuId = vals[0];
 			
 			PromMetricNodeGPU gpu = mGpuList.get(gpuId);
 			if(gpu == null) {
@@ -247,9 +268,9 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 	}
 	
 	public void setAvailableGpuMemory(String _val) {
-		String[] vals = _val.split(":");
+		String[] vals = getGpuArrayVals(_val);
 		try {
-			Integer gpuId = Integer.parseInt(vals[0]);
+			String gpuId = vals[0];
 			
 			PromMetricNodeGPU gpu = mGpuList.get(gpuId);
 			if(gpu == null) {
@@ -257,6 +278,22 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 				mGpuList.put(gpuId, gpu);
 			}
 			gpu.setAvailableMemory(Long.parseLong(vals[1]));
+		}catch(Exception e) {
+			log.error("setStatusCondtion error:{}", _val, e);
+		}
+	}
+	
+	public void setIndividualGpuUsage(String _val) {
+		String[] vals = getGpuArrayVals(_val);
+		try {
+			String gpuId = vals[0];
+			
+			PromMetricNodeGPU gpu = mGpuList.get(gpuId);
+			if(gpu == null) {
+				gpu = new PromMetricNodeGPU(gpuId);
+				mGpuList.put(gpuId, gpu);
+			}
+			gpu.setUsage(Double.parseDouble(vals[1]));
 		}catch(Exception e) {
 			log.error("setStatusCondtion error:{}", _val, e);
 		}
@@ -273,7 +310,7 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 	Map<String, PromMetricPod> mPodList = new HashMap<String, PromMetricPod>();;
 	
 	//GPU 모델은 의미없지만 추후에 모델별로 순위를 고려해서
-	Map<Integer, PromMetricNodeGPU> mGpuList = new HashMap<Integer, PromMetricNodeGPU>(); //gpu model
+	Map<String, PromMetricNodeGPU> mGpuList = new HashMap<String, PromMetricNodeGPU>(); //gpu model
 	
 	
 	/**
@@ -377,6 +414,8 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
         	mMap.put("usage_disk_read_1m"  , c.getMethod("setUsageDiskRead1m"   , Double.class));
         	mMap.put("usage_disk_write_1m" , c.getMethod("setUsageDiskWrite1m"  , Double.class));
         	mMap.put("capacity_maxhz_cpu"  , c.getMethod("setCapacityMaxHzCpu"  , Long.class));
+        	mMap.put("individual_gpu_usage", c.getMethod("setIndividualGpuUsage", String.class));
+        	
 		} catch (NoSuchMethodException e) {
 			log.error("",e);
 		} catch (SecurityException e) {

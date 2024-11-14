@@ -19,6 +19,7 @@ import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.RequestQueue;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,37 +54,37 @@ public class CollectorRestQueueMetricController {
 	
 	@GetMapping("/nodes")
     public ResponseEntity<Map> getMetricdNodes() {
-		PromMetricNodes pmns = promQ.getPromNodesDeque().peekFirst();
+		PromMetricNodes pmns = (PromMetricNodes)promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
     	return ResponseEntity.ok(pmns.getNodesMap());
     }
 
 	@GetMapping("/node/{clId}/{id}")
     public ResponseEntity<PromMetricNode> getMetricdNodeId(@PathVariable Integer clId, @PathVariable String id) {
-		PromMetricNodes pmns = promQ.getPromNodesDeque().peekFirst();
+		PromMetricNodes pmns = (PromMetricNodes)promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		return ResponseEntity.ok(pmns.getMetricNode(clId, id));
     }
 	
 	@GetMapping("/node/{id}")
     public ResponseEntity<PromMetricNode> getMetricdNodeId(@PathVariable String id) {
-		PromMetricNodes pmns = promQ.getPromNodesDeque().peekFirst();
+		PromMetricNodes pmns = (PromMetricNodes)promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 		return ResponseEntity.ok(pmns.getMetricNode(id));
     }
 	
 	@GetMapping("/pods")
     public ResponseEntity<Map> getMetricdPods() {
-		PromMetricPods pmps = promQ.getPromPodsDeque().peekFirst();
+		PromMetricPods pmps = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
 		return ResponseEntity.ok(pmps.getPodsMap());
     }
     
 	@GetMapping("/pod/{clId}/{id}")
     public ResponseEntity<PromMetricPod> getMetricdPodId(@PathVariable Integer clId, @PathVariable String id) {
-		PromMetricPods pmps = promQ.getPromPodsDeque().peekFirst();
+		PromMetricPods pmps = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
 		return ResponseEntity.ok(pmps.getMetricPod(clId, id));
     }
 	
 	@GetMapping("/pod/{id}")
     public ResponseEntity<PromMetricPod> getMetricdPodId(@PathVariable String id) {
-		PromMetricPods pmps = promQ.getPromPodsDeque().peekFirst();
+		PromMetricPods pmps = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
 		return ResponseEntity.ok(pmps.getMetricPod(id));
     }    
 }

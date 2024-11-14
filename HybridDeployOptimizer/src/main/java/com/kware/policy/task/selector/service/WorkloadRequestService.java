@@ -89,8 +89,8 @@ public class WorkloadRequestService {
 		Integer clUid = null;
 		for(int i = 0 ; i < containers.size(); i++) {
 			Container container =  containers.get(i);
-			
-			List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);
+			//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
+			List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);  
 			log.info("select node list: {}", tempNodes);
 
 			PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
@@ -98,13 +98,12 @@ public class WorkloadRequestService {
 			
 			if(node != null) {
 				clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
-				//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
-				wlRequest.getNodes().add(node.getNode());
-				wlRequest.setClUid(clUid);
 				
+				wlRequest.setClUid(clUid);
+				container.setNodeName(node.getNode());
 				
 				//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
-				requestQ.setWorkloadRequest(wlRequest, i);
+				requestQ.setWorkloadRequest(wlRequest, container);
 			}
 			
 			sel_nodes.add(node); //null이어도 등록한다.
@@ -242,12 +241,12 @@ public class WorkloadRequestService {
 			
 			if(node != null) {
 				clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
-				//workloadrequest에 컨테이너의 순서대로 선택된 노드명을 등록함
-				wlRequest.getNodes().add(node.getNode());
+				
 				wlRequest.setClUid(clUid);
+				container.setNodeName(node.getNode());
 				
 				//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
-				requestQ.setWorkloadRequest(wlRequest, i);
+				requestQ.setWorkloadRequest(wlRequest, container);
 			}
 			sel_nodes.add(node);
 		}
@@ -267,7 +266,7 @@ public class WorkloadRequestService {
 	 * @return
 	 */
 	public void completeRequest(WorkloadRequest wlRequest) {
-		WorkloadRequest memoryWlRequest = requestQ.getWorkloadRequestMap().get(wlRequest.getRequest().getMlId());
+		WorkloadRequest memoryWlRequest = requestQ.getWorkloadRequest(wlRequest.getRequest().getMlId());
 		memoryWlRequest.setComplete_notice_militime(System.currentTimeMillis()); //통지시간 설정
 	}
 	//}}

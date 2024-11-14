@@ -1,5 +1,6 @@
 package com.kware.policy.task.common.queue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -52,39 +53,52 @@ public class APIQueue extends DefaultQueue{
     }
 
   //---------------------------------------------------------------------------------------------------
-  	/**
-  	 * Cluster class를 관리하는 ConcurrentHashMap
-  	 * @return
-  	 */
-  	public Map<String, Cluster> getApiClusterMap() {
-  		return (ConcurrentHashMap<String, Cluster>)this.getApiMap(APIMapsName.CLUSTER);
-  	}
+	/**
+	 * Cluster class를 관리하는 ConcurrentHashMap
+	 * @return
+	 */
+	public Map<String, Cluster> getApiClusterMap() {
+		return (ConcurrentHashMap<String, Cluster>) this.getApiMap(APIMapsName.CLUSTER);
+	}
+
+	/**
+	 * ClusterNod class를 관리하는 ConcurrentHashMap
+	 * @return
+	 */
+	public Map<String, ClusterNode> getApiClusterNodeMap() {
+		return (ConcurrentHashMap<String, ClusterNode>) getApiMap(APIMapsName.NODE);
+	}
+
+	/**
+	 * ClusterWorkload class를 관리하는 ConcurrentHashMap
+	 * @return
+	 */
+
+	public Map<String, ClusterWorkload> getApiWorkloadMap() {
+		return (ConcurrentHashMap<String, ClusterWorkload>) getApiMap(APIMapsName.WORKLOAD);
+	}
+
+	/**
+	 * ClusterWorkloadPod class를 관리하는 ConcurrentHashMap
+	 * @return
+	 */
+	public Map<String, ClusterWorkloadPod> getApiWorkloadPodMap() {
+		return (ConcurrentHashMap<String, ClusterWorkloadPod>) getApiMap(APIMapsName.WORKLOADPOD);
+	}
+	  	 	
   	
-  	/**
-  	 * ClusterNod class를 관리하는 ConcurrentHashMap
-  	 * @return
-  	 */
-  	public Map<String, ClusterNode> getApiClusterNodeMap() {
-  		return (ConcurrentHashMap<String, ClusterNode>)getApiMap(APIMapsName.NODE);
+    public <T extends ClusterDefault>  Map<String, T> getReadOnlyApiMap(APIMapsName name) {
+  		Map<String, T> map = (Map<String, T>)apiMap.get(name);
+  		
+  		return Collections.unmodifiableMap(map);
   	}
-  	
-  	/**
-  	 * ClusterWorkload class를 관리하는 ConcurrentHashMap
-  	 * @return
-  	 */
-  	public Map<String, ClusterWorkload> getApiWorkloadMap() {
-  		return (ConcurrentHashMap<String, ClusterWorkload>)getApiMap(APIMapsName.WORKLOAD);
+    
+    public <T extends ClusterDefault>  T getObject(APIMapsName name, String id) {
+  		Map<String, T> map = (Map<String, T>)apiMap.get(name);
+  		
+  		return map.get(id);
   	}
-  	
-  	/**
-  	 * ClusterWorkloadPod class를 관리하는 ConcurrentHashMap
-  	 * @return
-  	 */
-  	public Map<String, ClusterWorkloadPod> getApiWorkloadPodMap() {
-  		return (ConcurrentHashMap<String, ClusterWorkloadPod>)getApiMap(APIMapsName.WORKLOADPOD);
-  	}
-  	 	
-  	
+    
   	public int getApiQueueSize(APIMapsName name) {
   		Map<String, ?> map = apiMap.get(name);
   		if(map == null)

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.policy.task.common.constant.APIConstant;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -102,7 +103,7 @@ import lombok.ToString;
 
 
 /*
- * 워크로드는 동일한 클러스터에 배포된다.(이것 확인)
+ * 스트라토 워크로드 API의 상세조회 결과
  * mlId는 
  */
 @Getter
@@ -147,12 +148,8 @@ public class ClusterWorkload extends ClusterDefault {
 		resourceMap = null;
 	}
 	
-	@JsonIgnore
+	@Setter(AccessLevel.NONE) //json으로 변환시에 필요함
 	private Map<String, ClusterWorkloadResource> resourceMap = new HashMap<String, ClusterWorkloadResource>();
-	
-	public Map<String, ClusterWorkloadResource> getResource(){
-		return this.resourceMap;
-	}
 	
 	public boolean addResource(ClusterWorkloadResource _resource) {
 		if(_resource.getUniqueKey() == null) {
@@ -164,11 +161,13 @@ public class ClusterWorkload extends ClusterDefault {
 		return true;
 	}
 	
+	//미사용
 	public ClusterWorkloadResource getResource(String _key) {
 		return resourceMap.get(_key);
 	}
 	
 	//{{ ClusterWorkloadResource[ClusterWorkloadPod] 관련
+	//미사용
 	public Map<String, ClusterWorkloadPod> getPods(String resourceKey){
 		ClusterWorkloadResource resource = this.resourceMap.get(resourceKey);
 		if(resource != null)
@@ -176,6 +175,7 @@ public class ClusterWorkload extends ClusterDefault {
 		else return null;
 	}
 	
+	//미사용
 	public ClusterWorkloadPod getPod(String _podUid) {
 		ClusterWorkloadPod pod = null;
 		for (String key : resourceMap.keySet()) {
@@ -188,6 +188,7 @@ public class ClusterWorkload extends ClusterDefault {
 		return null;
 	}
 
+	//미사용
 	public boolean containsPod(String _podUid) {
 		boolean isContains = false;
 		for (String key : resourceMap.keySet()) {
@@ -200,48 +201,7 @@ public class ClusterWorkload extends ClusterDefault {
 		return false;
 		//return mPods.containsKey(_podUid);
 	}
-
-	/**
-	 * ClusterWorkloadResource 에 포함되어 있는 pod를 관리한다.
-	 * @param _podUid
-	 * @param _pod
-	 */
-	public boolean addPod(ClusterWorkloadPod _pod) {
-		if(_pod.getOwnerName() == null) {
-			return false;
-		}
-		
-		ClusterWorkloadResource resource = this.resourceMap.get(_pod.getOwnerName());
-		if(resource == null) {
-			resource = new ClusterWorkloadResource();
-			resource.setClUid(clUid);
-			resource.setKind(_pod.getOwnerKind());
-			resource.setNm(_pod.getOwnerName());
-			resource.setUid(_pod.getOwnerUid());
-		}
-		
-		resource.addPod(_pod);
-		return true;
-	}
-//}} ClusterWorkloadResource[ClusterWorkloadPod] 관련
-	
-	/**
-	 * 필요에 따라서 실행
-	 */
-	public void setResourcePodClUidAll() {
-		if(this.clUid == null) {
-			return;
-		}
-		
-		for(Map.Entry<String, ClusterWorkloadResource> resourceE : this.resourceMap.entrySet() ) {
-			resourceE.getValue().setClUid(this.clUid);
-			Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
-			for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
-				entry.getValue().setClUid(this.clUid);
-			}
-		}		
-	}
-	
+	//}} ClusterWorkloadResource[ClusterWorkloadPod] 관련
 	
 	public void setStatusString(String status) {
 		if (status != null && !status.isEmpty()) {
@@ -254,6 +214,7 @@ public class ClusterWorkload extends ClusterDefault {
 	}	
 	
 	@JsonIgnore
+	//미사용
 	public String getStatuString() {
         if (status != null) {
             return status.name(); // Enum의 name() 메서드를 사용해 String으로 변환

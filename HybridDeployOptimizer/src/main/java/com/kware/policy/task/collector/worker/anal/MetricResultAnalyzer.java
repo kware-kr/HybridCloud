@@ -46,6 +46,7 @@ import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 
 import lombok.extern.slf4j.Slf4j;
@@ -173,11 +174,16 @@ public class MetricResultAnalyzer {
 					String sExtPath_puid = (String) extractMap.remove(JPATH_KEY_uid); // 공통
 
 					// {{ portal api를 통한 uid가 있는 경우만 처리한다.
+					//2024.11.04 쿠베플로우를 사용하면서 api에 나나타지 않지만 있는 경우는
+					//pod명, uid, node, cl_uid가 키값인데 이 값을 이용해서 쿠베플로워의 이름을 연결할 수 있나?
+					//pod명이 api리소스 이름으로 시작하고, 요청시 컨테이너의 이름을 포함하고 있다.
+					//
 					String mlId = null;
 					ClusterWorkloadPod wpod = apiWorkloadPodMap.get(sExtPath_puid);
 					if (wpod == null) {
 						extractMap.clear();
 						extractMap = null;
+						
 						continue;
 					} else {
 						mlId = wpod.getMlId();
@@ -191,8 +197,9 @@ public class MetricResultAnalyzer {
 						*/
 
 						for(Map.Entry<String, ClusterWorkloadResource> resourceE : clWorkload.getResourceMap().entrySet() ) {
-							resourceE.getValue().setClUid(clUid);
 							
+							resourceE.getValue().setClUid(clUid);
+							//하위 pod에도 설정함
 							Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
 							for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
 								entry.getValue().setClUid(clUid);
@@ -218,10 +225,23 @@ public class MetricResultAnalyzer {
 					}
 					pod = (PromMetricPod) this.makePareData(pod, extractMap);
 					
-					ClusterWorkloadPod cwPod = apiQ.getApiWorkloadPodMap().get(pod.getPodUid());
+					ClusterWorkloadPod cwPod = apiWorkloadPodMap.get(pod.getPodUid());
 					if(cwPod != null) {
-						if(pod.isCompleted())
+						if(pod.isCompleted()) {
 							cwPod.setCompleted(true);
+						}
+						
+						
+						//워크프로우는 순서를 가지고 있어서 각 단계별로 실행되는 이름과, 실제 파드 매핑을 해야한다.
+						
+						//mlid로 찾아서 이름을 비교해서 처리한다.
+						/*
+						cwPod.getOwnerName();//api에서 제공하는 resoruce 이름
+						pod.getScheduledTimestamp();
+						pod.getCompletedTimestamp();
+						pod.getCreateByKind(); //Workflow(순서 있음),replicaset, deployment, Job
+						pod.getPod();
+						*/
 					}
 
 					// if(pod != null) //테스트

@@ -81,7 +81,7 @@ import lombok.ToString;
 */
 
 /*
- * 워크로드는 동일한 클러스터에 배포된다.(이것 확인)
+ * 스트라토 워크로드 API의 상세조회 결과 resource를 관리
  * mlId는 
  */
 @Getter

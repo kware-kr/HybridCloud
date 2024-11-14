@@ -7,10 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +23,8 @@ import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 전역으로 사용할 스레드에 안전한 큐와 맵을 생성함
+ * 프로메테우스에서 수집한 데이터를 전역 관리
+ * 스레드에 안전한 큐와 맵을 생성함
  * @param <T>
  */
 @Slf4j
@@ -66,17 +64,17 @@ public class PromQueue extends DefaultQueue{
 	 * PromMetricNodes class를 관리하는 BlockingDeque
 	 * @return
 	 */
-	public BlockingDeque<PromMetricNodes> getPromNodesDeque() {
-		return (BlockingDeque<PromMetricNodes>)getPromDeque(PromDequeName.METRIC_NODEINFO);
-	}
+//	public BlockingDeque<PromMetricNodes> getPromNodesDeque() {
+//		return (BlockingDeque<PromMetricNodes>)getPromDeque(PromDequeName.METRIC_NODEINFO);
+//	}
 	
 		/**
 	 * PromMetricPods class를 관리하는 BlockingDeque
 	 * @return
 	 */
-	public BlockingDeque<PromMetricPods> getPromPodsDeque() {
-		return (BlockingDeque<PromMetricPods>)getPromDeque(PromDequeName.METRIC_PODINFO);
-	}
+//	public BlockingDeque<PromMetricPods> getPromPodsDeque() {
+//		return (BlockingDeque<PromMetricPods>)getPromDeque(PromDequeName.METRIC_PODINFO);
+//	}
 	
 	public int getProDequeSize(PromDequeName name) {
 		BlockingDeque<?> deque = promDequesMap.get(name);

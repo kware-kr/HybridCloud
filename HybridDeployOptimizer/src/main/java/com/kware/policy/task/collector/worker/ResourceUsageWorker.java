@@ -38,6 +38,7 @@ import com.kware.policy.task.collector.service.vo.ResourceUsagePod;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,7 +89,7 @@ public class ResourceUsageWorker extends Thread {
 		this.isRunning = true;
 		try {
 			//스레드 풀을 쓰는 방법도 고민해볼까?
-			PromMetricNodes pmns = promQ.getPromNodesDeque().peekFirst();
+			PromMetricNodes pmns = (PromMetricNodes)promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
 			Map<String, PromMetricNode>  pmnMap = pmns.getNodesMap();
 			if(pmnMap != null) {
 				for (PromMetricNode node : pmnMap.values()) {
@@ -115,7 +116,7 @@ public class ResourceUsageWorker extends Thread {
 		        }
 			}
 			
-			PromMetricPods pmps = promQ.getPromPodsDeque().peekFirst();
+			PromMetricPods pmps = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
 			Map<String, PromMetricPod> pmpMap = pmps.getPodsMap();
 			
 			if(pmpMap != null) {

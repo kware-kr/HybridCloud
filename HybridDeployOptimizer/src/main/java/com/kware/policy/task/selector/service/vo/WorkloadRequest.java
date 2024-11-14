@@ -1,7 +1,6 @@
 package com.kware.policy.task.selector.service.vo;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -32,9 +31,6 @@ public class WorkloadRequest extends CommonQueueDefault{
     private Integer clUid = null;
     
     @JsonIgnore
-    private List<String>  nodes  = new ArrayList(); //요청 컨테이너의 순서대로 노드선택알고리즘의 결과를 등록
-    
-    @JsonIgnore
     private Integer totalRequestCpu = 0;
     @JsonIgnore
     private Long    totalRequestMemory = 0L;
@@ -61,12 +57,16 @@ public class WorkloadRequest extends CommonQueueDefault{
 	}*/
         
     @JsonIgnore
-    public String getNodeKey(int i) {
-    	if(nodes.size() <= i) {
-    		return null;
+    public String getNodeKey(Container container) {
+    	return container.getNodeKey();
+    }
+    
+    public void setClUid(Integer clUid) {
+    	this.clUid = clUid;
+    	//컨테이너에 클래스 ID 설정
+    	for(Container c : this.request.getContainers()) {
+    		c.setClUid(clUid);
     	}
-    	
-    	return this.clUid + StringConstant.STR_UNDERBAR + this.nodes.get(i);
     }
 
     @Data
@@ -128,21 +128,30 @@ public class WorkloadRequest extends CommonQueueDefault{
     public static class Container extends CommonQueueDefault{
         private String name;
         
-        @JsonInclude(Include.NON_NULL) // null 값을 제외
-        private String podId; //이건 프로메테우스 메트릭에 포함된 정보를 넣으면 어떤가?
-        
         private RequestContainerAttributes attribute;
         private Resources resources;
         
         @JsonIgnore
-        public String getContainerKey(String _mlId) {
-        	return _mlId + StringConstant.STR_UNDERBAR + name;
+        public String getContainerKey() {
+        	return this.mlId + StringConstant.STR_UNDERBAR + name;
         }
         
         @JsonIgnore
         private String mlId;
         
         
+        @JsonIgnore
+        //노드셀렉터가 선택한 이후에  노드명을 설정
+        private String nodeName;
+        
+        @JsonIgnore
+        //노드셀렉터가 선택한 이후에  노드명을 설정
+        private Integer clUid;    
+        
+        @JsonIgnore
+        public String getNodeKey() {
+        	return this.clUid + StringConstant.STR_UNDERBAR + this.getNodeName();
+        }
     }
 
     @Data
@@ -175,22 +184,22 @@ public class WorkloadRequest extends CommonQueueDefault{
         private Long ephemeralStorage= 0L;
         
 		public void setCpu(String _cpu) {
-			this.cpu = convertMetricToLong(_cpu).intValue();
+			this.cpu = convertMetricToLong(_cpu, 0).intValue();
 			//this.cpu = _cpu;
 		}
 		
 		public void setMemory(String _memory) {
-			this.memory = convertMetricToLong(_memory);
+			this.memory = convertMetricToLong(_memory, 1);
 			//this.memory = _memory;
 		}
 		
 		public void setGpu(String _gpu) {
-			this.gpu = convertMetricToLong(_gpu).intValue();
+			this.gpu = convertMetricToLong(_gpu, 2).intValue();
 			//this.gpu = _gpu;
 		}
 		
 		public void setEphemeralStorage(String _ephemeralStorage) {
-			this.ephemeralStorage = convertMetricToLong(_ephemeralStorage);
+			this.ephemeralStorage = convertMetricToLong(_ephemeralStorage, 3);
 			//this.ephemeralStorage = _ephemeralStorage;
 		}
 		
@@ -234,9 +243,10 @@ public class WorkloadRequest extends CommonQueueDefault{
         private String       yaml;
     }
     
-    /**
+    /** 
      * 다중컨테이너가 있을때 request, limit을 합산 처리
      * 워크플로우나, job의 parallelism 등으로 인하여 순차 처리시에는 맥스 값으로 처리해야 할 수 있다.
+     * 200241101 실제 의미없는 함수가 될 수 있음: 작업순서추가로 인함, 동일한 시간에 수행되는 경우도 있지만, 순서대로 처리해야하는 경우 있음.
      */
     public void aggregate(boolean isSum) {
     	if(isSum) {
@@ -299,7 +309,7 @@ public class WorkloadRequest extends CommonQueueDefault{
     
     
  // 메트릭을 long 형으로 변환하는 유틸리티 메서드, 수정이 필요한 부분
-    private static Long convertMetricToLong(String metricValue) {
+    private static Long convertMetricToLong(String metricValue, int type) {
         if (metricValue == null || metricValue.isEmpty()) {
             return 0L;
         }
@@ -314,6 +324,10 @@ public class WorkloadRequest extends CommonQueueDefault{
         	// 1 MiB = 2^20 bytes
             factor = 1048576; //(long) Math.pow(2, 20);
             metricValue = metricValue.substring(0, metricValue.length() - 2);
+        }else {
+	        if(type == 0) { //cpu이면
+	        	factor = 1000;	
+	        }
         }
 
         try {

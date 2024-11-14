@@ -47,6 +47,7 @@ import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.PromQueue;
 
 import lombok.Data;
@@ -197,7 +198,6 @@ public class CollectorWorkloadWorker extends Thread {
 			
 			Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
 			Map apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
-			BlockingDeque<PromMetricPods> promPodsDeque   = this.promQ.getPromPodsDeque();
 			
 			for(Map<String,Object> mTmp: workloadList) {
 				String mlId = (String)mTmp.get(StringConstant.STR_mlId);
@@ -206,6 +206,7 @@ public class CollectorWorkloadWorker extends Thread {
 				url = url.replaceAll(REG_mlId, mlId);
 				
 				//{{ 이부분을 스레드로 변경이 가능함
+				//워크로드 상세 정보 조회
 				try {
 					apiResult = this.getAPIResult(url, org.jsoup.Connection.Method.GET, null, null);
 				} catch (IOException e) {
@@ -255,7 +256,7 @@ public class CollectorWorkloadWorker extends Thread {
 				try { //전체 업무에 방해받지 않도록하기 위함
 					if(isFinishEnable && workload.getDeleteAt().equals(StringConstant.STR_N)) { //상태가 미완료: finished가 아니면
 						boolean isCompleteWorkload = true;
-						PromMetricPods mPods = promPodsDeque.peek();
+						PromMetricPods mPods = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
 						if(mPods != null) {
 							for(Map.Entry<String, ClusterWorkloadResource> resourceE : workload.getResourceMap().entrySet() ) {
 								Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
@@ -480,6 +481,7 @@ public class CollectorWorkloadWorker extends Thread {
 				Map pod = (Map)podsArray.get(j);
 				ClusterWorkloadPod wPod = new ClusterWorkloadPod();
 				
+				wPod.setResourceName(cwResource.getNm());
 				wPod.setClUid(_workload.getClUid());
 				wPod.setUid((String)pod.get(StringConstant.STR_uid));
 				wPod.setKind((String)pod.get(StringConstant.STR_kind));

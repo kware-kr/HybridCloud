@@ -71,6 +71,11 @@ import lombok.ToString;
 */
  
 
+/**
+ * 스트라토 워크로드 API의 상세조회 결과 resource 하위의 pod를 관리
+ * 
+ * 파드의 WorkloadRequest.Request.Container와 연결이 필요함
+ */
 @Getter
 @Setter
 @ToString
@@ -81,6 +86,8 @@ public class ClusterWorkloadPod extends ClusterDefault {
 	private String node; // 노드이름
 	private String mlId; // ml이름
 	private Integer clUid;
+	
+	private String resourceName;
 	
 	//private long   createdAt;
 	//private long   updatedAt;
@@ -94,7 +101,7 @@ public class ClusterWorkloadPod extends ClusterDefault {
 	private Timestamp   updatedAt;
 	
 	private String namespace;
-	private String ownerUid; // 이것 프로메테우스에서 찾을 수 없네.
+	private String ownerUid; 
 	private String ownerName;
 	private Integer restart;
 	private String ownerKind;

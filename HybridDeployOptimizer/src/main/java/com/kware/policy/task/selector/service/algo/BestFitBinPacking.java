@@ -123,6 +123,7 @@ public class BestFitBinPacking {
     /**
      * 노드가 이미 할당된 요청과 새로운 요청을 수용할 수 있는지 확인
      * WorkloadRequest가 여러개의 파드를 실행하도록 되어 있어서, 실제 배포는 해당 컨테이너가 담당함
+     * 워크플로어 동작으로 실제 나중에 소비할 리소스도 포함되어 있어서 계산이 필요하지만 현재는 안됨
      * @param node
      * @param curContainer
      * @return

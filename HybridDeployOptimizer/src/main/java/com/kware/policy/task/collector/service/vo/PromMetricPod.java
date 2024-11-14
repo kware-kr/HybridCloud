@@ -38,13 +38,13 @@ public class PromMetricPod extends PromMetricDefault{
 
 	private String node; //가독성  나중에 지울수 있음
 	private String instance; //가독성 나중에 지울수 있음
-	private String pod; //pode명
+	private String pod; //pod명
 	private String podUid;
 	private String createByKind; //created_by_kind job, deployment, replicaset, statefulset 등, 이런 컨트롤러는 파드의 이름이 변경됨 
 	private String createByName;  //job, deploymente, workflow 이름
 	
-	private String parent; //created_by_이름
-	private String namespace; //created_by_이름
+//	private String parent; //created_by_이름
+	private String namespace; //namespace 이름
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
@@ -78,7 +78,7 @@ public class PromMetricPod extends PromMetricDefault{
 	
 	private String priorityClass; //해당 파드의 priority 정보를 가져와서 뭘할까????? kube_pod_info에 보이는데 일단 이건 나중에
 
-	private Map<Integer, Integer> mUsgeGpuMap   = new HashMap<Integer, Integer>(); //개별 GPU사용량:<GPU 번호, 사용량은 %>
+	private Map<String, Integer>  mUsgeGpuMap   = new HashMap<String, Integer>(); //개별 GPU사용량:<GPU 번호, 사용량은 %>
 	private Map<String, Long>     mLimitsList   = new HashMap<String, Long>();   //리소스이름: <(cpu, memory, gpu, disk), 값>
 	private Map<String, Long>     mRequestsList = new HashMap<String, Long>(); //리소스이름: <(cpu, memory, gpu, disk), 값>
 
@@ -103,8 +103,19 @@ public class PromMetricPod extends PromMetricDefault{
 	
 	public void setUsageGpu(String _val) {
 		String[] vals = _val.split(":");
+		int len = vals.length;
+		
+		if(len < 2)
+			return;
+		
+		StringBuilder result = new StringBuilder();
+        for (int i = 0; i < len - 1; i++) {
+        	if (i != 0) result.append("_");
+            result.append(vals[i]);
+        }
+        
 		try {
-			mUsgeGpuMap.put(Integer.parseInt(vals[0]), Integer.parseInt(vals[1]));
+			mUsgeGpuMap.put(result.toString(), Integer.parseInt(vals[len - 1]));
 		}catch(Exception e) {
 			log.error("setUsageGpu error:{}", _val, e);
 		}
@@ -165,7 +176,7 @@ public class PromMetricPod extends PromMetricDefault{
 //        	mMap.put("instance"                , c.getMethod("setInstance"                , String.class));
 //        	mMap.put("pod"                     , c.getMethod("setPod"                     , String.class));
 //        	mMap.put("pod_uid"                 , c.getMethod("setPodUid"                  , String.class));
-        	mMap.put("parent"                  , c.getMethod("setParent"                  , String.class));
+//        	mMap.put("parent"                  , c.getMethod("setParent"                  , String.class)); //중복
         	mMap.put("labels"                  , c.getMethod("setLabels"                  , Map.class));
         	mMap.put("createByKind"            , c.getMethod("setCreateByKind"            , String.class));
         	mMap.put("createByName"            , c.getMethod("setCreateByName"            , String.class));

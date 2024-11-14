@@ -405,7 +405,7 @@ public class CollectorClusterWorker extends Thread {
 			if(mNode != null) {
 				node.setPromMetricNode(mNode);
 				
-				Map<Integer, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
+				Map<String, PromMetricNodeGPU> gpulist = mNode.getMGpuList();
 				
 				try {
 					gpuJsonString = JSONUtil.getJsonstringFromObject(gpulist,this.gpuFilterSet);

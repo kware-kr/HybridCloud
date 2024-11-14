@@ -1,6 +1,5 @@
 package com.kware.policy.task.common;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.kware.policy.task.common.queue.APIQueue;

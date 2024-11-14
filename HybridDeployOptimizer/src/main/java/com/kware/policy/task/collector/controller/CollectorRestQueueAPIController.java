@@ -19,6 +19,7 @@ import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadPod;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
+import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
 
@@ -55,46 +56,46 @@ public class CollectorRestQueueAPIController {
 	@Operation(summary = "Get All Cluster", description = "Retrieve All Cluster Lists")
 	@GetMapping("/clusters")
     public ResponseEntity<Map> getCluster() {
-    	return ResponseEntity.ok(apiQ.getApiClusterMap());
+    	return ResponseEntity.ok(apiQ.getReadOnlyApiMap(APIMapsName.CLUSTER));
     }
 	
 	@GetMapping("/cluster/{id}")
     public ResponseEntity<Cluster> getClusterId(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiClusterMap().get(id));
+    	return ResponseEntity.ok((Cluster)apiQ.getReadOnlyApiMap(APIMapsName.CLUSTER).get(id));
     }
 	
 	@GetMapping("/cluster/nodes")
     public ResponseEntity<Map> getClusterNodes() {
-    	return ResponseEntity.ok(new TreeMap<>(apiQ.getApiClusterNodeMap()));
+    	return ResponseEntity.ok(new TreeMap<>(apiQ.getReadOnlyApiMap(APIMapsName.NODE)));
     }
 	
 	@GetMapping("/cluster/node/{id}")
     public ResponseEntity<ClusterNode> getClusterNodeId(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiClusterNodeMap().get(id));
+    	return ResponseEntity.ok((ClusterNode)apiQ.getReadOnlyApiMap(APIMapsName.NODE).get(id));
     }
 	
 	@GetMapping("/workloads")
     public ResponseEntity<Map> getWorkloads() {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadMap());
+    	return ResponseEntity.ok(apiQ.getReadOnlyApiMap(APIMapsName.WORKLOAD));
     }
 	
 	@GetMapping("/workload/{id}")
     public ResponseEntity<ClusterWorkload> getWorkloadId(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadMap().get(id));
+    	return ResponseEntity.ok((ClusterWorkload)apiQ.getReadOnlyApiMap(APIMapsName.WORKLOAD).get(id));
     }
 	
 	@GetMapping("/workload/{id}/pods")
     public ResponseEntity<Map> getWorkloadIdPods(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadMap().get(id).getResourceMap());
+    	return ResponseEntity.ok(((ClusterWorkload)apiQ.getReadOnlyApiMap(APIMapsName.WORKLOAD).get(id)).getResourceMap());
     }
 	
 	@GetMapping("/workload/pods")
     public ResponseEntity<Map> getWorkloadPods() {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadPodMap());
+    	return ResponseEntity.ok(apiQ.getReadOnlyApiMap(APIMapsName.WORKLOADPOD));
     }
 	
 	@GetMapping("/workload/pod/{id}")
     public ResponseEntity<ClusterWorkloadPod> getWorkloadPodId(@PathVariable String id) {
-    	return ResponseEntity.ok(apiQ.getApiWorkloadPodMap().get(id));
+    	return ResponseEntity.ok((ClusterWorkloadPod)apiQ.getReadOnlyApiMap(APIMapsName.WORKLOADPOD).get(id));
     }
 }

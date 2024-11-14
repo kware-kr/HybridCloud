@@ -70,6 +70,20 @@ public class StringConstant {
 	
 	public static enum PreemptionPolicy{
 		PreemptLowerPriority, Never
-	}
+	};
 	
+	/*
+	public static enum KubeKind {
+	    POD("Pod"),
+	    SERVICE("Service"),
+	    DEPLOYMENT("Deployment"),
+	    REPLICASET("ReplicaSet"),
+	    JOB("Job"),
+	    CRONJOB("CronJob"),
+	    CONFIGMAP("ConfigMap"),
+	    SECRET("Secret"),
+	    PERSISTENTVOLUME("PersistentVolume"),
+	    PERSISTENTVOLUMECLAIM("PersistentVolumeClaim")
+	};
+	*/
 }
