@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingDeque;
 
 import org.jsoup.Jsoup;
 
@@ -35,8 +34,6 @@ import com.kware.common.util.HttpSSLFactory;
 import com.kware.common.util.JSONUtil;
 import com.kware.common.util.StringUtil;
 import com.kware.policy.task.collector.service.ClusterManagerService;
-import com.kware.policy.task.collector.service.vo.Cluster;
-import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadPod;
 import com.kware.policy.task.collector.service.vo.ClusterWorkloadResource;
@@ -47,8 +44,10 @@ import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
-import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
+import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.selector.service.WorkloadRequestService;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -72,8 +71,9 @@ public class CollectorWorkloadWorker extends Thread {
 	 * METRIC_PODINFO);
 	 */
 	
-	APIQueue apiQ   = qm.getApiQ();
-	PromQueue promQ = qm.getPromQ();
+	APIQueue     apiQ     = qm.getApiQ();
+	PromQueue    promQ    = qm.getPromQ();
+	RequestQueue requestQ = qm.getRequestQ();
 	
 	//JPATH
 	private final static String JPATH_API_RESULT_CONTENT = "$.result.content"; //파라미터를 {pageRequest{ page: 1, size: 1}} 가 있을때와 없을때 차이가 있네.
@@ -91,6 +91,7 @@ public class CollectorWorkloadWorker extends Thread {
 	private final static String REG_mlId     = "\\{mlId\\}";
 	
 	ClusterManagerService service = null;
+	
 	boolean isRunning = false;
 	//HashMap<String, Object> clusterInfo = null;
 	
@@ -133,6 +134,7 @@ public class CollectorWorkloadWorker extends Thread {
 	}
 	
 	boolean isFirst = false; //처음 실행인지 여부확인, api가 없으면
+
 	
 	public void setIsFirst(boolean isFirst) {
 		this.isFirst = isFirst;
@@ -337,9 +339,14 @@ public class CollectorWorkloadWorker extends Thread {
 	/**DB 삭제
 	 */
 	private void delete(HashMap<String, Object> _removedMap) {
+		ClusterWorkload wl = null;
 		for(Object obj: _removedMap.values()) {
 			if(obj instanceof ClusterWorkload) {
-				this.service.deleteClusterWorkload((ClusterWorkload)obj);
+				wl = (ClusterWorkload)obj;
+				this.service.deleteClusterWorkload(wl);
+
+				//RequestQues에서 요청 워크로드를 삭제
+				this.requestQ.reomveWorkloadRequest(wl.getMlId());
 			}
 		}
 	}

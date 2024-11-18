@@ -10,28 +10,54 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		INSERT INTO k_hybrid.mo_user_request (
 	          ml_id 
 	        , nm 
-	        , info
-	        , status
+	        , request_json
 	    ) VALUES (
 	          #{mlId} 
 	        , #{name} 
-	        , #{info}::jsonb
-	        , #{status}
+	        , #{requestJson}::jsonb
 	    )
 	</insert>
+	
+	<update id="updateMoUserRequest_noti">
+        UPDATE k_hybrid.mo_user_request
+        SET 
+            noti_json = #{notiJson}::jsonb,
+            noti_dt = CURRENT_TIMESTAMP
+        WHERE uid = (
+	        SELECT uid
+	        FROM k_hybrid.mo_user_request
+	        WHERE ml_id = #{mlId}
+	        ORDER BY request_dt DESC
+	        LIMIT 1
+	    )
+    </update>
+    
+    <update id="updateMoUserRequest_complete">
+        UPDATE k_hybrid.mo_user_request
+        SET 
+            complete_dt = CURRENT_TIMESTAMP
+        WHERE uid = (
+	        SELECT uid
+	        FROM k_hybrid.mo_user_request
+	        WHERE ml_id = #{mlId}
+	        ORDER BY request_dt DESC
+	        LIMIT 1
+	    )
+    </update>
 	
 	<select id="selectMoUserRequestById" resultType="com.kware.policy.task.selector.service.vo.WorkloadRequest$Request">
 	    SELECT 
 	          uid
 	        , ml_id 
 	        , nm 
-	        , info 
-	        , status
-	        , reg_dt
+	        , request_json 
+	        , request_dt
+	        , noti_json
+	        , noti_dt
+	        , complete_dt
 	    FROM k_hybrid.mo_user_request
 	    WHERE 1 = 1
 	      AND uid    = #{uid}
-	      AND ml_uid = #{mlId}
 	</select>
 
 	<insert id="insertMoUserResponse">

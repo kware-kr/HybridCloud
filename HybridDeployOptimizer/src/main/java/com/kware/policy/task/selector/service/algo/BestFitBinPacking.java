@@ -2,6 +2,7 @@ package com.kware.policy.task.selector.service.algo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -10,8 +11,11 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.function.ToLongFunction;
+import java.util.stream.Collectors;
 
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
+import com.kware.policy.task.common.constant.ResourceConstant;
+import com.kware.policy.task.common.vo.MinimumRequiredFreeResources;
 import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
@@ -36,12 +40,62 @@ public class BestFitBinPacking {
     private Map<String, Map<String, Container>> notApplyRequestNodeMap; // 노드가 선택되었지만 미반영된 할당된 요청들을 관리
     
     private ResourceWeight weight;
-
+    //노드 운영에 필요한 최소한의 여유공간
+    
+    MinimumRequiredFreeResources minFree = ResourceConstant.minFreeResources;
+    
     // 생성자: 노드 리스트와 요청 맵을 초기화
     public BestFitBinPacking(List<PromMetricNode> nodes, Map<String, Map<String, Container>> requestNodeMap, ResourceWeight weight) {
         this.nodes = nodes;
         this.notApplyRequestNodeMap = requestNodeMap;
         this.weight = weight;
+    }
+    
+    
+    
+    /**
+     * 모든 컨테이너가 돌아갈 수 있는 클러스터 선택
+     * @param wlRequest
+     * @param maxCount
+     * @return
+     */
+    public List<PromMetricNode> getBestCluster(WorkloadRequest wlRequest){
+    	/*1 클러스터 없이 해당 컨테이너를 실행가능한 모든 노드에서 스코어별로 계산*/
+    	WorkloadRequest.Request req = wlRequest.getRequest();
+
+		List<Container> containers = req.getContainers();
+		
+		List<List<PromMetricNode>> sel_nodes = new ArrayList<List<PromMetricNode>>();
+		
+		for(int i = 0 ; i < containers.size(); i++) {
+			Container container =  containers.get(i);
+			List<PromMetricNode>  tempNodes = this.allocate(container, null); //전체
+			sel_nodes.add(tempNodes);
+		}
+
+		//모든 값에서 공통으로 들어 있는 클러스터 리스트를 제공
+		List<PromMetricNode> selectClusterNodeList = findIntersection(sel_nodes);
+		
+		for(List l : sel_nodes) {
+			l.clear();
+		}
+		sel_nodes.clear();
+		
+		//이값이 널이면 
+		return selectClusterNodeList;
+
+    }
+    
+    // n개의 리스트의 교집합을 구하는 메서드
+    private List<PromMetricNode> findIntersection(List<List<PromMetricNode>> lists) {
+        // 초기 교집합을 첫 번째 리스트로 설정
+        List<PromMetricNode> intersection = lists.stream()
+        .reduce((listA, listB) -> listA.stream()
+                .filter(personA -> listB.stream().anyMatch(personB -> personA.getClUid().equals(personB.getClUid())))
+                .collect(Collectors.toList()))
+        .orElse(Collections.emptyList());
+
+        return intersection;
     }
 
     /**
@@ -76,8 +130,6 @@ public class BestFitBinPacking {
         for (int i = 0; i < maxCount && !priorityQueue.isEmpty(); i++) {
             bestFitNodes.add(priorityQueue.poll().getNode());
         }
-        
-        
         priorityQueue.clear();
 
         return bestFitNodes;
@@ -140,11 +192,16 @@ public class BestFitBinPacking {
         long totalPendingGpu    = sumResource(containers, ResourceDetail::getGpu);
         long totalPendingDisk   = sumResource(containers, ResourceDetail::getEphemeralStorage);
         
+        int  nodeAvailableCpu    = node.getAvailableCpu()    - minFree.getFreeCpuMilliCores();
+        long nodeAvailableMemory = node.getAvailableMemory() - minFree.getFreeMemoryBytes();
+        int	 nodeAvailableGpu    = node.getAvailableGpu();  
+        long nodeAvailableDisk   = node.getAvailableDisk()   - minFree.getFreeDiskSpaceBytes();
+        
         ResourceDetail detail = curContainer.getResources().getLimits();
-        return node.getAvailableCpu()    >= detail.getCpu()    + totalPendingCpu    &&
-               node.getAvailableMemory() >= detail.getMemory() + totalPendingMemory &&
-               node.getAvailableGpu()    >= detail.getGpu()    + totalPendingGpu    &&
-               node.getAvailableDisk()   >= detail.getEphemeralStorage()   + totalPendingDisk;
+        return nodeAvailableCpu    >= detail.getCpu()                + totalPendingCpu    &&
+               nodeAvailableMemory >= detail.getMemory()             + totalPendingMemory &&
+               nodeAvailableGpu    >= detail.getGpu()                + totalPendingGpu    &&
+               nodeAvailableDisk   >= detail.getEphemeralStorage()   + totalPendingDisk;
     }
 
 
@@ -159,11 +216,16 @@ public class BestFitBinPacking {
         Map<String, WorkloadRequest.Container> pendingRequests = notApplyRequestNodeMap.getOrDefault(key, new HashMap<>());
         
         Collection<Container> containers =  pendingRequests.values();
-        
+        //이미 배포요청이 되었지만 배포는 안된 즉 연산이 이루어진 정보를 합산해서 처리
         long totalPendingCpu    = sumResource(containers, ResourceDetail::getCpu);
         long totalPendingMemory = sumResource(containers, ResourceDetail::getMemory);
         long totalPendingGpu    = sumResource(containers, ResourceDetail::getGpu);
         long totalPendingDisk   = sumResource(containers, ResourceDetail::getEphemeralStorage);
+        
+        int  nodeAvailableCpu    = node.getAvailableCpu()    - minFree.getFreeCpuMilliCores();
+        long nodeAvailableMemory = node.getAvailableMemory() - minFree.getFreeMemoryBytes();
+        int	 nodeAvailableGpu    = node.getAvailableGpu();  
+        long nodeAvailableDisk   = node.getAvailableDisk()   - minFree.getFreeDiskSpaceBytes();
         
         //최대값 정규화
         /*
@@ -184,16 +246,16 @@ public class BestFitBinPacking {
         //로그정규화
         ResourceDetail detail = curContainer.getResources().getLimits();
         
-        double cpuScore    = Math.log( (node.getAvailableCpu()    - (detail.getCpu()    + totalPendingCpu))   + 1) ;
-        double memoryScore = Math.log( (node.getAvailableMemory() - (detail.getMemory() + totalPendingMemory))+ 1) ;
-        double gpuScore    = Math.log( (node.getAvailableGpu()    - (detail.getGpu()    + totalPendingGpu))   + 1) ;
-        double diskScore   = Math.log( (node.getAvailableDisk()   - (detail.getEphemeralStorage() + totalPendingDisk))  + 1) ;
+        double cpuScore    = Math.log( (nodeAvailableCpu    - (detail.getCpu()              + totalPendingCpu))   + 1) ;
+        double memoryScore = Math.log( (nodeAvailableMemory - (detail.getMemory()           + totalPendingMemory))+ 1) ;
+        double gpuScore    = Math.log( (nodeAvailableGpu    - (detail.getGpu()              + totalPendingGpu))   + 1) ;
+        double diskScore   = Math.log( (nodeAvailableDisk   - (detail.getEphemeralStorage() + totalPendingDisk))  + 1) ;
         
         //20240718 스코어 계산에만 사용중인 networkIO, diskIO 정보를 추가
-        double diskIoScore    = node.getUsageDiskRead1m() + node.getUsageDiskWrite1m();
+        double diskIoScore    = node.getUsageDiskRead1m()       + node.getUsageDiskWrite1m();
         double networkIoScore = node.getUsageNetworkReceive1m() + node.getUsageNetworkTransmit1m();
-        diskIoScore    = Math.log(diskIoScore);
-        networkIoScore = Math.log(networkIoScore);
+        diskIoScore           = Math.log(diskIoScore);
+        networkIoScore        = Math.log(networkIoScore);
         
         DoScore ds = new DoScore(node.getNode(), node.getClUid(), Math.abs(cpuScore), Math.abs(memoryScore) , Math.abs(diskScore), Math.abs(gpuScore) 
         		                                                      , weight.getCpu()   , weight.getMemory()    , weight.getDisk()   , weight.getGpu());
@@ -252,10 +314,12 @@ public class BestFitBinPacking {
 			super();
 			this.node = node;
 			this.clUid = clUid;
+			
 			this.sCpu = sCpu;
 			this.sMmemory = sMmemory;
 			this.sDisk = sDisk;
 			this.sGpu = sGpu;
+			
 			this.wCpu = wCpu;
 			this.wMemory = wMemory;
 			this.wDisk = wDisk;

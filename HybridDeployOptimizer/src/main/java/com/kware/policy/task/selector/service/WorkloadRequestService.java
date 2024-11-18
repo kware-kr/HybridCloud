@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -42,27 +46,27 @@ public class WorkloadRequestService {
 	protected WorkloadRequestDao dao;
 	
 	QueueManager qm = QueueManager.getInstance();
+	
 	PromQueue    promQ = qm.getPromQ();
 	RequestQueue requestQ = qm.getRequestQ();
+	Queue<String /*mlId*/> completeWorkloadQueue = this.requestQ.getCompleteWorkloadQueue();
 
-	public int insertMoUserRequest(Request vo) {
+	public int insertUserRequest(Request vo) {
 		return dao.insertMoUserRequest(vo);
+	}
+	
+	public int updateUserRequest_noti(Request vo) {
+		return dao.updateMoUserRequest_noti(vo);
+	}
+	
+	public int updateUserRequest_complete(String mlId) {
+		return dao.updateMoUserRequest_complete(mlId);
 	}
 
 	public int insertMoUserResponse(Response vo) {
 		return dao.insertMoUserResponse(vo);
 	}
 	//}}db 관련 서비스
-	
-	
-	/**
-	 * 
-	 * @param wlRequest
-	 */
-	public void setCompleteNoti(WorkloadRequest wlRequest) {
-		
-	}
-	
 	
 	//{{노드 셀렉터
 	public WorkloadResponse getResponseToSelectedNode(WorkloadRequest wlRequest) {	
@@ -87,35 +91,38 @@ public class WorkloadRequestService {
 		List<Container> containers = req.getContainers();
 		List<PromMetricNode> sel_nodes = new ArrayList<PromMetricNode>();
 		Integer clUid = null;
-		for(int i = 0 ; i < containers.size(); i++) {
-			Container container =  containers.get(i);
-			//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
-			List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);  
-			log.info("select node list: {}", tempNodes);
-
-			PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
-			tempNodes.clear();
+		
+		List<PromMetricNode> sel_cluster_nodes = bbp.getBestCluster(wlRequest);
+		if(sel_cluster_nodes == null) {
 			
-			if(node != null) {
-				clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
+		}else {
+			clUid = sel_cluster_nodes.get(0).getClUid();
+			for(int i = 0 ; i < containers.size(); i++) {
+				Container container =  containers.get(i);
+				//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
+				List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);  
+				log.info("select node list: {}", tempNodes);
+	
+				//첫번째 노드를 선택함
+				PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
+				tempNodes.clear();
 				
-				wlRequest.setClUid(clUid);
-				container.setNodeName(node.getNode());
+				if(node != null) {
+					clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
+					
+					wlRequest.setClUid(clUid);
+					container.setNodeName(node.getNode());
+					
+					//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
+					requestQ.setWorkloadRequest(wlRequest, container);
+				}
 				
-				//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
-				requestQ.setWorkloadRequest(wlRequest, container);
+				sel_nodes.add(node); //null이어도 등록한다.
 			}
 			
-			sel_nodes.add(node); //null이어도 등록한다.
+			sel_cluster_nodes.clear();
 		}
-		
-		
-		
-		
-		
-		
-		
-		
+
 		
 		
 		
@@ -209,11 +216,13 @@ public class WorkloadRequestService {
 	//{{노드 셀렉터 테스트
 	/**
 	 * 요청 리퀘스트에 대한 노드의 스코어를 요청한 갯수 만큼 리턴 
+	 * 
+	 * 클러스터 확인전에 어떤 결과가 나오는지 테스트 용도
 	 * @param wlRequest
 	 * @param nodeConnt
 	 * @return
 	 */
-	public List<PromMetricNode> getNodeScore(WorkloadRequest wlRequest, int nodeCount) {
+	public List<PromMetricNode> getNodeScoreTest(WorkloadRequest wlRequest, int nodeCount) {
 		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
 		Map<String,Map<String, Container>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
 		
@@ -258,16 +267,29 @@ public class WorkloadRequestService {
 	}
 	//}}
 	
-	//{{배포완료 통지
+	
+	//{{배포 통지
 	/**
 	 * 리퀘스트 배포 완료 통지 처리 
 	 * @param wlRequest
 	 * @param nodeConnt
 	 * @return
 	 */
-	public void completeRequest(WorkloadRequest wlRequest) {
+	public void scheduleNotiRequest(WorkloadRequest wlRequest) {
+		//요청 큐에서 찾아서 통지정보 갱신하고
 		WorkloadRequest memoryWlRequest = requestQ.getWorkloadRequest(wlRequest.getRequest().getMlId());
-		memoryWlRequest.setComplete_notice_militime(System.currentTimeMillis()); //통지시간 설정
+		if(memoryWlRequest != null) {
+			memoryWlRequest.setComplete_notice_militime(System.currentTimeMillis()); //통지시간 설정
+		}
 	}
 	//}}
+	
+	 // 10초마다 큐를 확인하고 워크로드가 완료 되었는지 확인하여 DB를 갱신함
+    @Scheduled(fixedDelay = 10000)
+    public void processQueueJob() {
+    	String mlId;
+        while ((mlId = completeWorkloadQueue.poll()) != null) { // 큐가 빌 때까지 반복
+            this.updateUserRequest_complete(mlId);
+        }
+    }
 }

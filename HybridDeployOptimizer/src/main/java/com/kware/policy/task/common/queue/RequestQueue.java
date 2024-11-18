@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,10 @@ public class RequestQueue  extends DefaultQueue{
     //응답을 했지만 실제 적용이 안된 request:(메트릭에는 노드 uid가 없다)
     //즉 노드에 할당된 워크로드의 컨테이너(파드)
     private final ConcurrentHashMap<String/*cl_uid_node-name*/, ConcurrentHashMap<String/*mlid_container-name*/, Container>> requestNotApplyMap;
+    
+    //완료된 mlId를 등록하여 서비스에서 DB에 데이터를 갱신할 용도로 사용함
+    Queue<String /*mlId*/> completeWorkloadQueue ;
+   
     //}}요청관리
   
     public RequestQueue() {
@@ -56,6 +62,7 @@ public class RequestQueue  extends DefaultQueue{
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
         requestMap = new ConcurrentHashMap<String, WorkloadRequest>();
         requestNotApplyMap = new ConcurrentHashMap<String, ConcurrentHashMap<String, Container>>();
+        completeWorkloadQueue = new ConcurrentLinkedQueue<>();
     }
     
     @Override
@@ -98,6 +105,13 @@ public class RequestQueue  extends DefaultQueue{
     public Map<String, Map<String,Container>> getWorkloadRequestNotApplyReadOnlyMap() {
     	return Collections.unmodifiableMap(this.requestNotApplyMap);    	
     }	
+    
+    /**
+     * 완료큐를 리턴
+     */
+    public Queue<String> getCompleteWorkloadQueue(){
+    	return this.completeWorkloadQueue;
+    }
   	
     /**
      * requestMap(요청) 사이즈
@@ -117,7 +131,8 @@ public class RequestQueue  extends DefaultQueue{
     
     //{{ ///////////////////////// RequestWorkloadNode /////////////////////////////////
 
-  	/**
+  	/** 미사용
+  	 * 
   	 * 노드선택 알고리즘을 적용한 후에 워크로드 등록하고 및 워크로드에 포함된 모든 컨테이너를 배포전의 노드관리에 등록한다.
   	 * @param _req
   	 */
@@ -205,6 +220,7 @@ public class RequestQueue  extends DefaultQueue{
     		return;
     	
     	String mlId = _req.getRequest().getRequestKey();
+    	this.completeWorkloadQueue.offer(mlId);
     	
     	//노드에 배포할려고하는 모든 워크로드 리스트를 관리하는 HashMap를 가지고 와서, 그 안에 있는 것 중에서 나의 워크로드에 속한 요청을 가지고 온다.
     	List<Container> containers = _req.getRequest().getContainers();

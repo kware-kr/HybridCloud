@@ -289,26 +289,37 @@ COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.pod_uid IS 'pod_uid';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.results IS 'jsonb result';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.reg_dt IS '등록시간';
 
--- DROP TABLE k_hybrid.mo_user_request;
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE k_hybrid.mo_user_request;
 
 CREATE TABLE k_hybrid.mo_user_request (
 	uid bigserial NOT NULL, -- 일련번호
 	ml_id varchar(128) NOT NULL, -- ml UID
 	nm varchar(128) NOT NULL, -- workload 이름
-	info jsonb NOT NULL, -- workload 상세 정보
-	status varchar(10) DEFAULT 'request'::character varying NULL, -- 요청 또는 배포완료
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL, -- 등록일시
-	PRIMARY KEY (uid, ml_id)
+	request_json jsonb NOT NULL, -- workload 상세 정보
+	request_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL, -- 요청시간
+	noti_json jsonb NULL, -- 배포통지
+	noti_dt timestamp NULL, -- 통지완료시간
+	complete_dt timestamp NULL, -- 완료시간
+	CONSTRAINT mo_user_request_pkey PRIMARY KEY (uid)
 );
 
+CREATE INDEX idx_mo_user_request_ml_id_request_dt ON k_hybrid.mo_user_request (ml_id, request_dt DESC);
 -- Column comments
 
 COMMENT ON COLUMN k_hybrid.mo_user_request.uid IS '일련번호';
 COMMENT ON COLUMN k_hybrid.mo_user_request.ml_id IS 'ml UID';
 COMMENT ON COLUMN k_hybrid.mo_user_request.nm IS 'workload 이름';
-COMMENT ON COLUMN k_hybrid.mo_user_request.info IS 'workload 상세 정보';
-COMMENT ON COLUMN k_hybrid.mo_user_request.status IS '요청 또는 배포완료';
-COMMENT ON COLUMN k_hybrid.mo_user_request.reg_dt IS '등록일시';
+COMMENT ON COLUMN k_hybrid.mo_user_request.request_json IS 'workload 상세 JSON';
+COMMENT ON COLUMN k_hybrid.mo_user_request.request_dt IS '요청시간';
+COMMENT ON COLUMN k_hybrid.mo_user_request.noti_json IS '배포통지 상세 JSON';
+COMMENT ON COLUMN k_hybrid.mo_user_request.noti_dt IS '통지완료시간';
+COMMENT ON COLUMN k_hybrid.mo_user_request.complete_dt IS '완료시간';
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 -- DROP TABLE k_hybrid.mo_user_response;
 

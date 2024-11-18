@@ -7,8 +7,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.service.vo.CommonQueueDefault;
@@ -86,7 +84,10 @@ public class WorkloadRequest extends CommonQueueDefault{
         private RequestWorkloadAttributes attribute;
         
         @JsonIgnore
-        private String info;  //db:info json String
+        private String requestJson;  //db:info json String
+        
+        @JsonIgnore
+        private String notiJson;  //db:info json String
         
         @JsonIgnore
         /**
@@ -94,11 +95,16 @@ public class WorkloadRequest extends CommonQueueDefault{
          */
         private Long uid;     //db:uid
         
-        private String status;
         
         
         @JsonIgnore
-        private Timestamp regDt;
+        private Timestamp requestDt;
+        
+        @JsonIgnore
+        private Timestamp notiDt;
+        
+        @JsonIgnore
+        private Timestamp completeDt;
 
         
         @JsonIgnore //DB상에는 id가 ml_id로 되어있음

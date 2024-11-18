@@ -28,6 +28,7 @@ import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
+import com.kware.policy.task.selector.service.WorkloadRequestService;
 
 import lombok.extern.slf4j.Slf4j;
 

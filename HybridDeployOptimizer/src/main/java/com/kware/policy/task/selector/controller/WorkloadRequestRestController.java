@@ -142,9 +142,9 @@ public class WorkloadRequestRestController {
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
 		// req.setInfo(YAMLUtil.convertYamlToJson(requestString));
-		req.setInfo(requestString);
-		req.setStatus(RequestStatus.request.toString());
-		wlService.insertMoUserRequest(req);
+		req.setRequestJson(requestString);
+//		req.setStatus(RequestStatus.request.toString());
+		wlService.insertUserRequest(req);
 		// }}
 
 		// {{노드 셀렉터
@@ -209,9 +209,10 @@ public class WorkloadRequestRestController {
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		req.setInfo(requestString);
-		req.setStatus(RequestStatus.complete.toString());
-		wlService.insertMoUserRequest(req);
+		req.setNotiJson(requestString);
+		
+		wlService.updateUserRequest_noti(req);  //DB갱신
+		wlService.scheduleNotiRequest(wlRequest); //기존 RequsetQ에서 기등록된 정보를 갱신
 		// }}
 
 		status = APIResponseCode.SUCCESS;
@@ -221,7 +222,7 @@ public class WorkloadRequestRestController {
 	}
 
 	/**
-	 * 배포가능한 노드의 전체 스코어 BestFitBinPacking 알고리즘 적용한 계산
+	 * 배포가능한 노드의 전체 스코어 BestFitBinPacking 알고리즘 적용한 계산 테스트
 	 * 
 	 * @param yamlstring
 	 * @return
@@ -252,13 +253,13 @@ public class WorkloadRequestRestController {
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
 		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		req.setInfo(requestString);
-		req.setStatus(RequestStatus.request.toString());
-		wlService.insertMoUserRequest(req);
+		req.setRequestJson(requestString);
+//		req.setStatus(RequestStatus.request.toString());
+		wlService.insertUserRequest(req);
 		// }}
 
 		// {{노드 셀렉터
-		List<PromMetricNode> sel_nodes = wlService.getNodeScore(wlRequest, 0); // 전체 노드의 순서
+		List<PromMetricNode> sel_nodes = wlService.getNodeScoreTest(wlRequest, 0); // 전체 노드의 순서
 		// }}
 
 		return ResponseEntity.ok(sel_nodes);
