@@ -89,12 +89,16 @@ public class APIQueue extends DefaultQueue{
   	
     public <T extends ClusterDefault>  Map<String, T> getReadOnlyApiMap(APIMapsName name) {
   		Map<String, T> map = (Map<String, T>)apiMap.get(name);
+  		if(map == null)
+  			return null;
   		
   		return Collections.unmodifiableMap(map);
   	}
     
     public <T extends ClusterDefault>  T getObject(APIMapsName name, String id) {
   		Map<String, T> map = (Map<String, T>)apiMap.get(name);
+  		if(map == null)
+  			return null;
   		
   		return map.get(id);
   	}
