@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+  <main id="main" class="main">
+    <link href="/assets/css/dash_workload.css" rel="stylesheet" />
+    <section class="section dashboard">
+      <div class="row">
+
+        <!-- Left side columns -->
+        <div class="col-lg-8">
+          <div class="row">
+
+            <!-- Sales Card -->
+            <div class="col-xxl-4 col-md-6">
+              <div class="card info-card sales-card">
+                <div class="card-body">
+                  <h5 class="card-title">Workload<span></span></h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-cart"></i>
+                    </div>
+                    <div class="ps-3">
+                      <h6>0</h6>
+                      <span class="text-success small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">pods</span>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div><!-- End Sales Card -->
+
+            <!-- Revenue Card -->
+            <div class="col-xxl-4 col-md-6">
+              <div class="card info-card revenue-card">
+                <div class="card-body">
+                  <h5 class="card-title">Cluster</h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="ps-3">
+                      <h6>5</h6>
+                      <span class="text-success small pt-1 fw-bold">7</span> <span class="text-muted small pt-2 ps-1"> total nodes</span>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div><!-- End Revenue Card -->
+
+            <!-- Customers Card -->
+            <div class="col-xxl-4 col-xl-12">
+              <div class="card info-card customers-card">
+                <div class="card-body">
+                  <h5 class="card-title">Issued</h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-people"></i>
+                    </div>
+                    <div class="ps-3">
+                      <h6></h6>
+                      <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling pod</span><br>
+                      <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling cluster</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- End Customers Card -->
+
+            <!-- Reports -->
+            <div class="col-12">
+              <div class="card">
+
+                <div id="dashboard"></div>
+                <div id="dashboard-tooltip" class="dashboard-tooltip"></div> <!-- 툴팁을 표시할 div 추가 -->
+              </div>
+            </div><!-- End Reports -->
+
+          </div>
+        </div><!-- End Left side columns -->
+
+        <!-- Right side columns -->
+        <div class="col-lg-4">
+
+          <!-- Website Traffic -->
+          <div class="card">
+            <div class="card-body pb-0">
+              <h5 class="card-title">Workload by Cluster</h5>
+              <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
+              <script>
+                //document.addEventListener("DOMContentLoaded", () => {
+                  echarts.init(document.querySelector("#trafficChart")).setOption({
+                    tooltip: {
+                      trigger: 'item'
+                    },
+                    legend: {
+                      top: '5%',
+                      left: 'center'
+                    },
+                    series: [{
+                      name: 'Access From',
+                      type: 'pie',
+                      radius: ['40%', '70%'],
+                      avoidLabelOverlap: false,
+                      label: {
+                        show: false,
+                        position: 'center'
+                      },
+                      emphasis: {
+                        label: {
+                          show: true,
+                          fontSize: '18',
+                          fontWeight: 'bold'
+                        }
+                      },
+                      labelLine: {
+                        show: false
+                      },
+                      data: [{
+                          value: 1048,
+                          name: 'cluster1'
+                        },
+                        {
+                          value: 735,
+                          name: 'cluster2'
+                        },
+                        {
+                          value: 580,
+                          name: 'cluster3'
+                        },
+                        {
+                          value: 484,
+                          name: 'cluster4'
+                        },
+                        {
+                          value: 300,
+                          name: '5'
+                        }
+                      ]
+                    }]
+                  });
+                //});
+                //# sourceURL=dashboard3
+              </script>
+
+            </div>
+          </div><!-- End Website Traffic -->
+          
+          <!-- Recent Activity -->
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Recent Activity</h5>
+
+              <div class="activity">
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">발생 시간</div>
+                  <i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
+                  <div class="activity-content">
+                    최신 10개만 뿌려줄까
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">56 min</div>
+                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptatem blanditiis blanditiis eveniet
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 hrs</div>
+                  <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptates corrupti molestias voluptatem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">1 day</div>
+                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
+                  <div class="activity-content">
+                    Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 days</div>
+                  <i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
+                  <div class="activity-content">
+                    Est sit eum reiciendis exercitationem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">4 weeks</div>
+                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
+                  <div class="activity-content">
+                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
+                  </div>
+                </div><!-- End activity item-->
+                <div class="activity-item d-flex">
+                  <div class="activite-label">56 min</div>
+                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptatem blanditiis blanditiis eveniet
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 hrs</div>
+                  <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptates corrupti molestias voluptatem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">1 day</div>
+                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
+                  <div class="activity-content">
+                    Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 days</div>
+                  <i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
+                  <div class="activity-content">
+                    Est sit eum reiciendis exercitationem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">4 weeks</div>
+                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
+                  <div class="activity-content">
+                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
+                  </div>
+                </div><!-- End activity item-->
+                <div class="activity-item d-flex">
+                  <div class="activite-label">56 min</div>
+                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptatem blanditiis blanditiis eveniet
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 hrs</div>
+                  <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
+                  <div class="activity-content">
+                    Voluptates corrupti molestias voluptatem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">1 day</div>
+                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
+                  <div class="activity-content">
+                    Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">2 days</div>
+                  <i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
+                  <div class="activity-content">
+                    Est sit eum reiciendis exercitationem
+                  </div>
+                </div><!-- End activity item-->
+
+                <div class="activity-item d-flex">
+                  <div class="activite-label">4 weeks</div>
+                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
+                  <div class="activity-content">
+                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
+                  </div>
+                </div><!-- End activity item-->
+              </div>
+
+            </div>
+          </div><!-- End Recent Activity -->
+
+
+        </div><!-- End Right side columns -->
+
+      </div>
+    </section>
+
+  <script>
+  {
+    function fetchClusterData() {
+      fetch('dashboard_workload.json')
+        .then(response => response.json())
+        .then(data => {
+          renderClusters(data);
+        })
+        .catch(error => {
+          console.error('데이터를 불러오는 중 오류 발생:', error);
+        });
+    }
+
+    const clusterUsedData = {};
+
+    function getClusterUsedData(clusterId) {
+        if (!clusterUsedData[clusterId]) {
+            clusterUsedData[clusterId] = {
+            workloadIds: new Set(),
+            workloadColorMap: {},
+            usedColorsIndex: 0,
+            };
+        }
+        return clusterUsedData[clusterId];
+    }
+
+    function renderClusters(clusters) {
+      const container = document.getElementById("dashboard");
+      container.innerHTML = "";
+
+      clusters.forEach(cluster => {
+        const clusterDiv = document.createElement("div");
+        clusterDiv.className = "cluster-container";
+
+        const clusterHeader = document.createElement("div");
+        clusterHeader.className = "cluster-header";
+
+        const clusterName = document.createElement("div");
+        clusterName.className = "cluster-name";
+        clusterName.textContent = cluster.name;
+
+        let workloads = 0;
+        let pods = 0;
+
+        const usedData = getClusterUsedData(cluster.id);
+        const workloadIds = new Set();
+        const workloadColorMap = {};
+
+        cluster.nodes.forEach(node => {
+          node.pods.forEach(pod => {
+            pods++;
+            usedData.workloadIds.add(pod.workload_id);
+
+            if (!usedData.workloadColorMap[pod.workload_id]) {
+              let color = getIndexedColor(usedData.usedColorsIndex);
+              if (color) usedData.usedColorsIndex++;
+              usedData.workloadColorMap[pod.workload_id] = color;
+            }
+          });
+        });
+
+        workloads = usedData.workloadIds.size;
+
+        const clusterStats = document.createElement("div");
+        clusterStats.className = "cluster-stats";
+        clusterStats.innerHTML = `워크로드: ${workloads}<br>파드: ${pods}`;
+
+        clusterHeader.appendChild(clusterName);
+        clusterHeader.appendChild(clusterStats);
+        clusterDiv.appendChild(clusterHeader);
+
+        const nodeContainer = document.createElement("div");
+        nodeContainer.className = "node-container";
+
+        cluster.nodes.forEach(node => {
+          const nodeDiv = document.createElement("div");
+          nodeDiv.className = "node";
+
+          const nodeName = document.createElement("div");
+          nodeName.className = "node-name";
+          nodeName.textContent = node.name;
+
+          const nodeBar = document.createElement("div");
+          nodeBar.className = "node-bar";
+
+          node.pods.forEach(pod => {
+            const podDiv = document.createElement("div");
+            podDiv.className = "pod";
+            podDiv.style.backgroundColor = usedData.workloadColorMap[pod.workload_id];
+
+            const statusIcon = document.createElement("span");
+            statusIcon.className = "status-icon";
+            statusIcon.textContent = pod.status === "running" ? "✔️" : pod.status === "ready" ? "⏳" : "⭕";
+
+            podDiv.appendChild(statusIcon);
+            nodeBar.appendChild(podDiv);
+
+            let isTooltipVisible = false; // 툴팁 표시 여부를 추적
+
+            podDiv.addEventListener('mouseover', function(event) {
+              const tooltip = document.getElementById('dashboard-tooltip');
+              
+              if (!isTooltipVisible) {  // 툴팁이 이미 보이지 않을 때만 표시
+                  tooltip.style.display = 'block'; // 툴팁 표시
+                  //tooltip.style.left = podDiv.getBoundingClientRect().left + 60 +  'px';
+                  //tooltip.style.top = podDiv.getBoundingClientRect().top - 30 + 'px';
+                  
+
+                  tooltip.style.left = event.pageX - window.scrollX + 20 + 'px'; // 마우스 위치에 툴팁 위치 지정
+                  tooltip.style.top  = event.pageY - window.scrollY + 20 + 'px';
+
+                  tooltip.innerHTML = `
+                  <strong>워크로드:</strong> ${pod.workload_name}<br>
+                  <strong>상태:</strong> ${pod.status}<br>
+                  <strong>시작 시간:</strong> ${new Date(pod.start_time).toLocaleString()}<br>
+                  <strong>예상 시작 시간:</strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
+                  <strong>예상 종료 시간:</strong> ${new Date(pod.expected_end_time).toLocaleString()}<br>
+                  <strong>종료 시간:</strong> ${pod.end_time ? new Date(pod.end_time).toLocaleString() : 'N/A'}
+                  `;
+                  isTooltipVisible = true; // 툴팁이 표시된 상태로 설정
+              }
+            });
+
+            // 마우스가 나갔을 때 툴팁 숨기기
+            podDiv.addEventListener('mouseout', function() {
+                const tooltip = document.getElementById('dashboard-tooltip');
+                tooltip.style.display = 'none'; // 툴팁 숨기기
+                isTooltipVisible = false; // 툴팁이 숨겨진 상태로 설정
+            });
+
+
+
+          });
+
+          nodeDiv.appendChild(nodeName);
+          nodeDiv.appendChild(nodeBar);
+          nodeContainer.appendChild(nodeDiv);
+        });
+
+        clusterDiv.appendChild(nodeContainer);
+        container.appendChild(clusterDiv);
+      });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    // 랜덤 색상 생성 함수 (16진수)
+    
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+      
+    const predefinedColors = [
+        "#FF0000", "#FFA500", "#32CD32", "#8B0000", "#A0522D",
+        "#FFE4C4", "#E6E6FA", "#FF00FF", "#9400D3", "#6A5ACD",
+        "#B0C4DE", "#0000CD", "#800000", "#7CFC00", "#9ACD32",
+        "#20B2AA", "#48D1CC", "#ADD8E6", "#EE82EE", "#FFB6C1",
+        "#FFD700", "#8B4513", "#F4A460", "#FF4500", "#FFD700",
+        "#98FB98", "#B22222", "#D2B48C", "#FFDEAD", "#D8BFD8",
+        "#FF1493", "#9932CC", "#483D8B", "#6495ED", "#00008B",
+        "#32CD32", "#6B8E23", "#008080", "#008B8B", "#B0E0E6",
+        "#C71585", "#FF6347", "#FFFF00", "#A52A2A", "#D2691E",
+        "#F5DEB3", "#FAEBD7", "#DDA0DD", "#C71585", "#8B008B",
+        "#708090", "#1E90FF", "#191970", "#98FB98", "#808000",
+        "#40E0D0", "#00BFFF", "#AFEEEE", "#FF1493", "#FF7F50",
+        "#FFFFE0", "#800000", "#CD5C5C", "#FFF5EE", "#EE82EE",
+        "#FF69B4", "#800080", "#2F4F4F", "#4169E1", "#8B4513",
+        "#3CB371", "#556B2F", "#00CED1", "#1E90FF", "#D8BFD8",
+        "#FF8C00", "#F0E68C", "#D2691E", "#F4A460", "#D2B48C",
+        "#FFE4B5", "#DA70D6", "#FF1493", "#4B0082", "#778899",
+        "#0000FF", "#A52A2A", "#00FA9A", "#66CDAA", "#5F9EA0",
+        "#87CEFA", "#DDA0DD", "#FFC0CB", "#FFA500", "#BDB76B",
+        "#800000", "#D2691E", "#F8F8FF", "#D8BFD8", "#DA70D6",
+        "#FF7F50", "#FFD700", "#228B22", "#C04000", "#F5DEB3",
+        "#F0F8FF", "#FF69B4", "#6A5ACD", "#778899", "#87CEFA",
+        "#006400", "#228B22", "#9ACD32", "#D2B48C", "#DEB887",
+        "#F5DEB3", "#FF00FF", "#9932CC", "#483D8B", "#B0C4DE",
+        "#00008B", "#32CD32", "#6B8E23", "#556B2F", "#008080",
+        "#00CED1", "#00BFFF", "#ADD8E6", "#B0E0E6", "#AFEEEE",
+        "#FF6347", "#FFB6C1", "#FF8C00", "#FFFFE0", "#F0E68C",
+        "#BDB76B", "#800000", "#A52A2A", "#D2691E", "#C04000"
+    ];
+    function getIndexedColor(index) {
+        if((predefinedColors.length -1) < index)
+            return getRandomColor();
+       
+        return predefinedColors[index];
+    }
+
+    // 페이지가 로드되면 클러스터 데이터를 fetch하여 처리
+    fetchClusterData();
+  }
+  //# sourceURL=dashboardJS
+  </script>
+  </main><!-- End #main -->
+
+</body>
+
+</html>

@@ -1,0 +1,28 @@
+{
+    "sidebar": [
+      {
+        "name": "Dashboard",
+        "icon": "bi bi-grid",
+        "link": "/page/dashboard.ui"
+      },
+      {
+        "name": "Workload Request",
+        "icon": "bi bi-menu-button-wide",
+        "link": "/page/workload_request.ui"
+      },
+      {
+        "name": "Settings",
+        "icon": "bi bi-journal-text",
+        "collapsed": true,
+        "submenu": [
+          { "name": "운영 리소스 최소 용량"      , "link": "/page/min_resource_capacity_setting.ui" },
+          { "name": "파드 스케일링(up-down) 정책", "link": "/page/pod_scale_setting.ui" },
+          { "name": "노드 스케일링(in-out) 정책" , "link": "/page/node_scale_setting.ui" },
+          { "name": "클러스터 특성"              , "link": "/page/cluster_feature_setting.ui" },
+          { "name": "노드 특성"                 , "link": "/page/node_feature_setting.ui" },
+          { "name": "워크로드 특성"              , "link": "/page/workload_feature_setting.ui" }
+        ]
+      }
+    ]
+  }
+  

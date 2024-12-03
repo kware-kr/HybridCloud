@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <section id="dynimic_app" class="section">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"></h5>
+                <form @submit.prevent="submitForm">
+                  <div class="row mb-3">
+                    <label for="cpuCores" class="col-sm-4 col-form-label">CPU 코어 수</label>
+                    <div class="col-sm-8">
+                      <input type="number" v-model.number="form.cpuCores" class="form-control" id="cpuCores" placeholder="예: 1" />
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label for="memorySize" class="col-sm-4 col-form-label">MEMORY 용량 (GB)</label>
+                    <div class="col-sm-8">
+                      <input type="number" v-model.number="form.memorySize" class="form-control" id="ramSize" placeholder="예: 2" />
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label for="diskSpace" class="col-sm-4 col-form-label">디스크 공간 (GB)</label>
+                    <div class="col-sm-8">
+                      <input type="number" v-model.number="form.diskSpace" class="form-control" id="diskSpace" placeholder="예: 5" />
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label for="gpu" class="col-sm-4 col-form-label">GPU 필요 여부</label>
+                    <div class="col-sm-8">
+                      <select v-model="form.gpu" class="form-select" id="gpu">
+                        <option value="Y">필요</option>
+                        <option value="N">불필요</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-sm-12 text-center">
+                      <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("dynimic_app");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ""; // 기존 DOM 클리어
+              }
+            }
+          };
+
+          const app = Vue.createApp({
+            data() {
+              return {
+                // 폼 default 데이터
+                form: {
+                  cpuCores: 1,
+                  memorySize: 2,
+                  diskSpace: 5,
+                  gpu: "N",
+                },
+                existingData: true,
+                processUrlPath: "/setting/minresource",
+              };
+            },
+            created() {
+              this.fetchInitialData();
+            },
+            methods: {
+              // 서버에서 초기값 가져오기
+              fetchInitialData() {
+                axios
+                  //.get("/min_resource_capacity.json") // 샘플 JSON 경로
+                  .get(this.processUrlPath) // 샘플 JSON 경로
+                  .then((response) => {
+                    if (response.data) {
+                      this.form = { ...this.form, ...response.data };
+                      this.existingData = true;
+                    } else {
+                      this.existingData = false;
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("데이터를 가져오는 데 실패했습니다.", error);
+                  });
+              },
+              // 폼 제출 처리
+              async submitForm() {
+                console.log("폼 데이터:", this.form);
+                try {
+                  const response = this.existingData
+                    ? await axios.put(this.processUrlPath, this.form)
+                    : await axios.post(this.processUrlPath, this.form);
+
+                    showNotification("작업이 완료되었습니다!", "success"); // 성공 알림 main.js
+                  console.log("Success:", response.data);
+                } catch (error) {
+                  console.error("Error:", error);
+                  showNotification("작업이 실패했습니다.!", "danger"); // 성공 알림 main.js
+                }
+              },
+            },
+          });
+
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=minresourceJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

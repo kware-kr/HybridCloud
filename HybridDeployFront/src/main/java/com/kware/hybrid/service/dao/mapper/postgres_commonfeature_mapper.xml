@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="commonFeatureMapper">
+
+    <!-- Insert -->
+    <insert id="insertCommonFeature" parameterType="com.kware.hybrid.service.vo.CommonFeatureVO">
+		INSERT INTO k_hybrid.mo_common_feature (
+		    fea_name, 
+		    fea_sub_name, 
+		    fea_content, 
+		    fea_desc
+		) VALUES (
+		    #{feaName}, 
+		    #{feaSubName}, 
+		    #{feaContent} :: jsonb, 
+		    #{feaDesc} 
+		);
+
+    </insert>
+
+    <!-- Update -->
+    <update id="updateCommonFeature" parameterType="com.kware.hybrid.service.vo.CommonFeatureVO">
+        UPDATE k_hybrid.mo_common_feature
+        SET 
+            fea_content = #{feaContent}::jsonb,
+            <if test="feaDesc != null and feaDesc.trim() != ''">
+	            fea_desc = #{feaDesc},
+		    </if>
+            updt_uid = #{updtUid},
+            updt_dt = CURRENT_TIMESTAMP
+        WHERE fea_name = #{feaName} 
+        <if test="feaSubName != null and feaSubName.trim() != ''">
+	        AND fea_sub_name = #{feaSubName}
+	    </if>
+    </update>
+
+    <!-- Soft Delete -->
+    <update id="deleteCommonFeature">
+        UPDATE k_hybrid.mo_common_feature
+        SET 
+            delete_at = 'Y',
+            updt_uid = #{updtUid},
+            updt_dt = CURRENT_TIMESTAMP
+        WHERE fea_name = #{feaName} 
+        <if test="feaSubName != null and feaSubName.trim() != ''">
+	        AND fea_sub_name = #{feaSubName}
+	    </if>
+    </update>
+
+    <!-- Select By Primary Key -->
+    <select id="selectCommonFeatureByKey" parameterType="map" resultType="com.kware.hybrid.service.vo.CommonFeatureVO">
+        SELECT 
+            fea_name AS feaName,
+            fea_sub_name AS feaSubName,
+            fea_content::text AS feaContent,
+            fea_desc AS feaDesc,
+            delete_at AS deleteAt,
+            reg_uid AS regUid,
+            reg_dt AS regDt,
+            updt_uid AS updtUid,
+            updt_dt AS updtDt
+        FROM k_hybrid.mo_common_feature
+        WHERE fea_name = #{feaName} 
+        <if test="feaSubName != null and feaSubName.trim() != ''">
+	        AND fea_sub_name = #{feaSubName}
+	    </if>
+        <if test="feaSubName == null or feaSubName.trim() == ''">
+        	AND fea_sub_name = 'none'
+    	</if>
+    </select>
+
+    <!-- Select All -->
+    <select id="selectAllCommonFeatures" resultType="com.kware.hybrid.service.vo.CommonFeatureVO">
+        SELECT 
+            fea_name AS feaName,
+            fea_sub_name AS feaSubName,
+            fea_content::text AS feaContent,
+            fea_desc AS feaDesc,
+            delete_at AS deleteAt,
+            reg_uid AS regUid,
+            reg_dt AS regDt,
+            updt_uid AS updtUid,
+            updt_dt AS updtDt
+        FROM k_hybrid.mo_common_feature
+        WHERE delete_at = 'N'
+          AND fea_name = #{feaName} 
+    </select>
+</mapper>

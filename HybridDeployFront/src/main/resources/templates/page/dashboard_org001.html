@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <link href="/assets/css/dash_workload.css" rel="stylesheet" />
+      <section id="dynimic_app" class="section dashboard">
+        <div class="row">
+          <!-- Left side columns -->
+          <div class="col-lg-8">
+            <div class="row">
+              <!-- Sales Card -->
+              <div class="col-xxl-4 col-md-6">
+                <div class="card info-card sales-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Workload<span></span></h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-cart"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6>0</h6>
+                        <span class="text-success small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">pods</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Sales Card -->
+
+              <!-- Revenue Card -->
+              <div class="col-xxl-4 col-md-6">
+                <div class="card info-card revenue-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Cluster</h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-currency-dollar"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6>5</h6>
+                        <span class="text-success small pt-1 fw-bold">7</span> <span class="text-muted small pt-2 ps-1"> total nodes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Revenue Card -->
+
+              <!-- Customers Card -->
+              <div class="col-xxl-4 col-xl-12">
+                <div class="card info-card customers-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Issued</h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6></h6>
+                        <span class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">current request</span><br />
+                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling pods</span><br>
+                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling nodes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Customers Card -->
+
+              <!-- Reports -->
+              <div class="col-12">
+                <div class="card">
+                  <dashboard-cluster></dashboard-cluster>
+                  <div id="dashboard-tooltip" class="dashboard-tooltip"></div>
+                </div>
+              </div>
+              <!-- End Reports -->
+            </div>
+          </div>
+          <!-- End Left side columns -->
+
+          <!-- Right side columns -->
+          <div class="col-lg-4">
+            <!-- Workload Chart -->
+            <div class="card">
+              <div class="card-body pb-0">
+                  <h5 class="card-title">Workload by Cluster</h5>
+                  <workload-chart></workload-chart>
+              </div>
+          </div>
+            <!-- Workload Chart -->
+
+            <!-- Recent Activity -->
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Recent Activity</h5>
+
+                <div class="activity">
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">발생 시간</div>
+                    <i class="bi bi-circle-fill activity-badge text-success align-self-start"></i>
+                    <div class="activity-content">최신 10개만 뿌려줄까</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">56 min</div>
+                    <i class="bi bi-circle-fill activity-badge text-danger align-self-start"></i>
+                    <div class="activity-content">Voluptatem blanditiis blanditiis eveniet</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 hrs</div>
+                    <i class="bi bi-circle-fill activity-badge text-primary align-self-start"></i>
+                    <div class="activity-content">Voluptates corrupti molestias voluptatem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">1 day</div>
+                    <i class="bi bi-circle-fill activity-badge text-info align-self-start"></i>
+                    <div class="activity-content">Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 days</div>
+                    <i class="bi bi-circle-fill activity-badge text-warning align-self-start"></i>
+                    <div class="activity-content">Est sit eum reiciendis exercitationem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">4 weeks</div>
+                    <i class="bi bi-circle-fill activity-badge text-muted align-self-start"></i>
+                    <div class="activity-content">Dicta dolorem harum nulla eius. Ut quidem quidem sit quas</div>
+                  </div>
+                  <!-- End activity item-->
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">56 min</div>
+                    <i class="bi bi-circle-fill activity-badge text-danger align-self-start"></i>
+                    <div class="activity-content">Voluptatem blanditiis blanditiis eveniet</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 hrs</div>
+                    <i class="bi bi-circle-fill activity-badge text-primary align-self-start"></i>
+                    <div class="activity-content">Voluptates corrupti molestias voluptatem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">1 day</div>
+                    <i class="bi bi-circle-fill activity-badge text-info align-self-start"></i>
+                    <div class="activity-content">Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 days</div>
+                    <i class="bi bi-circle-fill activity-badge text-warning align-self-start"></i>
+                    <div class="activity-content">Est sit eum reiciendis exercitationem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">4 weeks</div>
+                    <i class="bi bi-circle-fill activity-badge text-muted align-self-start"></i>
+                    <div class="activity-content">Dicta dolorem harum nulla eius. Ut quidem quidem sit quas</div>
+                  </div>
+                  <!-- End activity item-->
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">56 min</div>
+                    <i class="bi bi-circle-fill activity-badge text-danger align-self-start"></i>
+                    <div class="activity-content">Voluptatem blanditiis blanditiis eveniet</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 hrs</div>
+                    <i class="bi bi-circle-fill activity-badge text-primary align-self-start"></i>
+                    <div class="activity-content">Voluptates corrupti molestias voluptatem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">1 day</div>
+                    <i class="bi bi-circle-fill activity-badge text-info align-self-start"></i>
+                    <div class="activity-content">Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">2 days</div>
+                    <i class="bi bi-circle-fill activity-badge text-warning align-self-start"></i>
+                    <div class="activity-content">Est sit eum reiciendis exercitationem</div>
+                  </div>
+                  <!-- End activity item-->
+
+                  <div class="activity-item d-flex">
+                    <div class="activite-label">4 weeks</div>
+                    <i class="bi bi-circle-fill activity-badge text-muted align-self-start"></i>
+                    <div class="activity-content">Dicta dolorem harum nulla eius. Ut quidem quidem sit quas</div>
+                  </div>
+                  <!-- End activity item-->
+                </div>
+              </div>
+            </div>
+            <!-- End Recent Activity -->
+          </div>
+          <!-- End Right side columns -->
+        </div>
+      </section>
+
+      <script>
+      {
+          window.page_clear = function(){
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("dynimic_app");
+            if(ele){
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ''; // 기존 DOM 클리어
+              }
+            }
+          }
+
+          const EventBus = mitt();
+          window.EventBus = EventBus;
+          // 클러스터 노드와 헤더를 통합한 컴포넌트
+          const DashboardClusterNodes = {
+            template: `
+              <!-- 클러스터 헤더 -->
+              <div class="cluster-header">
+                <div class="cluster-name">{{ cluster.name }}</div>
+                <div class="cluster-stats">
+                  워크로드: {{ clusterStats[cluster.id]?.workloads || 0 }}<br>
+                  파드: {{ clusterStats[cluster.id]?.pods || 0 }}
+                </div>
+              </div>
+
+              <!-- 클러스터 노드 -->
+              <div class="node-container">
+                <div v-for="node in cluster.nodes" :key="node.name" class="node">
+                  <div class="node-name">{{ node.name }}</div>
+                  <div class="node-bar">
+                    <div
+                      v-for="pod in node.pods"
+                      :key="pod.id"
+                      class="pod"
+                      :style="{ backgroundColor: clusterColorMap[cluster.id]?.[pod.workload_id] || '#ccc' }"
+                      @mouseover="showTooltip($event, pod)"
+                      @mouseout="hideTooltip"
+                    >
+                      <span class="status-icon">
+                        {{ pod.status === 'running' ? '✔️' : pod.status === 'ready' ? '⏳' : '⭕' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          `,
+            props: {
+              cluster: Object,
+              clusterStats: Object,
+              clusterColorMap: Object,
+            },
+            methods: {
+              showTooltip(event, pod) {
+                this.hideTooltip();
+                const tooltip = document.getElementById("dashboard-tooltip");
+
+                tooltip.innerHTML = `
+                <strong>워크로드:</strong> ${pod.workload_name}<br>
+                <strong>상태:</strong> ${pod.status}<br>
+                <strong>시작 시간:</strong> ${new Date(pod.start_time).toLocaleString()}<br>
+                <strong>예상 시작 시간:</strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
+                <strong>예상 종료 시간:</strong> ${new Date(pod.expected_end_time).toLocaleString()}<br>
+                <strong>종료 시간:</strong> ${pod.end_time ? new Date(pod.end_time).toLocaleString() : "N/A"}
+              `;
+                document.body.appendChild(tooltip);
+
+                tooltip.style.left = event.pageX - window.scrollX + 20 + "px"; // 마우스 위치에 툴팁 위치 지정
+                tooltip.style.top = event.pageY - window.scrollY + 20 + "px";
+                tooltip.style.display = "block";
+              },
+              hideTooltip() {
+                const tooltip = document.getElementById("dashboard-tooltip");
+                tooltip.style.display = "none"; // 툴팁 숨기기
+              },
+            },
+          };
+
+          // 클러스터 대시보드 컴포넌트
+          const DashboardCluster = {
+            template: `
+            <div id="dashboard">
+              <div v-for="cluster in clusters" :key="cluster.id" class="cluster-container">
+                <dashboard-cluster-nodes :cluster="cluster" :clusterStats="clusterStats" :clusterColorMap="clusterColorMap"></dashboard-cluster-nodes>
+              </div>
+            </div>
+          `,
+            data() {
+              return {
+                clusters: [],
+                clusterStats: {},
+                clusterColorMap: {},
+                previousClusters: [], // 이전 상태 저장
+                predefinedColors: [],
+              };
+            },
+            methods: {
+              async fetchClusterData() {
+                try {
+                  const response = await fetch("dashboard_workload.json");
+                  const data = await response.json();
+                  this.updateClusters(data);
+                } catch (error) {
+                  console.error("클러스터 데이터를 불러오는 중 오류 발생:", error);
+                }
+              },
+              async fetchPredefinedColors() {
+                try {
+                  const response = await fetch("options.json");
+                  const data = await response.json();
+                  this.predefinedColors = data.predefinedColors || [];
+                } catch (error) {
+                  console.error("색상 데이터를 불러오는 중 오류 발생:", error);
+                }
+              },
+              processClusterData() {
+                this.clusters.forEach((cluster) => {
+                  const stats = { name: cluster.name, workloads: 0, pods: 0 };
+                  const workloadIds = new Set();
+                  const workloadColorMap = {};
+
+                  cluster.nodes.forEach((node) => {
+                    node.pods.forEach((pod) => {
+                      stats.pods++;
+                      workloadIds.add(pod.workload_id);
+
+                      if (!workloadColorMap[pod.workload_id]) {
+                        workloadColorMap[pod.workload_id] = this.getIndexedColor(workloadIds.size - 1);
+                      }
+                    });
+                  });
+
+                  stats.workloads = workloadIds.size;
+                  this.clusterStats[cluster.id] = stats;
+                  this.clusterColorMap[cluster.id] = workloadColorMap;
+                });
+
+                if (EventBus) EventBus.emit("clusterWorkloadStatic", this.clusterStats);
+              },
+              updateClusters(newData) {
+                const updatedClusters = [];
+                newData.forEach((newCluster) => {
+                  const existingCluster = this.previousClusters.find((c) => c.id === newCluster.id);
+                  if (existingCluster) {
+                    updatedClusters.push(newCluster);
+                  } else {
+                    updatedClusters.push(newCluster);
+                  }
+                });
+
+                this.previousClusters = updatedClusters;
+                this.clusters = updatedClusters;
+                this.processClusterData();
+              },
+              getIndexedColor(index) {
+                if (index >= this.predefinedColors.length) {
+                  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+                }
+                return this.predefinedColors[index];
+              },
+            },
+            async mounted() {
+              await this.fetchPredefinedColors();
+              await this.fetchClusterData();
+
+              setInterval(() => {
+                this.fetchClusterData(); // 5초마다 데이터 업데이트
+              }, 5000);
+            },
+          };
+
+          // WorkloadChart 컴포넌트 (ECharts 차트를 표시)
+          const WorkloadChart = {
+            template: `
+        <div ref="chart" style="min-height: 400px;" class="echart"></div>
+      `,
+            data() {
+              return {
+                chart: null,
+              };
+            },
+            mounted() {
+              this.initChart();
+              // EventBus에서 데이터 수신
+              EventBus.on("clusterWorkloadStatic", this.updateChart);
+            },
+            beforeDestroy() {
+              // 컴포넌트가 사라질 때 이벤트 리스너 제거
+              EventBus.off("clusterWorkloadStatic", this.updateChart);
+
+              // ECharts 인스턴스 제거
+              if (this.chart) {
+                this.chart.dispose(); // 차트 메모리 해제
+              }
+            },
+            methods: {
+              initChart() {
+                // ECharts 차트 초기화
+                this.chart = echarts.init(this.$refs.chart);
+                this.chart.setOption({
+                  tooltip: {
+                    trigger: "item",
+                  },
+                  legend: {
+                    top: "5%",
+                    left: "center",
+                  },
+                  series: [
+                    {
+                      name: "워크로드 갯수",
+                      type: "pie",
+                      radius: ["40%", "70%"],
+                      avoidLabelOverlap: false,
+                      label: {
+                        show: false,
+                        position: "center",
+                      },
+                      emphasis: {
+                        label: {
+                          show: true,
+                          fontSize: "18",
+                          fontWeight: "bold",
+                        },
+                      },
+                      labelLine: {
+                        show: false,
+                      },
+                      data: [],
+                    },
+                  ],
+                });
+              },
+              updateChart(data) {
+                // EventBus로 받은 데이터를 바탕으로 차트를 업데이트
+                const chartData = Object.values(data).map((item) => ({
+                  value: item.workloads,
+                  name: item.name,
+                }));
+                this.chart.setOption({
+                  series: [
+                    {
+                      data: chartData,
+                    },
+                  ],
+                });
+              },
+            },
+          };
+
+          // Vue 애플리케이션
+          const app = Vue.createApp({
+            //    components: { DashboardCluster, DashboardClusterNodes},
+          });
+
+          //전역으로 설정함
+          app.component("dashboard-cluster", DashboardCluster);
+          app.component("dashboard-cluster-nodes", DashboardClusterNodes);
+          app.component('workload-chart', WorkloadChart);
+
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=dashboardJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

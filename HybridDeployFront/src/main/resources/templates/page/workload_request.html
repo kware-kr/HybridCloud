@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/page/page-monitoring.css" />
+      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/design.css" />
+      <style>
+        /* Pods 컨테이너 스타일 */
+        .pods-container {
+          margin-top: 10px; /* Pods 항목과 상위 요소 간의 간격 */
+          padding: 10px;
+          background-color: #f9f9f9; /* 배경색 */
+          border-radius: 8px; /* 테두리 라운드 처리 */
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 가벼운 그림자 효과 */
+          font-size: 0.8rem;
+        }
+        /* 테이블 스타일 */
+        .pods-table {
+          width: 100%;
+          border-collapse: collapse; /* 셀 경계가 겹치지 않도록 */
+        }
+
+        .pods-table th,
+        .pods-table td {
+          border: 1px solid #d1d9f3; /* 셀 경계 */
+          padding: 4px; /* 셀 안쪽 여백 */
+          text-align: left; /* 왼쪽 정렬 */
+        }
+
+        .pods-table th {
+          background-color: #e6e8e9; /* 헤더 배경색 */
+          font-weight: bold;
+        }
+
+        .pods-table td ul {
+          list-style-type: none; /* 불릿 제거 */
+          margin: 0;
+          padding-left: 10px; /* 항목들에 왼쪽 여백 */
+        }
+      </style>
+
+      <section id="section">
+        <div style="display: inline-block; width: 100%">
+          <ul class="nav nav-tabs type_01" role="tablist" style="float: left; margin-bottom: 0px !important">
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext active ps-2"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="all">Total</span> (18)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext ps-2"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="normal">Starting</span> (15)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext ps-2"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="error">Pendding</span> (2)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext ps-2"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="inspection">Ready</span> (1)</a
+              >
+            </li>
+            <!-- <li class="nav-item">
+              <a
+                class="nav-link btn_catetext ps-2"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="stop">운영중지</span> (1)</a
+              >
+            </li> -->
+          </ul>
+          <!-- <div class="sort_wrap" style="float: right">
+            <select
+              class="form-select round select_line"
+              id="select-country1"
+              name="teamApproveSttusCd"
+              onchange="searchStatus(this)"
+              style="width: 200px">
+              <option value="">설치일 순</option>
+              <option value="">설치장소 순</option>
+            </select>
+          </div> -->
+          <div class="search_wrap" style="float: right; margin-right: 8px">
+            <input
+              type="text"
+              id="team-all-history-stat-search"
+              class="form-control round border_line"
+              name="searchKeyword"
+              placeholder="클러스터 선택으로 변경하자" />
+            <i class="icon_search"></i>
+          </div>
+        </div>
+        <!--
+      <div class="tab-content">
+          <div class="tab-pane" id="" role="tabpanel"></div>
+      </div>
+      -->
+        <div id="search-data-list">
+          <div v-for="(request, index) in requestData" :key="index">
+            <request-card :data="request"></request-card>
+          </div>
+
+          <div class="row align-items-center">
+            <div class="col-md-12 col-12 d-flex justify-content-between mt-2">
+              <div class="dataTables_length" id="participant-table_length">
+                <select
+                  name="participant-table_length"
+                  v-model.number="itemsPerPage"
+                  aria-controls="participant-table"
+                  class="form-select form-select-sm"
+                  style="width: 170px">
+                  <option value="5">5개씩 보기</option>
+                  <option value="10">10개씩 보기</option>
+                  <option value="25">25개씩 보기</option>
+                  <option value="50">50개씩 보기</option>
+                </select>
+              </div>
+              <div class="dataTables_length d-flex justify-content-end">
+                <!-- 페이지 네비게이션 컴포넌트 사용 -->
+                <pagination v-if="totalPages > 1" :current-page="currentPage" :total-pages="totalPages" @update-page="updatePage" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("search-data-list");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ""; // 기존 DOM 클리어
+              }
+            }
+          };
+
+          const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+          const RequestCard = {
+            template: `
+              <div class="card mt-1">
+                <div class="list_item go-to-each-tenant">
+
+                  <div class="col-12 col-xl-12 d-flex justify-content-between" style="flex-wrap: wrap;">    
+                    <div class="d2_text" style="color: rgb(29, 95, 158); margin-top:5px;">
+                      <span class="btit_wrap"><i class="icon_equip"></i></span>
+                    </div>
+
+                    <!-- ML ID 항목 -->
+                    <div class="col-12 col-xl-2" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">ML ID</div>
+                      <div class="d2_text" style="color: rgb(29, 95, 158)">
+                        <span class="fw-bolder row-text">{{ data.mlId }}</span>
+                      </div>
+                    </div>
+
+                    <!-- 배포 클러스터 항목 -->
+                    <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">배포 클러스터</div>
+                      <div class="d2_text">
+                        <span class="fw-bolder">{{ data.clusterNm }}</span>
+                      </div>
+                    </div>
+
+                    <!-- 요청 시간 항목 -->
+                    <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">요청 시간</div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.reqDt }}</span></div>
+                    </div>
+
+                    <!-- 배포 통지 시간 항목 -->
+                    <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">배포 통지 시간</div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.notiDt }}</span></div>
+                    </div>
+
+                    <!-- 최초 배포 시간 항목 -->
+                    <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">최초 배포 시간</div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.deployDt }}</span></div>
+                    </div>
+
+                    <!-- 완료 시간 항목 -->
+                    <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title">완료 시간</div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.completeDt }}</span></div>
+                    </div>
+
+                    <!-- 버튼 그룹을 묶어서 표시 -->
+                    <div class="col-12 col-xl-2" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
+                      <div class="d2_title text-center">보기</div>
+                      <div class="d2_text text-center">
+                        <button @click="togglePods" class="btn btn-outline-primary btn-sm" style="margin: 2px; ">Pods</button>
+                        <button @click="toggleRequestModal" class="btn btn-outline-secondary btn-sm" style="margin: 2px;">요청 원문</button>
+                        <button @click="toggleYmlModal" class="btn btn-outline-secondary btn-sm" style="margin: 2px;">Yml 원문</button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>               
+      
+                <!-- Pods 항목 표시 -->
+                <div v-if="showPods" class="pods-container" style="margin-top: 20px;">
+                  <table class="pods-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr>
+                        <th>Pod Name (Order)</th>
+                        <th>Node</th>
+                        <th>Resources</th>
+                        <th>Estimated Time</th>
+                        <th>Creation Date</th>
+                        <th>Schedule Date</th>
+                        <th>Expected Schedule Date</th>  <!-- 예상 스케줄 날짜 -->
+                        <th>Completion Date</th>
+                        <th>Expected Completion Date</th>  <!-- 예상 완료 날짜 -->
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(pod, index) in data.pods" :key="index">
+                        <td>{{ pod.name }} (Order: {{ pod.order }})</td>
+                        <td>{{ pod.node }}</td>
+                        <td>
+                          <ul style="padding-left: 20px; margin: 0;">
+                            <li>CPU: {{ pod.resources.requests.cpu }} / {{ pod.resources.limits.cpu }}</li>
+                            <li>Memory: {{ pod.resources.requests.memory }} / {{ pod.resources.limits.memory }}</li>
+                            <li>GPU: {{ pod.resources.limits.gpu }}</li>
+                          </ul>
+                        </td>
+                        <td>{{ pod.estimatedTime }}</td>
+                        <td>{{ pod.createDt }}</td>
+                        <td>{{ pod.scheduleDt }}</td>
+                        <td>{{ pod.expScheduleDt }}</td>  <!-- 예상 스케줄 날짜 -->
+                        <td>{{ pod.completeDt }}</td>
+                        <td>{{ pod.expCompleteDt }}</td>  <!-- 예상 완료 날짜 -->
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Request Modal 팝업 -->
+                <div v-if="showRequestModal" class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+                  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">요청 원문</h5>
+                        <button type="button" class="btn-close" @click="closeRequestModal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <pre>{{ data.requestDoc }}</pre>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="closeRequestModal">닫기</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- YML Modal 팝업-->
+                <div v-if="showYmlModal" class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+                  <div class="modal-dialog modal-dialog-scrollable modal-xl"> <!-- modal-lg -->
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">YML 원문</h5>
+                        <button type="button" class="btn-close" @click="closeYmlModal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <pre>{{ decodedValue }}</pre>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="closeYmlModal">닫기</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            `,
+            props: ["data"],
+            setup(props) {
+              const showPods = ref(false);
+              const togglePods = () => {
+                showPods.value = !showPods.value;
+              };
+              // YML 원문 보기 모달 토글
+              const showRequestModal = ref(false);
+              const toggleRequestModal = () => {
+                showRequestModal.value = true;
+              };
+              const closeRequestModal = () => {
+                showRequestModal.value = false;
+              };
+              // YML 원문 보기 모달 토글
+              const showYmlModal = ref(false);
+              const toggleYmlModal = () => {
+                showYmlModal.value = true;
+              };
+              const closeYmlModal = () => {
+                showYmlModal.value = false;
+              };
+
+              //{{완료되지 않은 워크로드는 1초에 1번씩 데이터를 가져온다.}}
+              const timer = ref(null);
+              // 1초마다 갱신 함수 호출
+              const fetchUpdatedData = async () => {
+                try {
+                  const response = await fetch(`/api/data?mlId=${props.data.mlId}`);
+                  const updatedData = await response.json();
+                  if (updatedData.completeDt) {
+                    props.data.completeDt = updatedData.completeDt;
+                    clearInterval(timer.value); // 완료시간이 갱신되면 타이머 중지
+                  }
+                } catch (error) {
+                  console.error("Error fetching updated data:", error);
+                }
+              };
+
+              // Mount 시 타이머 시작
+              onMounted(() => {
+                if (!props.data.completeDt) {
+                  timer.value = setInterval(fetchUpdatedData, 1000); // 1초마다 fetchUpdatedData 호출
+                }
+              });
+
+              // Unmount 시 타이머 제거
+              onUnmounted(() => {
+                if (timer.value) {
+                  clearInterval(timer.value);
+                }
+              });
+
+              return { showPods, togglePods, showRequestModal, toggleRequestModal, closeRequestModal, showYmlModal, toggleYmlModal, closeYmlModal };
+            },
+            computed: {
+              decodedValue() {
+                try {
+                  return atob(this.data.requestYml);
+                } catch {
+                  return "Invalid Base64 string";
+                }
+              },
+            },
+          };
+
+          const Pagination = {
+            props: {
+              currentPage: {
+                type: Number, // 숫자 타입을 요구
+                required: true, // 필수 항목으로 설정
+              },
+              totalPages: {
+                type: Number, // 숫자 타입을 요구
+                required: true, // 필수 항목으로 설정
+              },
+            },
+            data() {
+              return {
+                startPage: 1, // 현재 표시 중인 페이지 범위의 시작 페이지
+                endPage: 0, // 현재 표시 중인 페이지 범위의 끝 페이지
+                maxPagesToShow: 10,
+              };
+            },
+            computed: {
+              totalPagesArray() {
+                if (this.endPage == 0) {
+                  this.adjustPageRange();
+                } else if (this.currentPage < this.startPage || this.currentPage > this.endPage) {
+                  this.adjustPageRange();
+                }
+                return Array.from({ length: this.endPage - this.startPage + 1 }, (_, index) => this.startPage + index);
+              },
+            },
+            methods: {
+              changePage(page) {
+                if (page < 1 || page > this.totalPages) return; // 페이지 번호가 범위를 벗어나면 무시
+                this.$emit("update-page", page); // 부모 컴포넌트에 페이지 변경 알리기
+              },
+              adjustPageRange() {
+                // 현재 페이지가 범위를 벗어났을 때만 범위 재조정
+                if (this.currentPage < this.startPage || this.currentPage > this.endPage || this.endPage === 0) {
+                  this.startPage = Math.max(1, this.currentPage - Math.floor(this.maxPagesToShow / 2));
+                  this.endPage = Math.min(this.totalPages, this.startPage + this.maxPagesToShow - 1);
+
+                  // 범위가 전체 페이지 수를 초과하지 않도록 재조정
+                  if (this.endPage - this.startPage + 1 < this.maxPagesToShow) {
+                    this.startPage = Math.max(1, this.endPage - this.maxPagesToShow + 1);
+                  }
+                }
+              },
+            },
+            template: `
+                  <nav aria-label="Page navigation example">
+                    <ul class="pagination pagination-sm">
+                      <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                        <a href="#" class="page-link" @click="changePage(currentPage - 1)" aria-label="Previous">
+                          <span aria-hidden="true">&laquo;</span>
+                        </a>
+                      </li>
+                      
+                      <li class="page-item" :class="{ active: currentPage === pageNumber }"
+                        v-for="pageNumber in totalPagesArray" :key="pageNumber">
+                        <a href="#" class="page-link" @click="changePage(pageNumber)">{{ pageNumber }}</a>
+                      </li>
+                      
+                      <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                        <a href="#" class="page-link" @click="changePage(currentPage + 1)" aria-label="Next">
+                          <span aria-hidden="true">&raquo;</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+              `,
+          };
+
+          createApp({
+            components: { RequestCard, Pagination },
+            data() {
+              return {
+                requestData: [], // 요청 데이터 초기값은 null
+                currentPage: 1, // 현재 페이지
+                itemsPerPage: 5, // 페이지 당 항목 수
+                totalCount: 0, // 전체 항목 수 (초기에는 0)
+              };
+            },
+            computed: {
+              // 총 페이지 수 계산
+              totalPages() {
+                return Math.ceil(this.requestData.length / this.itemsPerPage);
+                //return 2;
+              },
+            },
+            watch: {
+              // itemsPerPage가 변경될 때
+              itemsPerPage(newVal) {
+                this.currentPage = 1; // 페이지를 처음으로 리셋
+                this.fetchData(); // 새로운 페이지 크기에 맞춰 데이터를 다시 가져옴
+              },
+            },
+            // 컴포넌트가 마운트 될 때 req_workload.json을 fetch해서 데이터 로딩
+            async mounted() {
+              this.fetchData();
+            },
+            methods: {
+              // 서버에 POST 요청을 보내 데이터 가져오기
+              async fetchData() {
+                try {
+                  const response = await fetch("req_workload.json", {
+                    method: "POST", // POST 요청
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      currentPage: this.currentPage,
+                      itemsPerPage: this.itemsPerPage,
+                      searchKeyword: "", // 검색어를 추가하려면 여기에 입력
+                    }),
+                  });
+
+                  const data = await response.json();
+
+                  if (data) {
+                    // 응답이 정상적이면 totalCount와 데이터 할당
+                    this.requestData = data.resultList; // 현재 페이지의 데이터
+                    if (data.totalCount !== undefined) {
+                      this.totalCount = data.totalCount; // 전체 항목 수
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error fetching data:", error);
+                }
+              },
+              updatePage(page) {
+                this.currentPage = page; // 페이지 변경
+              },
+            },
+          }).mount("#search-data-list");
+        }
+        //# sourceURL=workloadrequestJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

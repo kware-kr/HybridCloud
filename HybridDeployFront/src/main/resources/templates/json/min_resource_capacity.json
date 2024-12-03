@@ -1,0 +1,6 @@
+{
+    "cpuCores": 4,
+    "ramSize": 8,
+    "diskSpace": 128,
+    "gpu": "required"
+  }

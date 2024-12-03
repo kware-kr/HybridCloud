@@ -1,0 +1,45 @@
+[
+    {
+      "id": 1,
+      "clusterName": "Cluster A",
+      "name": "Node 1",
+      "performanceLevel": 5,
+      "gpuLevel": 3,
+      "securityLevel": 6,
+      "cloudType": "pub",
+      "cpuCores": 8,
+      "memoryGB": 32,
+      "diskGB": 500,
+      "gpuCount": 2,
+      "gpuNames": ["NVIDIA Tesla", "AMD Radeon"]
+    },
+    {
+      "id": 2,
+      "clusterName": "Cluster A",
+      "name": "Node 2",
+      "performanceLevel": 7,
+      "gpuLevel": 5,
+      "securityLevel": 8,
+      "cloudType": "pri",
+      "cpuCores": 8,
+      "memoryGB": 32,
+      "diskGB": 500,
+      "gpuCount": 2,
+      "gpuNames": ["NVIDIA Tesla", "NVIDIA Quadro"]
+    },
+    {
+      "id": 3,
+      "clusterName": "Cluster B",
+      "name": "Node 3",
+      "performanceLevel": 6,
+      "gpuLevel": 4,
+      "securityLevel": 7,
+      "cloudType": "onp",
+      "cpuCores": 16,
+      "memoryGB": 64,
+      "diskGB": 1000,
+      "gpuCount": 4,
+      "gpuNames": ["AMD Radeon", "NVIDIA Quadro", "NVIDIA Tesla", "AMD Vega"]
+    }
+  ]
+  

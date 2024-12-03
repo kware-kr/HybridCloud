@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <section id="dynimic_app" class="section">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-center"></h5>
+                <form @submit.prevent="submitForm">
+                  <!-- 노드 스케일링 설정 폼 -->
+                  <div class="mb-4">
+                    <div class="row g-3">
+                      <!-- CPU 스케일 인 트리거 -->
+                      <div class="col-md-6">
+                        <label for="cpuInTrigger" class="form-label"><b>CPU</b> In trigger (%)</label>
+                        <input type="number" v-model.number="nodePolicy.cpu.inTrigger" class="form-control" id="cpuInTrigger" placeholder="예: 85" />
+                      </div>
+                      <!-- CPU 스케일 아웃 트리거 -->
+                      <div class="col-md-6">
+                        <label for="cpuOutTrigger" class="form-label">Out trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.cpu.outTrigger"
+                          class="form-control"
+                          id="cpuOutTrigger"
+                          placeholder="예: 30" />
+                      </div>
+
+                      <!-- 메모리 스케일 인 트리거 -->
+                      <div class="col-md-6">
+                        <label for="memoryInTrigger" class="form-label"><b>Memory</b> In trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.memory.inTrigger"
+                          class="form-control"
+                          id="memoryInTrigger"
+                          placeholder="예: 85" />
+                      </div>
+                      <!-- 메모리 스케일 아웃 트리거 -->
+                      <div class="col-md-6">
+                        <label for="memoryOutTrigger" class="form-label">Out trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.memory.outTrigger"
+                          class="form-control"
+                          id="memoryOutTrigger"
+                          placeholder="예: 30" />
+                      </div>
+
+                      <!-- 디스크 스케일 인 트리거 -->
+                      <div class="col-md-6">
+                        <label for="diskInTrigger" class="form-label"><b>Disk</b> In trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.disk.inTrigger"
+                          class="form-control"
+                          id="diskInTrigger"
+                          placeholder="예: 85" />
+                      </div>
+                      <!-- 디스크 스케일 아웃 트리거 -->
+                      <div class="col-md-6">
+                        <label for="diskOutTrigger" class="form-label">Out trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.disk.outTrigger"
+                          class="form-control"
+                          id="diskOutTrigger"
+                          placeholder="예: 30" />
+                      </div>
+
+                      <!-- GPU 스케일 인 트리거 -->
+                      <div class="col-md-6">
+                        <label for="gpuInTrigger" class="form-label"><b>GPU</b> In trigger (%)</label>
+                        <input type="number" v-model.number="nodePolicy.gpu.inTrigger" class="form-control" id="gpuInTrigger" placeholder="예: 85" />
+                      </div>
+                      <!-- GPU 스케일 아웃 트리거 -->
+                      <div class="col-md-6">
+                        <label for="gpuOutTrigger" class="form-label">Out trigger (%)</label>
+                        <input
+                          type="number"
+                          v-model.number="nodePolicy.gpu.outTrigger"
+                          class="form-control"
+                          id="gpuOutTrigger"
+                          placeholder="예: 30" />
+                      </div>
+
+                      <!-- 최소 노드 수 -->
+                      <div class="col-md-6">
+                        <label for="nodeMinCount" class="form-label"><b>Minimum </b> node count</label>
+                        <input type="number" v-model.number="nodePolicy.minCount" class="form-control" id="nodeMinCount" placeholder="예: 2" />
+                      </div>
+
+                      <!-- 최대 노드 수 -->
+                      <div class="col-md-6">
+                        <label for="nodeMaxCount" class="form-label"><b>Maximum</b> node count</label>
+                        <input type="number" v-model.number="nodePolicy.maxCount" class="form-control" id="nodeMaxCount" placeholder="예: 10" />
+                      </div>
+
+                      <!-- 스케일링 정책 선택 -->
+                      <div class="col-md-6">
+                        <label for="scalingLogic" class="form-label"><b>Scaling Logic</b></label>
+                        <select v-model="nodePolicy.scalingLogic" class="form-select" id="scalingLogic">
+                          <option value="AND">AND</option>
+                          <option value="OR">OR</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-center">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("dynimic_app");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ""; // 기존 DOM 클리어
+              }
+            }
+          };
+
+          const app = Vue.createApp({
+            data() {
+              return {
+                nodePolicy: {
+                  cpu: { inTrigger: 85, outTrigger: 30 },
+                  memory: { inTrigger: 85, outTrigger: 30 },
+                  disk: { inTrigger: 85, outTrigger: 30 },
+                  gpu: { inTrigger: 85, outTrigger: 30 },
+                  scalingLogic: "AND", // 'AND' or 'OR'
+                  minCount: 2,
+                  maxCount: 10,
+                },
+                existingData: true,
+                processUrlPath: "/setting/nodescaling",
+              };
+            },
+            created() {
+              this.fetchInitialData();
+            },
+            methods: {
+              // 서버에서 초기값 가져오기
+              fetchInitialData() {
+                axios
+                  .get(this.processUrlPath) // 샘플 JSON 경로
+                  .then((response) => {
+                    if (response.data) {
+                      this.nodePolicy = { ...this.nodePolicy, ...response.data };
+                      this.existingData = true;
+                    } else {
+                      this.existingData = false;
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("데이터를 가져오는 데 실패했습니다.", error);
+                  });
+              },
+              async submitForm() {
+                console.log("폼 데이터:", this.nodePolicy);
+                try {
+                  const response = this.existingData
+                    ? await axios.put(this.processUrlPath, this.nodePolicy)
+                    : await axios.post(this.processUrlPath, this.nodePolicy);
+
+                  showNotification("작업이 완료되었습니다!", "success"); // 성공 알림 main.js
+                  console.log("Success:", response.data);
+                } catch (error) {
+                  console.error("Error:", error);
+                  showNotification("작업이 실패했습니다.!", "danger"); // 성공 알림 main.js
+                }
+              },
+            },
+          });
+
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=nodescalingJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

@@ -1,0 +1,58 @@
+spring:
+  profiles:
+    active: local
+   #main.web-application-type: none   #웹서버실행하지 않기
+  devtools:
+    restart.enabled: true
+    livereload.enabled: true
+  mvc.pathmatch.matching-strategy: ant-path-matcher
+  thymeleaf:
+    prefix: classpath:templates/
+    check-template-location: true
+    suffix: .html
+    mode: HTML
+    cache: false
+  #shutdown  
+  pid:
+    file: .\.app.loc.pid
+  jackson:
+    time-zone: Asia/Seoul
+    #serialization.WRITE_DATES_AS_TIMESTAMPS: false
+    date-format: yyyy-MM-dd HH:mm:ss
+
+server:
+  port: 80 #8888
+  servlet:
+    context-path: /
+    session:
+      timeout: 28800000  # 8 hours in milliseconds
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
+
+hybrid:
+  proxy:
+     url: http://172.30.1.28:8898
+  init-sql-location:
+    ddl: classpath:/db/init/ddl.sql
+    insert-data: classpath:/db/init/insert*.sql
+  datasource:
+    url: jdbc:log4jdbc:postgresql://172.30.1.35:5433/postgres?currentSchema=k_hybrid
+    #url: jdbc:log4jdbc:postgresql://172.30.1.30:30007/postgres?currentSchema=k_hybrid
+    hikari: 
+      jdbcUrl: ${hybrid.datasource.url}
+      #driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      driver-class-name: net.sf.log4jdbc.DriverSpy
+      #username: ENC(HrVw3fiyCLDR948tKQhAejZAT9wpchPEpFFoJG3Y38HWipO+iLHob1pXaX1N+pXg)
+      username: postgres
+      #password: ENC(/MbRwpHCgQGTORq4/DsIej4lS47MVzdzdW8TPWEthKH+h6P/sCqbru9aLMqV+iQp)
+      password: postgresql!@
+      pool-name: hikari-cp
+      maximum-pool-size: 5
+      minimum-idle: 2
+      data-source-properties: 
+          cachePrepStmts: true
+          prepStmtCacheSize: 250
+          prepStmtCacheSqlLimit: 2048
+          useServerPrepStmts: true  

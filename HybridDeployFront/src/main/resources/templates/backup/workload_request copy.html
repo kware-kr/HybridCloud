@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/page/page-monitoring.css"/>
+      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/design.css" />
+
+
+      <section id="section">
+        <div style="display: inline-block; width: 100%">
+          <ul class="nav nav-tabs type_01" role="tablist" style="float: left; margin-bottom: 0px !important">
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext active"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="all">전체</span> (325)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="normal">정상작동</span> (15)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="error">모듈이상</span> (2)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="inspection">점검중</span> (1)</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link btn_catetext"
+                id="teamFinalStat-tab"
+                data-bs-toggle="tab"
+                href="#teamFinalStat"
+                aria-controls="teamStat-tab"
+                role="tab"
+                aria-selected="true"
+                ><span data-th="stop">운영중지</span> (1)</a
+              >
+            </li>
+          </ul>
+          <div class="sort_wrap" style="float: right">
+            <select
+              class="form-select round select_line"
+              id="select-country1"
+              name="teamApproveSttusCd"
+              onchange="searchStatus(this)"
+              style="width: 200px">
+              <option value="">설치일 순</option>
+              <option value="">설치장소 순</option>
+            </select>
+          </div>
+          <div class="search_wrap" style="float: right; margin-right: 8px">
+            <input
+              type="text"
+              id="team-all-history-stat-search"
+              class="form-control round border_line"
+              name="searchKeyword"
+              placeholder="검색기 ID, 설치장소" />
+            <i class="icon_search"></i>
+          </div>
+        </div>
+        <!--
+      <div class="tab-content">
+          <div class="tab-pane" id="" role="tabpanel"></div>
+      </div>
+      -->
+        <div id="search-data-list">
+          <div class="card mt-1">
+            <div class="list_item go-to-each-tenant" data="0">
+              <div class="col-12 col-xl-12 d_flex justify-content-between">
+                <div class="col-12 col-xl-2" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; width: 50%; float: left">
+                    <div class="d2_text">
+                      <span class="btit_wrap"><i class="icon_equip"></i></span>
+                    </div>
+                  </div>
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 50%; float: left">
+                    <div class="d2_title">장비 ID</div>
+                    <div class="d2_text" style="color: rgb(29, 95, 158)"><span class="fw-bolder row-text equipId">CSIU2000838</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-4" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치일</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setDate">2023.06.08</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치 장소</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setPlace">Zone 110021</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">최근 가동시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text recentUptime">2024.10.18 15:38</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">누적 가동 시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text cmlUptime">14,016 시간</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 일 가동률</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgDailyOperRate">81 %</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 검색 시간</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgSearchTime">138 초</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">상태</div>
+                    <div class="d2_text" style="color: rgb(35, 193, 46)"><span class="fw-bolder row-text state">작동 중</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div style="width: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; float: left">
+                    <div class="d2_title">검사 모듈 상태</div>
+                    <div class="d2_text">
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_xray_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_rpm_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_ims_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-1">
+            <div class="list_item go-to-each-tenant" data="0">
+              <div class="col-12 col-xl-12 d_flex justify-content-between">
+                <div class="col-12 col-xl-2" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; width: 50%; float: left">
+                    <div class="d2_text">
+                      <span class="btit_wrap"><i class="icon_equip"></i></span>
+                    </div>
+                  </div>
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 50%; float: left">
+                    <div class="d2_title">장비 ID</div>
+                    <div class="d2_text" style="color: rgb(29, 95, 158)"><span class="fw-bolder row-text equipId">CSIU2000839</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-4" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치일</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setDate">2023.06.08</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치 장소</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setPlace">Zone 110021</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">최근 가동시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text recentUptime">2024.10.18 15:38</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">누적 가동 시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text cmlUptime">14,016 시간</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 일 가동률</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgDailyOperRate">81 %</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 검색 시간</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgSearchTime">138 초</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">상태</div>
+                    <div class="d2_text" style="color: rgb(35, 193, 46)"><span class="fw-bolder row-text state">작동 중</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div style="width: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; float: left">
+                    <div class="d2_title">검사 모듈 상태</div>
+                    <div class="d2_text">
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_xray_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_rpm_detail"></i><span class="tb_tit fw-bolder t_green error" style="font-size: 14px">Err01</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_ims_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-1">
+            <div class="list_item go-to-each-tenant" data="0">
+              <div class="col-12 col-xl-12 d_flex justify-content-between">
+                <div class="col-12 col-xl-2" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; width: 50%; float: left">
+                    <div class="d2_text">
+                      <span class="btit_wrap"><i class="icon_equip"></i></span>
+                    </div>
+                  </div>
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 50%; float: left">
+                    <div class="d2_title">장비 ID</div>
+                    <div class="d2_text" style="color: rgb(181, 30, 32)"><span class="fw-bolder row-text equipId">CSIU2000840</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-4" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치일</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setDate">2023.06.08</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치 장소</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setPlace">Zone 110021</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">최근 가동시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text recentUptime">2024.10.18 15:38</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">누적 가동 시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text cmlUptime">14,016 시간</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 일 가동률</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgDailyOperRate">81 %</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 검색 시간</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgSearchTime">138 초</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">상태</div>
+                    <div class="d2_text" style="color: rgb(181, 30, 32)"><span class="fw-bolder row-text state">점검중</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div style="width: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; float: left">
+                    <div class="d2_title">검사 모듈 상태</div>
+                    <div class="d2_text">
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_xray_detail"></i><span class="tb_tit fw-bolder t_green error" style="font-size: 14px">Err04</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_rpm_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_ims_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-1">
+            <div class="list_item go-to-each-tenant" data="0">
+              <div class="col-12 col-xl-12 d_flex justify-content-between">
+                <div class="col-12 col-xl-2" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; width: 50%; float: left">
+                    <div class="d2_text">
+                      <span class="btit_wrap"><i class="icon_equip"></i></span>
+                    </div>
+                  </div>
+                  <div
+                    class="col-xl-6"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 50%; float: left">
+                    <div class="d2_title">장비 ID</div>
+                    <div class="d2_text" style="color: rgb(189, 208, 227)"><span class="fw-bolder row-text equipId">CSIU2000841</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-4" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치일</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setDate">2023.06.08</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">설치 장소</div>
+                    <div class="d2_text"><span class="fw-bolder row-text setPlace">Zone 110021</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">최근 가동시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text recentUptime">2024.10.18 15:38</span></div>
+                  </div>
+                  <div
+                    class="col-xl-3"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">누적 가동 시간</div>
+                    <div class="d2_text"><span class="fw-bolder row-text cmlUptime">14,016 시간</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 일 가동률</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgDailyOperRate">81 %</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">평균 검색 시간</div>
+                    <div class="d2_text" style="color: rgb(39, 180, 222)"><span class="fw-bolder row-text avgSearchTime">138 초</span></div>
+                  </div>
+                  <div
+                    class="col-xl-4"
+                    style="display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0px; width: 25%; float: left">
+                    <div class="d2_title">상태</div>
+                    <div class="d2_text" style="color: rgb(189, 208, 227)"><span class="fw-bolder row-text state">운영중지</span></div>
+                  </div>
+                </div>
+                <div class="col-12 col-xl-3" style="display: flex; flex-direction: row; height: 62px">
+                  <div style="width: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0px; float: left">
+                    <div class="d2_title">검사 모듈 상태</div>
+                    <div class="d2_text">
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_xray_detail"></i><span class="tb_tit fw-bolder t_green error" style="font-size: 14px">Err04</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_rpm_detail"></i><span class="tb_tit fw-bolder t_green error" style="font-size: 14px">Err01</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-xl-4" style="float: left; width: 25%">
+                        <div class="btit_wrap">
+                          <div class="tit">
+                            <i class="icon_ims_detail"></i><span class="tb_tit fw-bolder t_green normal" style="font-size: 14px">정상</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between row align-items-center">
+          <div class="col-md-6 col-12">
+            <div class="dataTables_length" id="participant-table_length">
+              <select name="participant-table_length" aria-controls="participant-table" class="form-select form-select-sm" style="width: 170px">
+                <option value="10">10개씩 보기</option>
+                <option value="25">25개씩 보기</option>
+                <option value="50">50개씩 보기</option>
+                <option value="100">100개씩 보기</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-12">
+            <div
+              class="dataTables_paginate paging_simple_numbers"
+              id="participant-table_paginate"
+              style="display: inline-block; position: relative; float: right">
+              <ul class="pagination" style="margin: 0px">
+                <li class="paginate_button page-item previous disabled" id="participant-table_previous">
+                  <a href="#" aria-controls="participant-table" data-dt-idx="0" tabindex="0" class="page-link"><span></span></a>
+                </li>
+                <li class="paginate_button page-item active">
+                  <a href="#" aria-controls="participant-table" data-dt-idx="1" tabindex="0" class="page-link">1</a>
+                </li>
+                <li class="paginate_button page-item">
+                  <a href="#" aria-controls="participant-table" data-dt-idx="2" tabindex="0" class="page-link">2</a>
+                </li>
+                <li class="paginate_button page-item">
+                  <a href="#" aria-controls="participant-table" data-dt-idx="3" tabindex="0" class="page-link">3</a>
+                </li>
+                <li class="paginate_button page-item next" id="participant-table_next">
+                  <a href="#" aria-controls="participant-table" data-dt-idx="4" tabindex="0" class="page-link"><span></span></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

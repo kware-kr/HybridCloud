@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <link href="/assets/css/dash_workload.css" rel="stylesheet" />
+      <section id="dynimic_app" class="section dashboard">
+        <div class="row">
+          <!-- Left side columns -->
+          <div class="col-lg-8">
+            <div class="row">
+              <!-- Workload Card -->
+              <div class="col-xxl-4 col-md-6">
+                <div class="card info-card sales-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Workload<span></span></h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-cart"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6>{{totalWorkloads}}</h6>
+                        <span class="text-success small pt-1 fw-bold">{{ totalPods}}</span> <span class="text-muted small pt-2 ps-1">pods</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Workload Card -->
+
+              <!-- Cluster Card -->
+              <div class="col-xxl-4 col-md-6">
+                <div class="card info-card revenue-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Cluster</h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-currency-dollar"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6>{{totalClusters}}</h6>
+                        <span class="text-success small pt-1 fw-bold">{{totalNodes}}</span>
+                        <span class="text-muted small pt-2 ps-1"> total nodes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Cluster Card -->
+
+              <!-- Customers Card -->
+              <div class="col-xxl-4 col-xl-12">
+                <div class="card info-card customers-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Issued</h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6></h6>
+                        <span class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">current request</span><br />
+                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling pods</span><br />
+                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling nodes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Customers Card -->
+
+              <!-- Reports -->
+              <div class="col-12">
+                <div class="card">
+                  <div id="dashboard">
+                    <div v-for="cluster in clusters" :key="cluster.id" class="cluster-container">
+                      <dashboard-cluster-nodes
+                        :cluster="cluster"
+                        :cluster-stat="clusterStats[cluster.id] || {}"
+                        :cluster-color="clusterColorMap[cluster.id] || {}"></dashboard-cluster-nodes>
+                    </div>
+                  </div>
+                  <div id="dashboard-tooltip" class="dashboard-tooltip"></div>
+                </div>
+              </div>
+              <!-- End Reports -->
+            </div>
+          </div>
+          <!-- End Left side columns -->
+
+          <!-- Right side columns -->
+          <div class="col-lg-4">
+            <!-- Workload Chart -->
+            <div class="card">
+              <div class="card-body pb-0">
+                <h5 class="card-title">Workload by Cluster</h5>
+                <workload-chart :cluster-stats="clusterStats || {}"></workload-chart>
+              </div>
+            </div>
+            <!-- Workload Chart -->
+
+            <!-- Recent Activity -->
+            <div class="card">
+              <div class="card-body">
+                  <h5 class="card-title">Recent Activity</h5>
+                  <recent-activity></recent-activity>
+              </div>
+            </div><!-- End Recent Activity -->
+
+          </div>
+          <!-- End Right side columns -->
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("dynimic_app");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ""; // 기존 DOM 클리어
+              }
+            }
+          };
+
+          // 클러스터 노드와 헤더를 통합한 컴포넌트
+          const DashboardClusterNodes = {
+            template: `
+              <!-- 클러스터 헤더 -->
+              <div class="cluster-header">
+                <div class="cluster-name">{{ cluster.name }}</div>
+                <div class="cluster-stats">
+                  워크로드: {{ clusterStat?.workloads || 0 }}<br>
+                  파드: {{ clusterStat?.pods || 0 }}
+                </div>
+              </div>
+
+              <!-- 클러스터 노드 -->
+              <div class="node-container">
+                <div v-for="node in cluster.nodes" :key="node.name" class="node">
+                  <div class="node-name">{{ node.name }}</div>
+                  <div class="node-bar">
+                    <div
+                      v-for="pod in node.pods"
+                      :key="pod.id"
+                      class="pod"
+                      :style="{ backgroundColor: clusterColor?.[pod.workload_id] || '#ccc' }"
+                      @mouseover="showTooltip($event, pod)"
+                      @mouseout="hideTooltip"
+                    >
+                      <span class="status-icon">
+                        {{ pod.status === 'running' ? '✔️' : pod.status === 'ready' ? '⏳' : '⭕' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          `,
+            props: {
+              cluster: {
+                type: Object,
+                required: true, // 부모에서 반드시 전달해야 하는 필수 값
+              },
+              clusterStat: {
+                type: Object,
+                required: true, // 부모에서 반드시 전달해야 하는 필수 값
+              },
+              clusterColor: {
+                type: Object,
+                required: true, // 부모에서 반드시 전달해야 하는 필수 값
+              },
+            },
+            methods: {
+              showTooltip(event, pod) {
+                this.hideTooltip();
+                const tooltip = document.getElementById("dashboard-tooltip");
+
+                tooltip.innerHTML = `
+                <strong>워크로드:</strong> ${pod.workload_name}<br>
+                <strong>상태:</strong> ${pod.status}<br>
+                <strong>시작 시간:</strong> ${new Date(pod.start_time).toLocaleString()}<br>
+                <strong>예상 시작 시간:</strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
+                <strong>예상 종료 시간:</strong> ${new Date(pod.expected_end_time).toLocaleString()}<br>
+                <strong>종료 시간:</strong> ${pod.end_time ? new Date(pod.end_time).toLocaleString() : "N/A"}
+              `;
+                document.body.appendChild(tooltip);
+
+                tooltip.style.left = event.pageX - window.scrollX + 20 + "px"; // 마우스 위치에 툴팁 위치 지정
+                tooltip.style.top = event.pageY - window.scrollY + 20 + "px";
+                tooltip.style.display = "block";
+              },
+              hideTooltip() {
+                const tooltip = document.getElementById("dashboard-tooltip");
+                tooltip.style.display = "none"; // 툴팁 숨기기
+              },
+            },
+          };
+
+          // WorkloadChart 컴포넌트 (ECharts 차트를 표시)
+          const WorkloadChart = {
+            template: `<div ref="chart" style="min-height: 400px;" class="echart"></div>`,
+            data() {
+              return {
+                chart: null,
+              };
+            },
+            props: {
+              clusterStats: {
+                type: Object,
+                required: true, // 부모에서 반드시 전달해야 하는 필수 값
+              },
+            },
+            mounted() {
+              this.initChart();
+
+              // EventBus에서 데이터 수신
+              //EventBus.on('clusterWorkloadStatic', this.updateChart);
+            },
+            unmounted() {
+              // 컴포넌트가 사라질 때 이벤트 리스너 제거
+              //EventBus.off('clusterWorkloadStatic', this.updateChart);
+
+              // ECharts 인스턴스 제거
+              if (this.chart) {
+                this.chart.dispose(); // 차트 메모리 해제
+              }
+            },
+            watch: {
+              // clusterStats가 변경될 때마다 차트를 업데이트
+              clusterStats: {
+                handler(newStats) {
+                  this.updateChart(newStats);
+                },
+                deep: true, // nested 속성까지 감지하려면 deep 옵션을 사용
+              },
+            },
+            methods: {
+              initChart() {
+                // ECharts 차트 초기화
+                this.chart = echarts.init(this.$refs.chart);
+                this.chart.setOption({
+                  tooltip: {
+                    trigger: "item",
+                  },
+                  legend: {
+                    top: "5%",
+                    left: "center",
+                  },
+                  series: [
+                    {
+                      name: "워크로드 갯수",
+                      type: "pie",
+                      radius: ["40%", "70%"],
+                      avoidLabelOverlap: false,
+                      label: {
+                        show: false,
+                        position: "center",
+                      },
+                      emphasis: {
+                        label: {
+                          show: true,
+                          fontSize: "18",
+                          fontWeight: "bold",
+                        },
+                      },
+                      labelLine: {
+                        show: false,
+                      },
+                      data: [],
+                    },
+                  ],
+                });
+              },
+              updateChart(data) {
+                // EventBus로 받은 데이터를 바탕으로 차트를 업데이트
+                const chartData = Object.values(data).map((item) => ({
+                  value: item.workloads,
+                  name: item.name,
+                }));
+                console.log("aaaa");
+                this.chart.setOption({
+                  series: [
+                    {
+                      data: chartData,
+                    },
+                  ],
+                });
+              },
+            },
+          };
+
+          // Recent Activity 컴포넌트
+         const RecentActivity = {
+            template: `
+                <div class="activity" style="overflow-y: auto;" :style="{ height: containerHeight }">
+                    <div v-for="(activity, index) in activities" :key="activity.id" class="activity-item d-flex">
+                        <div class="activite-label">{{ formatTime(activity.timestamp) }}</div>
+                        <i class="bi bi-circle-fill activity-badge" :class="activityBadgeClass(activity)"></i>
+                        <div class="activity-content">{{ activity.message }}</div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    activities: [],  // 활동 목록
+                    lastActivityId: null,  // 마지막 활동 ID (새로운 메시지를 가져오기 위해)
+                    containerHeight: '400px',  // 컨테이너 높이 (기본값)
+                    intervalId: null,   // setInterval 생성 객체, 제거하기 위함
+                };
+            },
+            mounted() {
+                this.fetchActivities();  // 컴포넌트가 마운트될 때 활동 데이터 가져오기
+                this.intervalId = setInterval(this.fetchActivities, 1000);  // 1초마다 최신 활동 데이터 받아오기
+
+                this.updateContainerHeight();  // 화면 크기에 맞게 컨테이너 높이 설정
+                window.addEventListener('resize', this.updateContainerHeight);  // 화면 크기 변경 시 컨테이너 높이 업데이트
+            },
+            unmounted() {
+              clearInterval(this.intervalId); // 타이머 정리
+            },
+            methods: {
+                updateContainerHeight() {
+                    const windowHeight = window.innerHeight;  // 현재 창 높이
+                    const scrollY = window.scrollY;          // 현재 스크롤 위치
+
+                    // 스크롤 위치가 있을 경우, 스크롤 위치를 고려하여 컨테이너 높이 설정
+                    const containerHeight = `${windowHeight - 200 - scrollY}px`;  // 여백과 스크롤 위치 반영
+
+                    this.containerHeight = containerHeight;
+                },
+                async fetchActivities() {
+                    try {
+                        const url = this.lastActivityId 
+                            ? `recent_activity.json?after_id=${this.lastActivityId}` 
+                            : 'recent_activity.json';
+
+                        const response = await fetch(url);
+                        const newActivities = await response.json();
+                        
+                        // 최신 15개만 유지
+                        if (newActivities.length) {
+                            this.activities = [...newActivities, ...this.activities].slice(0, 100);
+                            this.lastActivityId = newActivities[0]?.id || this.lastActivityId;  // 가장 최신 메시지 ID 업데이트
+                        }
+                    } catch (error) {
+                        console.error("활동 데이터를 가져오는 중 오류 발생:", error);
+                    }
+                },
+                formatTime(timestamp) {
+                    const now = new Date();
+                    const activityTime = new Date(timestamp);
+                    const diff = now - activityTime;
+
+                    const minutes = Math.floor(diff / 60000);
+                    const hours = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+
+                    if (days > 0) return `${days}일 전`;
+                    if (hours > 0) return `${hours}시간 전`;
+                    return `${minutes}분 전`;
+                },
+                activityBadgeClass(activity) {
+                    return activity.type === 'success' ? 'text-success' : 'text-danger';
+                }
+            }
+        };
+
+          // Vue 애플리케이션
+          const app = Vue.createApp({
+            components: { DashboardClusterNodes, WorkloadChart, RecentActivity},
+            data() {
+              return {
+                clusters: [], //array
+                clusterStats: {}, // object[object]
+                clusterColorMap: {}, // object[object]
+                previousClusters: [], // 이전 상태 저장
+                predefinedColors: [],
+              };
+            },
+            computed: {
+              totalClusters() {
+                return this.clusters.length;
+              },
+              totalNodes() {
+                return this.clusters.reduce((sum, cluster) => sum + (cluster.nodes?.length || 0), 0);
+              },
+              totalWorkloads() {
+                return Object.values(this.clusterStats).reduce((sum, stats) => sum + (stats.workloads || 0), 0);
+              },
+              totalPods() {
+                return this.clusters.reduce((total, cluster) => {
+                  return total + cluster.nodes.reduce((nodeSum, node) => nodeSum + (node.pods?.length || 0), 0);
+                }, 0);
+              },
+            },
+            methods: {
+              async fetchClusterData() {
+                try {
+                  const response = await fetch("dashboard_workload.json");
+                  const data = await response.json();
+                  this.updateClusters(data);
+                } catch (error) {
+                  console.error("클러스터 데이터를 불러오는 중 오류 발생:", error);
+                }
+              },
+              async fetchPredefinedColors() {
+                try {
+                  const response = await fetch("options.json");
+                  const data = await response.json();
+                  this.predefinedColors = data.predefinedColors || [];
+                } catch (error) {
+                  console.error("색상 데이터를 불러오는 중 오류 발생:", error);
+                }
+              },
+              processClusterData() {
+                this.clusters.forEach((cluster) => {
+                  const stats = { name: cluster.name, workloads: 0, pods: 0 };
+                  const workloadIds = new Set();
+                  const workloadColorMap = {};
+
+                  cluster.nodes.forEach((node) => {
+                    node.pods.forEach((pod) => {
+                      stats.pods++;
+                      workloadIds.add(pod.workload_id);
+
+                      if (!workloadColorMap[pod.workload_id]) {
+                        workloadColorMap[pod.workload_id] = this.getIndexedColor(workloadIds.size - 1);
+                      }
+                    });
+                  });
+
+                  stats.workloads = workloadIds.size;
+                  this.clusterStats[cluster.id] = stats;
+                  this.clusterColorMap[cluster.id] = workloadColorMap;
+                });
+
+                //EventBus.emit("clusterWorkloadStatic", this.clusterStats);
+              },
+              updateClusters(newData) {
+                const updatedClusters = [];
+                newData.forEach((newCluster) => {
+                  const existingCluster = this.previousClusters.find((c) => c.id === newCluster.id);
+                  if (existingCluster) {
+                    updatedClusters.push(newCluster);
+                  } else {
+                    updatedClusters.push(newCluster);
+                  }
+                });
+
+                this.previousClusters = updatedClusters;
+                this.clusters = updatedClusters;
+                this.processClusterData();
+              },
+              getIndexedColor(index) {
+                if (index >= this.predefinedColors.length) {
+                  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+                }
+                return this.predefinedColors[index];
+              },
+            },
+            async mounted() {
+              await this.fetchPredefinedColors();
+              await this.fetchClusterData();
+
+              //setInterval(() => {
+              //    this.fetchClusterData(); // 5초마다 데이터 업데이트
+              //}, 5000);
+            },
+          });
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=dashboardJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

@@ -1,0 +1,74 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.18'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'kware'
+version = '0.0.1-SNAPSHOT'
+
+
+sourceCompatibility = '11'
+//mainClassName = "com.kware.ApplicationMain"
+
+ext.profile = (!project.hasProperty('profile') || !profile)?'local':profile
+sourceSets {
+	main {
+		resources { 
+			srcDirs = ["src/main/resources","src/main/resources-env/$profile","src/main/java"]
+			//src/main/java 영역에 리스스(xml 등)파일이 있어서, 이 코드가 없으면 java 이외의 파일이 들어가지 않는다.
+			//gradlew를 활용할 경우 
+		}
+	}
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    all {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        //exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+}
+
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	
+	//implementation 'io.github.wimdeblauwe:htmx-spring-boot'
+	
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'org.postgresql:postgresql'
+	
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' //thymeleaf
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'       //thymeleaf layout이 필요한 경우
+    implementation 'io.github.wimdeblauwe:htmx-spring-boot-thymeleaf:1.0.0'
+	
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	//testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+	
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.1'	
+	//implementation 'org.springframework.boot:spring-boot-starter-security' 
+	
+	
+	implementation group: 'org.lazyluke', name: 'log4jdbc-remix', version: '0.2.7'
+	//implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'  
+    //implementation 'org.jsoup:jsoup:1.17.2'
+    //implementation 'com.jayway.jsonpath:json-path:2.9.0'   
+	
+}
+
+

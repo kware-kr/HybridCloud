@@ -1,0 +1,122 @@
+.cluster-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 5px;
+    align-items: stretch;
+  }
+
+  .cluster-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    background-color: #fafafa;
+    flex: 0 0 150px;
+  }
+
+  .cluster-name {
+    text-align: left;
+  }
+
+  .cluster-stats {
+    
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .node-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 5px;
+  }
+
+  .node {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .node-name {
+    width: 70px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .node-bar {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 2px;
+    width: 100%;
+  }
+
+  .pod {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    position: relative;
+    /*cursor: pointer;*/ 
+    user-select: none;
+  }
+
+  .pod .status-icon {
+    font-size: 12px;
+    color: white;
+  }
+
+  .stats {
+    width: 25%;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 5px;
+    margin-right: 5px;
+  }
+
+  .legend-item {
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+  }
+
+  .legend-item span {
+    margin-left: 5px;
+  }
+
+  /* 툴팁 스타일 */
+  .dashboard-tooltip {
+    position: fixed; 
+    /*position: absolute;*/
+    background-color: #333;
+    
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 10px;
+    display: none; /* 기본적으로 숨겨놓음 */
+    z-index: 1000;
+    transition: top 0.3s ease, left 0.3s ease; /* top과 left의 변화를 0.3초 동안 부드럽게 이동 */
+  }

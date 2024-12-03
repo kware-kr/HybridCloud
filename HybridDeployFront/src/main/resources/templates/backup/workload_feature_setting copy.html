@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+ 
+  <main id="main" class="main">
+    <div id="workload_app" class="container mt-5">
+      <h5 class="fw-bold text-center">워크로드 관리</h5>
+    
+      <!-- 워크로드 테이블 -->
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>워크로드 이름</th>
+            <th>우선순위</th>
+            <th>Node Level</th>
+            <th>GPU Level</th>
+            <th>보안 레벨</th>
+            <th>워크로드 타입</th>
+            <th>배포 단계</th>
+            <th>클라우드 유형</th>
+            <th>변경 상태</th>
+            <th>액션</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(workload, index) in workloadList" :key="workload.id">
+            <td>
+              <input
+                type="text"
+                v-model="workload.name"
+                class="form-control"
+                @input="checkChanges(workload)"
+              />
+            </td>
+            <td>
+              <select class="form-select" v-model="workload.priority" @change="checkChanges(workload)">
+                <option v-for="opt in priorityOptions" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </td>
+            <td>
+              <input
+                type="number"
+                v-model.number="workload.nodeLevel"
+                min="1"
+                max="10"
+                class="form-control"
+                @input="checkChanges(workload)"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                v-model.number="workload.gpuLevel"
+                min="1"
+                max="10"
+                class="form-control"
+                @input="checkChanges(workload)"
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                v-model.number="workload.securityLevel"
+                min="1"
+                max="5"
+                class="form-control"
+                @input="checkChanges(workload)"
+              />
+            </td>
+            <td>
+              <select class="form-select" v-model="workload.workloadType" @change="checkChanges(workload)">
+                <option v-for="opt in workloadTypeOptions" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-select" v-model="workload.deploymentStage" @change="checkChanges(workload)">
+                <option v-for="opt in deploymentStageOptions" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-select" v-model="workload.cloudType" @change="checkChanges(workload)">
+                <option v-for="opt in cloudTypeOptions" :value="opt.code">{{ opt.name }}</option>
+              </select>
+            </td>
+            <td>
+              <i
+                :class="changedWorkloads[workload.id]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'"
+                style="font-size: 20px"
+              ></i>
+            </td>
+            <td>
+              <button
+                class="btn btn-outline-primary btn-sm"
+                :disabled="!changedWorkloads[workload.id]?.isChanged || changedWorkloads[workload.id]?.saved"
+                @click="saveWorkload(workload, index)"
+              >
+                저장
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <script>
+      {
+    const app = Vue.createApp({
+      data() {
+        return {
+          workloadList: [],
+          changedWorkloads: {},
+    
+          priorityOptions: [
+            { value: 1, label: "Very Low Priority" },
+            { value: 2, label: "Low Priority" },
+            { value: 3, label: "Medium Priority" },
+            { value: 4, label: "High Priority" },
+            { value: 5, label: "Critical Priority" },
+          ],
+          workloadTypeOptions: [
+            { value: "DPP", label: "Data Preprocessing" },
+            { value: "TRA", label: "Training" },
+            { value: "HPT", label: "High-Performance Training" },
+            { value: "MOE", label: "Model Evaluation" },
+            { value: "INF", label: "Inference" },
+          ],
+          deploymentStageOptions: [
+            { value: "DEV", label: "Development" },
+            { value: "TEST", label: "Testing" },
+            { value: "STG", label: "Staging" },
+            { value: "PROD", label: "Production" },
+          ],
+          cloudTypeOptions: [
+            { code: "PUB", name: "Public" },
+            { code: "PRI", name: "Private" },
+            { code: "ONP", name: "On-premise" },
+          ],
+        };
+      },
+      methods: {
+        checkChanges(workload) {
+          const { original, ...currentData } = workload;
+          const currentString = JSON.stringify(currentData);
+          const originalString = JSON.stringify(original);
+    
+          this.changedWorkloads[workload.id] = {
+            isChanged: currentString !== originalString,
+            saved: false,
+          };
+        },
+        saveWorkload(workload, index) {
+          this.saveWorkloadToAPI(workload)
+            .then(() => {
+              this.changedWorkloads[workload.id] = { isChanged: false, saved: true };
+              this.workloadList[index] = { ...workload, original: JSON.parse(JSON.stringify(workload)) };
+              alert(`워크로드 "${workload.name}" 저장 완료!`);
+            })
+            .catch(() => alert("저장 실패"));
+        },
+        saveWorkloadToAPI(workload) {
+          return fetch("save_workload_feature.api", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(workload),
+          }).then((res) => res.json());
+        },
+        fetchWorkloads() {
+          fetch("workload_feature.json")
+            .then((res) => res.json())
+            .then((data) => {
+              this.workloadList = data.map((item) => ({
+                ...item,
+                original: JSON.parse(JSON.stringify(item)),
+              }));
+              this.workloadList.forEach(
+                (workload) => (this.changedWorkloads[workload.id] = { isChanged: false, saved: true })
+              );
+            });
+        },
+      },
+      created() {
+        this.fetchWorkloads();
+      },
+    });
+    
+    app.mount("#workload_app");
+  }
+    </script>
+    
+  </main><!-- End #main -->
+</body>
+
+</html>

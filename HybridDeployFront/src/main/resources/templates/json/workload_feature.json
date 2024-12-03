@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "고객 서비스 (챗봇, 가상 어시스턴트)",
+    "priority": 4,
+    "nodeLevel": 6,
+    "gpuLevel": 7,
+    "securityLevel": 4,
+    "workloadType": "INF",
+    "deploymentStage": "PROD",
+    "cloudType": "PUB"
+  },
+  {
+    "id": 2,
+    "name": "사기 방지",
+    "priority": 5,
+    "nodeLevel": 7,
+    "gpuLevel": 7,
+    "securityLevel": 5,
+    "workloadType": "INF",
+    "deploymentStage": "PROD",
+    "cloudType": "PUB"
+  },
+  {
+    "id": 3,
+    "name": "고객 맞춤형 금융 상품 추천",
+    "priority": 3,
+    "nodeLevel": 6,
+    "gpuLevel": 5,
+    "securityLevel": 4,
+    "workloadType": "INF",
+    "deploymentStage": "STG",
+    "cloudType": "PUB"
+  },
+  {
+    "id": 4,
+    "name": "운영 효율화 (프로세스 자동화)",
+    "priority": 1,
+    "nodeLevel": 2,
+    "gpuLevel": 2,
+    "securityLevel": 3,
+    "workloadType": "DPP",
+    "deploymentStage": "DEV",
+    "cloudType": "PRI"
+  },
+  {
+    "id": 5,
+    "name": "자산 관리 (로보 어드바이저) 및 로그 분석",
+    "priority": 3,
+    "nodeLevel": 4,
+    "gpuLevel": 4,
+    "securityLevel": 3,
+    "workloadType": "DPP",
+    "deploymentStage": "TEST",
+    "cloudType": "PUB"
+  }
+]

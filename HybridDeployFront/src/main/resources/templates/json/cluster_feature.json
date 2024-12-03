@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Cluster A",
+    "cloudType": "pub"
+  },
+  {
+    "id": 2,
+    "name": "Cluster B",
+    "cloudType": "pri"
+  },
+  {
+    "id": 3,
+    "name": "Cluster C",
+    "cloudType": "onp"
+  }
+]

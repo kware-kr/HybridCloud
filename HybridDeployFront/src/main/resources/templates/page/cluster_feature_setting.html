@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <section id="dynimic_app" class="section">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-center"></h5>
+
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>클러스터 이름</th>
+                      <th>클라우드 유형</th>
+                      <th style="width: 50px">상태</th>
+                      <th style="width: 60px">저장</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(cluster, index) in clusterList" :key="cluster.id">
+                      <td>{{ cluster.name }}</td>
+                      <td>
+                        <select v-model="cluster.cloudType" class="form-select" @change="checkChanges(cluster)">
+                          <option v-for="type in cloudTypes" :key="type.code" :value="type.code">{{ type.label }}</option>
+                        </select>
+                      </td>
+                      <td>
+                        <i
+                          style="font-weight: bold; font-size: 20px"
+                          :class="changedClusters[cluster.id]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'">
+                        </i>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-outline-primary btn-sm"
+                          :disabled="!changedClusters[cluster.id]?.isChanged || changedClusters[cluster.id]?.saved"
+                          @click="saveCluster(cluster, index)">
+                          저장
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            const ele = document.getElementById("dynimic_app");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount();
+                ele.innerHTML = "";
+              }
+            }
+          };
+
+          const app = Vue.createApp({
+            data() {
+              return {
+                clusterList: [],
+                changedClusters: {},
+                cloudTypes: [], // 클라우드 유형 코드 저장
+              };
+            },
+            methods: {
+              checkChanges(cluster) {
+                const { original, ...currentData } = cluster;
+                const currentDataString = JSON.stringify(currentData);
+                const originalDataString = JSON.stringify(original);
+
+                if (currentDataString !== originalDataString) {
+                  this.changedClusters[cluster.id] = {
+                    isChanged: true,
+                    saved: false,
+                  };
+                } else {
+                  this.changedClusters[cluster.id] = {
+                    isChanged: false,
+                    saved: true,
+                  };
+                }
+              },
+
+              saveCluster(cluster, index) {
+                this.saveClusterToAPI(cluster)
+                  .then((response) => {
+                    this.changedClusters[cluster.id] = {
+                      isChanged: false,
+                      saved: true,
+                    };
+                    this.clusterList[index] = {
+                      ...cluster,
+                      original: JSON.parse(JSON.stringify(cluster)),
+                    };
+                    alert(`클러스터 "${cluster.name}"의 데이터가 저장되었습니다.`);
+                  })
+                  .catch(() => {
+                    alert("저장 중 오류가 발생했습니다.");
+                  });
+              },
+
+              saveClusterToAPI(cluster) {
+                return fetch("/cluster_feature_save.api", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(cluster),
+                }).then((response) => response.json());
+              },
+
+              fetchClusterDataFromAPI() {
+                fetch("cluster_feature.json")
+                  .then((response) => response.json())
+                  .then((data) => {
+                    this.clusterList = data;
+                    this.clusterList.forEach((cluster) => {
+                      cluster.original = JSON.parse(JSON.stringify(cluster));
+                      this.changedClusters[cluster.id] = { isChanged: false, saved: true };
+                    });
+                  });
+              },
+              fetchCloudTypes() {
+                /*
+                fetch("cloud_type_codes.json")
+                  .then((response) => response.json())
+                  .then((data) => {
+                    this.cloudTypes = data;
+                  });
+                  */
+                this.cloudTypes = [
+                  { code: "pub", label: "Public" },
+                  { code: "pri", label: "Private" },
+                  { code: "onp", label: "On-premise" },
+                ];
+              },
+            },
+            created() {
+              this.fetchCloudTypes(); // 클라우드 유형 코드 데이터 가져오기
+              this.fetchClusterDataFromAPI();
+            },
+          });
+
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=clusterFeatureJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

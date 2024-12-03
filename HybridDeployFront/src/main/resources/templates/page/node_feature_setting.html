@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <main id="main" class="main">
+      <section id="dynimic_app" class="section">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-center"></h5>
+
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>클러스터 이름</th>
+                      <th>노드 이름</th>
+                      <th>CPU 코어</th>
+                      <th>메모리 (GB)</th>
+                      <th>디스크 (GB)</th>
+                      <th>GPU 갯수</th>
+                      <th>GPU 이름</th>
+                      <th>성능 레벨 (1~10)</th>
+                      <th>GPU 레벨 (1~10)</th>
+                      <th>보안 레벨 (1~10)</th>
+                      <th style="width: 50px">상태</th>
+                      <th style="width: 60px">저장</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(node, index) in nodeList" :key="node.id">
+                      <td>{{ node.clusterName }}</td>
+                      <td>{{ node.name }}</td>
+                      <td>{{ node.cpuCores }}</td>
+                      <td>{{ node.memoryGB }}</td>
+                      <td>{{ node.diskGB }}</td>
+                      <td>{{ node.gpuCount }}</td>
+                      <td style="text-align: left">{{ node.gpuNames.join(", ") }}</td>
+                      <td>
+                        <input
+                          type="number"
+                          v-model.number="node.performanceLevel"
+                          min="1"
+                          max="10"
+                          class="form-control"
+                          @input="checkChanges(node)" />
+                      </td>
+                      <td>
+                        <input type="number" v-model.number="node.gpuLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" />
+                      </td>
+                      <td>
+                        <input type="number" v-model.number="node.securityLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" />
+                      </td>
+                      <td>
+                        <i
+                          style="font-weight: bold; font-size: 20px"
+                          :class="changedNodes[node.id]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'">
+                        </i>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-outline-primary btn-sm"
+                          :disabled="!changedNodes[node.id]?.isChanged || changedNodes[node.id]?.saved"
+                          @click="saveNode(node, index)">
+                          저장
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        {
+          window.page_clear = function () {
+            //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
+            const ele = document.getElementById("dynimic_app");
+            if (ele) {
+              const existingApp = ele.__vue_app__;
+              if (existingApp) {
+                existingApp.unmount(); // 언마운트
+                ele.innerHTML = ""; // 기존 DOM 클리어
+              }
+            }
+          };
+
+          const app = Vue.createApp({
+            data() {
+              return {
+                nodeList: [],
+                changedNodes: {},
+              };
+            },
+            methods: {
+              // 노드 변경 사항 확인
+              checkChanges(node) {
+                const { original, saved, ...currentData } = node;
+                const currentDataString = JSON.stringify(currentData);
+                const originalDataString = JSON.stringify(original);
+
+                // 변경 여부 확인
+                if (currentDataString !== originalDataString) {
+                  this.changedNodes[node.id] = {
+                    isChanged: true,
+                    saved: false, // 변경된 상태로 설정
+                  };
+                } else {
+                  this.changedNodes[node.id] = {
+                    isChanged: false,
+                    saved: true, // 변경된 상태로 설정
+                  };
+                }
+              },
+
+              // 저장 처리
+              saveNode(node, index) {
+                // API로 해당 노드만 저장
+                this.saveNodeToAPI(node)
+                  .then((response) => {
+                    // 저장 처리 후, 상태를 업데이트
+                    this.changedNodes[node.id] = {
+                      isChanged: false,
+                      saved: true,
+                    };
+
+                    // Vue 3에서 직접 nodeList[index]를 수정하여 상태 변경
+                    this.nodeList[index] = { ...node, saved: true, original: JSON.parse(JSON.stringify(node)) };
+
+                    // 알림
+                    alert(`노드 "${node.name}"의 데이터가 저장되었습니다.`);
+                  })
+                  .catch((error) => {
+                    alert("저장 중 오류가 발생했습니다.");
+                  });
+              },
+
+              // API로 데이터를 저장하는 함수 (샘플)
+              saveNodeToAPI(node) {
+                return new Promise((resolve, reject) => {
+                  // 실제 API 호출 예시 (axios나 fetch 사용)
+                  fetch("/node_feature_save.api", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(node),
+                  })
+                    .then((response) => response.json())
+                    .then((data) => resolve(data))
+                    .catch((error) => reject(error));
+
+                  // 예시 응답 (1초 후 성공적으로 처리)
+                  setTimeout(() => {
+                    resolve({ success: true });
+                  }, 1000);
+                });
+              },
+              // API로부터 데이터 받아오기 (초기화)
+              fetchNodeDataFromAPI() {
+                //실제 API에서 JSON 데이터를 받아오는 로직
+                fetch("node_feature.json")
+                  .then((response) => response.json())
+                  .then((data) => {
+                    this.nodeList = data;
+                    this.nodeList.forEach((node) => {
+                      node.original = JSON.parse(JSON.stringify(node)); // original 값 복사
+                      this.changedNodes[node.id] = { isChanged: false, saved: true }; // 초기 상태
+                    });
+                  });
+              },
+            },
+            created() {
+              // API에서 노드 데이터 받아오기
+              this.fetchNodeDataFromAPI();
+            },
+          });
+
+          app.mount("#dynimic_app");
+        }
+        //# sourceURL=nodeFeatureJS
+      </script>
+    </main>
+    <!-- End #main -->
+  </body>
+</html>

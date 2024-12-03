@@ -1,0 +1,51 @@
+{
+    "workloadTypes": [
+      { "value": "DPP", "label": "Data Preprocessing" },
+      { "value": "TRA", "label": "Training" },
+      { "value": "HPT", "label": "High-Performance Training" },
+      { "value": "MOE", "label": "Model Evaluation" },
+      { "value": "INF", "label": "Inference" }
+    ],
+    "deploymentStages": [
+      { "value": "DEV", "label": "Development" },
+      { "value": "TEST", "label": "Testing" },
+      { "value": "STG", "label": "Staging" },
+      { "value": "PROD", "label": "Production" }
+    ],
+    "cloudTypes": [
+      { "value": "PUB", "label": "Public" },
+      { "value": "PRI", "label": "Private" },
+      { "value": "ONP", "label": "On-premise" }
+    ],
+      "predefinedColors": [
+        "#FF0000", "#FFA500", "#32CD32", "#8B0000", "#A0522D",
+        "#FFE4C4", "#E6E6FA", "#FF00FF", "#9400D3", "#6A5ACD",
+        "#B0C4DE", "#0000CD", "#800000", "#7CFC00", "#9ACD32",
+        "#20B2AA", "#48D1CC", "#ADD8E6", "#EE82EE", "#FFB6C1",
+        "#FFD700", "#8B4513", "#F4A460", "#FF4500", "#FFD700",
+        "#98FB98", "#B22222", "#D2B48C", "#FFDEAD", "#D8BFD8",
+        "#FF1493", "#9932CC", "#483D8B", "#6495ED", "#00008B",
+        "#32CD32", "#6B8E23", "#008080", "#008B8B", "#B0E0E6",
+        "#C71585", "#FF6347", "#FFFF00", "#A52A2A", "#D2691E",
+        "#F5DEB3", "#FAEBD7", "#DDA0DD", "#C71585", "#8B008B",
+        "#708090", "#1E90FF", "#191970", "#98FB98", "#808000",
+        "#40E0D0", "#00BFFF", "#AFEEEE", "#FF1493", "#FF7F50",
+        "#FFFFE0", "#800000", "#CD5C5C", "#FFF5EE", "#EE82EE",
+        "#FF69B4", "#800080", "#2F4F4F", "#4169E1", "#8B4513",
+        "#3CB371", "#556B2F", "#00CED1", "#1E90FF", "#D8BFD8",
+        "#FF8C00", "#F0E68C", "#D2691E", "#F4A460", "#D2B48C",
+        "#FFE4B5", "#DA70D6", "#FF1493", "#4B0082", "#778899",
+        "#0000FF", "#A52A2A", "#00FA9A", "#66CDAA", "#5F9EA0",
+        "#87CEFA", "#DDA0DD", "#FFC0CB", "#FFA500", "#BDB76B",
+        "#800000", "#D2691E", "#F8F8FF", "#D8BFD8", "#DA70D6",
+        "#FF7F50", "#FFD700", "#228B22", "#C04000", "#F5DEB3",
+        "#F0F8FF", "#FF69B4", "#6A5ACD", "#778899", "#87CEFA",
+        "#006400", "#228B22", "#9ACD32", "#D2B48C", "#DEB887",
+        "#F5DEB3", "#FF00FF", "#9932CC", "#483D8B", "#B0C4DE",
+        "#00008B", "#32CD32", "#6B8E23", "#556B2F", "#008080",
+        "#00CED1", "#00BFFF", "#ADD8E6", "#B0E0E6", "#AFEEEE",
+        "#FF6347", "#FFB6C1", "#FF8C00", "#FFFFE0", "#F0E68C",
+        "#BDB76B", "#800000", "#A52A2A", "#D2691E", "#C04000"
+    ]
+  }
+  

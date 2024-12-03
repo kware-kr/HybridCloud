@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+    PUBLIC "-//www.mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+    <settings>
+        <!-- 설정에서 각 mapper 에 설정된 캐시를 전역적으로 사용할지 말지에 대한 여부 | true -->
+        <setting name="cacheEnabled" value="true" />
+        <!-- 늦은 로딩을 사용할지에 대한 여부. 사용하지 않는다면 모두 즉시 로딩할 것이다. | true -->
+        <setting name="lazyLoadingEnabled" value="true" />
+        <!-- 한개의 구문에서 여러개의 ResultSet 을 허용할지의 여부(드라이버가 해당 기능을 지원해야 함) | true -->
+        <setting name="multipleResultSetsEnabled" value="true" />
+        <!-- 칼럼명 대신에 칼럼라벨을 사용. 드라이버마다 조금 다르게 작동한다.
+        * 문서와 간단한 테스트를 통해 실제 기대하는 것처럼 작동하는지 확인해야 한다. | true -->
+        <setting name="useColumnLabel" value="true" />
+        <!-- 생성키에 대한 JDBC 지원을 허용. 지원하는 드라이버가 필요하다. true 로 설정하면 생성키를 강제로 생성한다.
+        * 일부 드라이버(예를들면, Derby)에서는 이 설정을 무시한다. | false -->
+        <setting name="useGeneratedKeys" value="false" />
+        <!-- MyBatis 가 칼럼을 필드/프로퍼티에 자동으로 매핑할지와 방법에 대해 명시. PARTIAL 은 간단한 자동매핑만 할 뿐,
+        * 내포된 결과에 대해서는 처리하지 않는다. FULL 은 처리가능한 모든 자동매핑을 처리한다. | PARTIAL (NONE, PARTIAL, FULL)-->
+        <setting name="autoMappingBehavior" value="PARTIAL" />
+        <!-- 디폴트 실행자(executor) 설정. SIMPLE 실행자는 특별히 하는 것이 없다. REUSE 실행자는 PreparedStatement 를 재사용한다.
+        BATCH 실행자는 구문을 재사용하고 수정을 배치처리한다. | SIMPLE (SIMPLE, REUSE, BATCH) -->
+        <setting name="defaultExecutorType" value="SIMPLE" />
+        <!-- 데이터베이스로의 응답을 얼마나 오래 기다릴지를 판단하는 타임아웃을 셋팅 | null -->
+        <setting name="defaultStatementTimeout" value="25000" />
+        <!-- 중첩구문내 RowBound 사용을 허용 | false -->
+        <setting name="safeRowBoundsEnabled" value="false" />
+        <!-- 전통적인 데이터베이스 칼럼명 형태인 A_COLUMN을 CamelCase형태의 자바 프로퍼티명 형태인 aColumn으로 자동으로 매핑하도록 함 | false -->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+        <!-- SESSION (SESSION, STATEMENT) -->
+        <setting name="localCacheScope" value="SESSION" />
+        <!-- OTHER (NULL, VARCHAR, OTHER) -->
+        <setting name="jdbcTypeForNull" value="NULL" />
+        <!-- equals,clone,hashCode,toString -->
+        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString" />
+    </settings>
+<!-- 
+    <typeAliases>
+        <package name="cetus"/>
+        <package name="kware"/>
+        <package name="keti"/>
+        <package name="spp"/>
+    </typeAliases>
+ -->
+ 	<typeHandlers>
+        <typeHandler handler="com.kware.common.db.handler.JsonNodeTypeHandler"  javaType="com.fasterxml.jackson.databind.JsonNode" />
+    </typeHandlers>
+</configuration>

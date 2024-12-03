@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+<title>ML Workload Protal</title>
+<meta content="" name="description">
+<meta content="" name="keywords">
+
+<!-- Favicons -->
+<link href="/assets/img/favicon.png" rel="icon">
+<link href="/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+<!-- Google Fonts -->
+<link href="https://fonts.gstatic.com" rel="preconnect">
+<link
+	href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+	rel="stylesheet">
+
+<!-- Vendor CSS Files -->
+<link href="/assets/vendor/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+<link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css"
+	rel="stylesheet">
+<link href="/assets/vendor/boxicons/css/boxicons.min.css"
+	rel="stylesheet">
+<link href="/assets/vendor/quill/quill.snow.css" rel="stylesheet">
+<link href="/assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+<link href="/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+<link href="/assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+<!-- Template Main CSS File -->
+<link href="/assets/css/style.css" rel="stylesheet">
+
+
+<!-- 테스트 -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+
+<body>
+
+	<!-- ======= Header ======= -->
+	<header id="header" class="header fixed-top d-flex align-items-center">
+
+		<div class="d-flex align-items-center justify-content-between">
+			<a href="index.html" class="logo d-flex align-items-center"> <img
+				src="assets/img/strato-logo.png" alt=""> <span
+				class="d-none d-lg-block">ML Workload Portal</span>
+			</a>
+			<!-- <i class="bi bi-list toggle-sidebar-btn"></i> -->
+		</div>
+		<!-- End Logo -->
+
+		<!-- <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div> -->
+		<!-- End Search Bar -->
+
+		<nav class="header-nav ms-3">
+			<ul class="d-flex">
+				<li class="nav-item dropdown"><a class="nav-link nav-icon"
+					href="#" data-bs-toggle="dropdown"> <!-- <i class="bi bi-chat-left-text"></i> -->
+						<i class="ri-spotify-line"><span class="ms-1">Hybrid
+								Project</span></i> <!-- <i class="bi bi-filter-circle"><span class="ms-1">Hybrid Project</span></i> -->
+						<!-- <span class="badge bg-success badge-number">3</span> -->
+				</a> <!-- End Messages Icon --></li>
+				<!-- End Messages Nav -->
+
+				<li class="nav-item dropdown"><a class="nav-link nav-icon"
+					href="#" data-bs-toggle="dropdown"> <!-- <i class="bi bi-chat-left-text"></i> -->
+						<i class="bi bi-card-heading"><span class="ms-1">Hybrid
+								Project2</span></i> <!-- <span class="badge bg-success badge-number">3</span> -->
+				</a> <!-- End Messages Icon --></li>
+				<!-- End Messages Nav -->
+			</ul>
+		</nav>
+
+		<nav class="header-nav ms-auto">
+			<ul class="d-flex align-items-center">
+
+				<li class="nav-item dropdown"><a class="nav-link nav-icon"
+					href="#" data-bs-toggle="dropdown"> <i class="bi bi-bell"></i>
+						<span class="badge bg-primary badge-number">4</span>
+				</a> <!-- End Notification Icon --></li>
+				<!-- End Notification Nav -->
+
+				<li class="nav-item dropdown"><a class="nav-link nav-icon"
+					href="#" data-bs-toggle="dropdown"> <!-- <i class="bi bi-chat-left-text"></i> -->
+						<i class="bi dropdown-toggle">Hybrid Project</i> <!-- <span class="badge bg-success badge-number">3</span> -->
+				</a> <!-- End Messages Icon -->
+
+					<ul
+						class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+						<li class="message-item"><a href="#">
+								<div>
+									<h4>Hybrid Project</h4>
+								</div>
+						</a></li>
+						<!-- <li>
+              <hr class="dropdown-divider">
+            </li> -->
+					</ul> <!-- End Messages Dropdown Items --></li>
+				<!-- End Messages Nav -->
+
+				<li class="nav-item dropdown pe-3"><a
+					class="nav-link nav-profile d-flex align-items-center pe-0"
+					href="#" data-bs-toggle="dropdown"> <span
+						class="d-none d-md-block dropdown-toggle ps-2 pe-2"><h6
+								class="mb-0">demouser</h6> <span class="pt-0">PORTAL_ADMIN</span></span>
+						<img src="assets/img/user-avatar.png" alt="Profile"
+						class="rounded-circle">
+				</a> <!-- End Profile Iamge Icon -->
+
+					<ul
+						class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+						<!-- <li class="dropdown-header">
+              <h6>Kevin Anderson</h6>
+              <span>Web Designer</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li> -->
+						<li><a class="dropdown-item d-flex align-items-center"
+							href="#"> <i class="bi bi-box-arrow-right"></i> <span>Sign
+									Out</span>
+						</a></li>
+
+					</ul> <!-- End Profile Dropdown Items --></li>
+				<!-- End Profile Nav -->
+
+			</ul>
+		</nav>
+		<!-- End Icons Navigation -->
+
+	</header>
+	<!-- End Header -->
+
+	<!-- ======= Sidebar ======= -->
+	<aside id="sidebar" class="sidebar">
+		<!-- 사이드바 컴포넌트를 사용 -->
+    	<sidebar-component></sidebar-component>
+	</aside>
+	<!-- End Sidebar-->
+
+
+
+
+	<main id="main" class="main"></main>
+	<!-- End #main -->
+
+	<!-- ======= Footer ======= -->
+	<footer id="footer" class="footer">
+		<div class="copyright">
+			&copy; Copyright <strong><span>Kware</span></strong>. All Rights
+			Reserved
+		</div>
+		<div class="credits">
+			<!-- All the links in the footer should remain intact. -->
+			<!-- You can delete the links only if you purchased the pro version. -->
+			<!-- Licensing information: https://bootstrapmade.com/license/ -->
+			<!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
+			<!-- Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> -->
+		</div>
+	</footer>
+	<!-- End Footer -->
+
+	<a href="#"
+		class="back-to-top d-flex align-items-center justify-content-center"><i
+		class="bi bi-arrow-up-short"></i></a>
+
+	<!-- Vendor JS Files -->
+	<script src="/assets/vendor/apexcharts/apexcharts.min.js"></script>
+	<script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<script src="/assets/vendor/chart.js/chart.umd.js"></script>
+	<script src="/assets/vendor/echarts/echarts.min.js"></script>
+	<script src="/assets/vendor/quill/quill.js"></script>
+	<script src="/assets/vendor/simple-datatables/simple-datatables.js"></script>
+	<script src="/assets/vendor/tinymce/tinymce.min.js"></script>
+	<script src="/assets/vendor/php-email-form/validate.js"></script>
+
+  <script>
+  	
+  
+	let currentUrl = '';
+	function getTable(url) {
+	    //동일하면 계속 리로드 할 필요가 있나? 내부에서 rest로 한다.
+	    if (url == null || url === currentUrl) {
+	        return;
+	    }
+	
+	    currentUrl = url;
+	
+	    fetch(url)
+	    .then(response => {
+	        if (!response.ok) {
+	            throw new Error(`HTTP error! status: ${response.status}`);
+	        }
+	        return response.text();
+	    })
+	    .then(html => {
+	        addcount = 0;
+	        removeCount = 0;
+	
+	        try{
+		        //기존 페이지 클리어 함수 호출
+		        if (typeof page_clear === "function") {
+		            page_clear();
+		        }
+		
+		        const parser = new DOMParser();
+		        const doc = parser.parseFromString(html, 'text/html');
+		
+		        // 외부 HTML에서 특정 부분 (예: #external-content) 찾기
+		        const src_content = doc.querySelector('#main');
+		
+		        removeOldScripts();
+		
+		        // 콘텐츠 영역에 html 로드
+		        const target_container = document.getElementById('main');
+		        target_container.innerHTML = src_content.innerHTML;
+		
+		        //javascript 처리
+		        const src_scriptlist = src_content.getElementsByTagName("script");
+		
+		        for (let i = 0; i < src_scriptlist.length; i++) {
+		            const target_script = document.createElement("script");
+		            
+		            if(src_scriptlist[i].src){
+		            	target_script.src = src_scriptlist[i].src; 
+		            }else{
+		            	target_script.text = src_scriptlist[i].text;
+					}
+		
+		            target_container.appendChild(target_script); // 이제 스크립트는 #container 안에만 추가됩니다.
+		        }
+		        const root_el = doc.documentElement;
+		        if(root_el)
+		        	root_el.remove();
+	        }catch(error){
+				console.error('에러발생', error.message);
+			}finally{
+				//자동으로 실행되는 부분이 있어서 재적용
+		        reloadScript('/assets/js/contents.js');
+			}
+	
+	    })
+	    .catch(error => {
+	        console.error('Error loading content:', error);
+	        document.getElementById('main').innerHTML = '<p>콘텐츠를 불러오는 데 실패했습니다.</p>';
+	    });
+	}
+	
+	function removeOldScripts() {
+	    const oldScripts = document.querySelectorAll('#main script');
+	    oldScripts.forEach(script => script.remove());
+	}
+	
+	function reloadScript(src) {
+	    // 1. 기존 스크립트 태그 제거
+	    const existingScript = document.querySelector(`script[src="${src}"]`);
+	    if (existingScript) {
+	        existingScript.remove();
+	        //console.log(`기존 스크립트 제거: ${src}`);
+	    }
+	
+	    // 2. 새 스크립트 태그 추가
+	    const newScript = document.createElement("script");
+	    //newScript.src = `${src}?v=${new Date().getTime()}`; // 캐시 방지
+	    newScript.src = src; // 캐시 방지
+	    newScript.onload = () => {
+	        //console.log(`스크립트 재로드 완료: ${src}`);
+	    };
+	    newScript.onerror = () => {
+	        //console.error(`스크립트 로드 실패: ${src}`);
+	    };
+	
+	    // 스크립트를 <head>에 추가
+	    document.head.appendChild(newScript);
+	}
+</script>
+  <script>
+    // 사이드바 컴포넌트 정의
+    const SidebarComponent = {
+      template: `
+          <!-- 토글 버튼 -->
+          <div class="text-end" style="margin-left: 275px; margin-top: -20px; position: fixed;">
+            <i class="bi bi-list toggle-sidebar-btn" style="font-size: 27px; font-weight: bold; user-select: none"></i>
+          </div>
+  
+          <ul class="sidebar-nav" id="sidebar-nav">
+            <li v-for="(item, index) in sidebarData" :key="index" class="nav-item">
+              <!-- 메뉴 항목이 서브 메뉴가 없으면 바로 링크로 출력 -->
+              <a v-if="!item.submenu" class="nav-link" href="#" 
+			    :id="'menu-' + index" 
+			    @click="setActiveNav(item.name, "'menu-' + index" );getContentPage(item.link)" 
+              	:class="[ activeNav !== item.name ? 'collapsed' : '', activeNav === item.name ? 'active' : '' ]">
+                <i :class="item.icon" style="color: green;font-weight: bold;"></i>
+                <span>{{ item.name }}</span>
+              </a>
+  
+              <!-- 서브 메뉴가 있으면 Collapse 처리 -->
+              <a v-else class="nav-link collapsed" :data-bs-target="'#' + item.name + '-nav'" data-bs-toggle="collapse" href="#" 
+            	  @click="setActiveNav(item.name)">
+                <i :class="item.icon" style="color: green;font-weight: bold;"></i><span>{{ item.name }}</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+  
+              <!-- 서브 메뉴 -->
+              <ul v-if="item.submenu" :id="item.name + '-nav'" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                <li v-for="(subItem, subIndex) in item.submenu" :key="subIndex">
+                  <a href="#" 
+				    :id="'menu-' + index + '-' + subIndex"
+				    @click="setActiveNav(subItem.name, "'menu-' + index + '-' + subIndex");getContentPage(subItem.link)" 
+				    :class="{ active: activeNav === subItem.name }">
+                    <i class="bi bi-circle"></i><span>{{ subItem.name }}</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+      `,
+      data() {
+        return {
+          activeNav: null,  // 현재 열려있는 네비게이션 항목
+          sidebarData: [],   // 외부에서 로드한 사이드바 데이터
+          breadcrumb: []    // breadcrumb 데이터
+        };
+      },
+      mounted() {
+        // 컴포넌트가 마운트되면 외부에서 데이터를 불러옵니다.
+        this.loadSidebarData();
+        this.loadBreadcrumbFromLocalStorage();
+        this.autoSelectMenuFromLocalStorage(); // 로컬스토리지에서 자동으로 메뉴를 선택하고 페이지를 로드
+      },
+      methods: {
+        // 외부 JSON 데이터를 비동기적으로 로드
+        async loadSidebarData() {
+          try {
+            const response = await axios.get('sidebar.json');
+            this.sidebarData = response.data.sidebar;
+          } catch (error) {
+            console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
+          }
+        },
+        getContentPage(page) {
+		  getTable(page);
+          console.log('페이지 로딩:', page);
+          // 페이지 로딩 로직을 추가 (예: Vue Router로 페이지 이동)
+        },
+        setActiveNav(name, id) {
+            this.activeNav = name;  // 클릭한 항목의 이름을 활성 상태로 설정
+            //this.updateBreadcrumb(name, link);
+            //this.saveBreadcrumbToLocalStorage();
+            
+         // 메뉴 클릭 시 해당 메뉴를 로컬스토리지에 저장
+            localStorage.setItem('activeMenuId', id); // 이름과 링크를 로컬스토리지에 저장
+        },
+     // Breadcrumb을 업데이트
+        updateBreadcrumb(name, link) {
+          // breadcrumb에 새로운 항목을 추가
+          this.breadcrumb.push({ name, link });
+        },
+
+        // 로컬스토리지에 breadcrumb 저장
+        saveBreadcrumbToLocalStorage() {
+          localStorage.setItem('breadcrumb', JSON.stringify(this.breadcrumb));
+        },
+
+        // 로컬스토리지에서 breadcrumb 불러오기
+        loadBreadcrumbFromLocalStorage() {
+          const breadcrumb = localStorage.getItem('breadcrumb');
+          if (breadcrumb) {
+            this.breadcrumb = JSON.parse(breadcrumb);
+          }
+        },
+        // 로컬스토리지에서 메뉴 정보를 읽어 자동으로 메뉴를 활성화하고 페이지를 로딩
+        autoSelectMenuFromLocalStorage() {
+          const activeMenu = localStorage.getItem('activeMenu');
+          if (activeMenu) {
+            const [menuName, menuLink] = JSON.parse(activeMenu);
+            this.setActiveNav(menuName, menuLink);
+            this.getContentPage(menuLink); // 해당 메뉴의 링크로 페이지를 로딩
+          }
+        }
+      }
+    };
+
+    // Vue 앱 생성 및 컴포넌트 등록
+    const app = Vue.createApp({
+      components: {
+        'sidebar-component': SidebarComponent
+      }
+    });
+
+    app.mount('#sidebar');
+    
+  </script>
+  
+  	<!-- Template Main JS File -->
+ <script src="/assets/js/main.js"></script>
+	
+
+
+</body>
+
+</html>
