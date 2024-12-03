@@ -212,7 +212,7 @@
                     })
                     .catch((error) => {
                       console.error("Error:", error);
-                      //showNotification("워크로드 삭제 중 오류가 발생했습니다.",'danger');
+                      //showNotification("워크로드 삭제 중 오류가 발생했습니다.",'danger'); 
                       showNotification(error.response.data, 'danger');
                     });
                 }
