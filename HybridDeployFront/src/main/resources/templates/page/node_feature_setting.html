@@ -27,42 +27,22 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(node, index) in nodeList" :key="node.id">
-                      <td>{{ node.clusterName }}</td>
-                      <td>{{ node.name }}</td>
-                      <td>{{ node.cpuCores }}</td>
-                      <td>{{ node.memoryGB }}</td>
-                      <td>{{ node.diskGB }}</td>
-                      <td>{{ node.gpuCount }}</td>
-                      <td style="text-align: left">{{ node.gpuNames.join(", ") }}</td>
+                    <tr v-for="(node, index) in nodeList" :key="node.nodeUid">
+                      <td>{{ node.clusterNm }}</td>
+                      <td>{{ node.nodeInfo.nodeNm }}</td>
+                      <td>{{ node.nodeInfo.cpu }}</td>
+                      <td>{{ node.nodeInfo.memory }}</td>
+                      <td>{{ node.nodeInfo.disk }}</td>
+                      <td>{{ node.nodeInfo.gpu }}</td>
+                      <td style="text-align: left">{{ node.nodeInfo.gpuModels }}</td>
+                      <td><input type="number" v-model.number="node.feature.performanceLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
+                      <td><input type="number" v-model.number="node.feature.gpuLevel"         min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
+                      <td><input type="number" v-model.number="node.feature.securityLevel"    min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
                       <td>
-                        <input
-                          type="number"
-                          v-model.number="node.performanceLevel"
-                          min="1"
-                          max="10"
-                          class="form-control"
-                          @input="checkChanges(node)" />
+                        <i style="font-weight: bold; font-size: 20px" :class="changedNodes[node.nodeUid]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'"></i>
                       </td>
-                      <td>
-                        <input type="number" v-model.number="node.gpuLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" />
-                      </td>
-                      <td>
-                        <input type="number" v-model.number="node.securityLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" />
-                      </td>
-                      <td>
-                        <i
-                          style="font-weight: bold; font-size: 20px"
-                          :class="changedNodes[node.id]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'">
-                        </i>
-                      </td>
-                      <td>
-                        <button
-                          class="btn btn-outline-primary btn-sm"
-                          :disabled="!changedNodes[node.id]?.isChanged || changedNodes[node.id]?.saved"
-                          @click="saveNode(node, index)">
-                          저장
-                        </button>
+                      <td><button class="btn btn-outline-primary btn-sm" :disabled="!changedNodes[node.nodeUid]?.isChanged || changedNodes[node.nodeUid]?.saved" 
+                                 @click="saveNode(node, index)">저장</button>
                       </td>
                     </tr>
                   </tbody>
@@ -92,9 +72,38 @@
               return {
                 nodeList: [],
                 changedNodes: {},
+                processUrlPath: "/setting/clusternodefeature",
               };
             },
+            created() {
+              this.fetchInitialData();
+            },
             methods: {
+              fetchInitialData() {
+                axios.get(this.processUrlPath)
+                .then((response) => {
+                  const nodeResponse = response.data;
+                  const parsedContentList = nodeResponse.map((item) => {
+                    item.feature = item.feature ? JSON.parse(item.feature) : {};
+                    item.nodeInfo = JSON.parse(item.nodeInfo);
+                    return item;
+                  });
+
+                  this.nodeList = parsedContentList.map((node) => ({
+                    ...node,
+                    original: JSON.parse(JSON.stringify(node)),
+                  }));
+
+                  this.nodeList.forEach((node) => {
+                    this.changedNodes[node.nodeUid] = { isChanged: false, saved: true };
+                  });
+                  //console.log(this.nodeList, this.changedNodes);
+                })
+                .catch(() => {
+                  //alert("");
+                  showNotification("초기 데이터 로드 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
+                });
+              },
               // 노드 변경 사항 확인
               checkChanges(node) {
                 const { original, saved, ...currentData } = node;
@@ -103,78 +112,31 @@
 
                 // 변경 여부 확인
                 if (currentDataString !== originalDataString) {
-                  this.changedNodes[node.id] = {
-                    isChanged: true,
-                    saved: false, // 변경된 상태로 설정
-                  };
+                  this.changedNodes[node.nodeUid].isChanged = true;
+                  this.changedNodes[node.nodeUid].saved = false; // 변경된 상태로 설정
                 } else {
-                  this.changedNodes[node.id] = {
-                    isChanged: false,
-                    saved: true, // 변경된 상태로 설정
-                  };
+                  this.changedNodes[node.nodeUid].isChanged = false;
+                  this.changedNodes[node.nodeUid].saved = true; // 변경된 상태로 설정
                 }
               },
-
-              // 저장 처리
-              saveNode(node, index) {
+              async saveNode(node, index) {
                 // API로 해당 노드만 저장
-                this.saveNodeToAPI(node)
-                  .then((response) => {
-                    // 저장 처리 후, 상태를 업데이트
-                    this.changedNodes[node.id] = {
-                      isChanged: false,
-                      saved: true,
-                    };
+                try {
+                  const { original, ...saveData } = node; //original를 제거한 데이터만 저장
+                  saveData.feature  = JSON.stringify(saveData.feature);
+                  saveData.nodeInfo = JSON.stringify(saveData.nodeInfo);
+                  const response = await axios.put(this.processUrlPath, saveData);
+                  node.original = JSON.stringify(saveData); // 원본 업데이트
 
-                    // Vue 3에서 직접 nodeList[index]를 수정하여 상태 변경
-                    this.nodeList[index] = { ...node, saved: true, original: JSON.parse(JSON.stringify(node)) };
+                  this.changedNodes[node.nodeUid].isChanged = false;
+                  this.changedNodes[node.nodeUid].saved = true;
 
-                    // 알림
-                    alert(`노드 "${node.name}"의 데이터가 저장되었습니다.`);
-                  })
-                  .catch((error) => {
-                    alert("저장 중 오류가 발생했습니다.");
-                  });
+                  showNotification("작업이 완료되었습니다!", "success"); // 성공 알림 main.js
+                } catch (error) {
+                  console.error("Error:", error);
+                  showNotification("작업이 실패했습니다.!", "danger"); // 성공 알림 main.js
+                }
               },
-
-              // API로 데이터를 저장하는 함수 (샘플)
-              saveNodeToAPI(node) {
-                return new Promise((resolve, reject) => {
-                  // 실제 API 호출 예시 (axios나 fetch 사용)
-                  fetch("/node_feature_save.api", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(node),
-                  })
-                    .then((response) => response.json())
-                    .then((data) => resolve(data))
-                    .catch((error) => reject(error));
-
-                  // 예시 응답 (1초 후 성공적으로 처리)
-                  setTimeout(() => {
-                    resolve({ success: true });
-                  }, 1000);
-                });
-              },
-              // API로부터 데이터 받아오기 (초기화)
-              fetchNodeDataFromAPI() {
-                //실제 API에서 JSON 데이터를 받아오는 로직
-                fetch("node_feature.json")
-                  .then((response) => response.json())
-                  .then((data) => {
-                    this.nodeList = data;
-                    this.nodeList.forEach((node) => {
-                      node.original = JSON.parse(JSON.stringify(node)); // original 값 복사
-                      this.changedNodes[node.id] = { isChanged: false, saved: true }; // 초기 상태
-                    });
-                  });
-              },
-            },
-            created() {
-              // API에서 노드 데이터 받아오기
-              this.fetchNodeDataFromAPI();
             },
           });
 

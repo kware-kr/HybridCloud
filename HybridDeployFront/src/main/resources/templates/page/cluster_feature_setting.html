@@ -19,23 +19,24 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(cluster, index) in clusterList" :key="cluster.id">
-                      <td>{{ cluster.name }}</td>
+                    <tr v-for="(cluster, index) in clusterList" :key="cluster.clUid">
+                      <td>{{ cluster.clusterNm }}</td>
                       <td>
-                        <select v-model="cluster.cloudType" class="form-select" @change="checkChanges(cluster)">
-                          <option v-for="type in cloudTypes" :key="type.code" :value="type.code">{{ type.label }}</option>
+                        <select v-model="cluster.feature.cloudType" class="form-select" @change="checkChanges(cluster)">
+                          <option :value="null" disabled>선택하세요</option>
+                          <option v-for="type in cloudTypes" :value="type.value" :key="type.value">{{ type.label }}</option>
                         </select>
                       </td>
                       <td>
                         <i
                           style="font-weight: bold; font-size: 20px"
-                          :class="changedClusters[cluster.id]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'">
+                          :class="changedClusters[cluster.clUid]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'">
                         </i>
                       </td>
                       <td>
                         <button
                           class="btn btn-outline-primary btn-sm"
-                          :disabled="!changedClusters[cluster.id]?.isChanged || changedClusters[cluster.id]?.saved"
+                          :disabled="!changedClusters[cluster.clUid]?.isChanged || changedClusters[cluster.clUid]?.saved"
                           @click="saveCluster(cluster, index)">
                           저장
                         </button>
@@ -68,84 +69,69 @@
                 clusterList: [],
                 changedClusters: {},
                 cloudTypes: [], // 클라우드 유형 코드 저장
+                processUrlPath: "/setting/clusterfeature",
               };
             },
+            created() {
+              this.fetchInitialData();
+              console.log(this.clusterList, this.changedClusters);
+            },
             methods: {
+              fetchInitialData() {
+                Promise.all([axios.get("options.json"), axios.get(this.processUrlPath)])
+                  .then(([optionsResponse, clustersResponse]) => {
+                    this.cloudTypes = optionsResponse.data.cloudTypes;
+
+                    const parsedContentList = clustersResponse.data.map((item) => {
+                      item.feature = item.feature ? JSON.parse(item.feature) : {};
+                      //item.feature.cloudType = item.feature.cloudType || null; // cloudType 초기화
+                      return item;
+                    });
+
+                    this.clusterList = parsedContentList.map((cluster) => ({
+                      ...cluster,
+                      original: JSON.parse(JSON.stringify(cluster)),
+                    }));
+
+                    this.clusterList.forEach((cluster) => {
+                      this.changedClusters[cluster.clUid] = { isChanged: false, saved: true };
+                    });
+                  })
+                  .catch(() => {
+                    showNotification("초기 데이터 로드 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
+                  });
+              },
               checkChanges(cluster) {
+                //console.log(this.clusterList, this.changedClusters);
+                //console.log('checkChange', cluster);
                 const { original, ...currentData } = cluster;
                 const currentDataString = JSON.stringify(currentData);
                 const originalDataString = JSON.stringify(original);
 
                 if (currentDataString !== originalDataString) {
-                  this.changedClusters[cluster.id] = {
-                    isChanged: true,
-                    saved: false,
-                  };
+                  this.changedClusters[cluster.clUid].isChanged = true;
+                  this.changedClusters[cluster.clUid].saved = false;
                 } else {
-                  this.changedClusters[cluster.id] = {
-                    isChanged: false,
-                    saved: true,
-                  };
+                  this.changedClusters[cluster.clUid].isChanged = false;
+                  this.changedClusters[cluster.clUid].saved = true;
                 }
               },
+              async saveCluster(cluster, index) {
+                try {
+                  const { original, ...saveData } = cluster; //original를 제거한 데이터만 저장
+                  saveData.feature = JSON.stringify(saveData.feature);
+                  const response = await axios.put(this.processUrlPath, saveData);
+                  cluster.original = JSON.stringify(saveData); // 원본 업데이트
 
-              saveCluster(cluster, index) {
-                this.saveClusterToAPI(cluster)
-                  .then((response) => {
-                    this.changedClusters[cluster.id] = {
-                      isChanged: false,
-                      saved: true,
-                    };
-                    this.clusterList[index] = {
-                      ...cluster,
-                      original: JSON.parse(JSON.stringify(cluster)),
-                    };
-                    alert(`클러스터 "${cluster.name}"의 데이터가 저장되었습니다.`);
-                  })
-                  .catch(() => {
-                    alert("저장 중 오류가 발생했습니다.");
-                  });
-              },
+                  this.changedClusters[cluster.clUid].isChanged = false;
+                  this.changedClusters[cluster.clUid].saved = true;
 
-              saveClusterToAPI(cluster) {
-                return fetch("/cluster_feature_save.api", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(cluster),
-                }).then((response) => response.json());
+                  showNotification("작업이 완료되었습니다!", "success"); // 성공 알림 main.js
+                } catch (error) {
+                  console.error("Error:", error);
+                  showNotification("작업이 실패했습니다.!", "danger"); // 성공 알림 main.js
+                }
               },
-
-              fetchClusterDataFromAPI() {
-                fetch("cluster_feature.json")
-                  .then((response) => response.json())
-                  .then((data) => {
-                    this.clusterList = data;
-                    this.clusterList.forEach((cluster) => {
-                      cluster.original = JSON.parse(JSON.stringify(cluster));
-                      this.changedClusters[cluster.id] = { isChanged: false, saved: true };
-                    });
-                  });
-              },
-              fetchCloudTypes() {
-                /*
-                fetch("cloud_type_codes.json")
-                  .then((response) => response.json())
-                  .then((data) => {
-                    this.cloudTypes = data;
-                  });
-                  */
-                this.cloudTypes = [
-                  { code: "pub", label: "Public" },
-                  { code: "pri", label: "Private" },
-                  { code: "onp", label: "On-premise" },
-                ];
-              },
-            },
-            created() {
-              this.fetchCloudTypes(); // 클라우드 유형 코드 데이터 가져오기
-              this.fetchClusterDataFromAPI();
             },
           });
 

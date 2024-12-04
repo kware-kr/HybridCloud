@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import com.kware.hybrid.service.vo.ClusterNodeFeatureVO;
 import com.kware.hybrid.service.vo.CommonFeatureVO;
 
 @Repository
@@ -45,4 +46,28 @@ public class CommonFeatureDao {
     public List<CommonFeatureVO> selectAllCommonFeatures(String feaName) {
         return sqlSession.selectList("commonFeatureMapper.selectAllCommonFeatures", feaName);
     }
+    
+    
+    // {{mo_cluster 클러스터 특성관련
+    public List<ClusterNodeFeatureVO> selectAllClusterFeatures() {
+        return sqlSession.selectList("commonFeatureMapper.selectAllClusterFeatures");
+    }
+    
+    public int updateClusterFeature(ClusterNodeFeatureVO vo) {
+        return sqlSession.update("commonFeatureMapper.updateClusterFeature", vo);
+    }
+    // }}mo_cluster 클러스터 특성관련
+    
+ // {{mo_cluster_node 클러스터 특성관련
+    public List<ClusterNodeFeatureVO> selectAllClusterNodeFeatures() {
+        return sqlSession.selectList("commonFeatureMapper.selectAllClusterNodeFeatures");
+    }
+    
+    public int updateClusterNodeFeature(ClusterNodeFeatureVO vo) {
+        return sqlSession.update("commonFeatureMapper.updateClusterNodeFeature", vo);
+    }
+    // }}mo_cluster 클러스터 특성관련
+
+    
+    
 }

@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kware.common.util.JSONUtil;
 import com.kware.hybrid.service.CommonFeatureService;
+import com.kware.hybrid.service.vo.ClusterNodeFeatureVO;
 import com.kware.hybrid.service.vo.CommonFeatureVO;
 
 @RestController
+@RequestMapping("/setting")
 public class SettingRestController {
 
 	final private CommonFeatureService cfService;
@@ -25,9 +27,75 @@ public class SettingRestController {
 	SettingRestController(CommonFeatureService service) {
 		this.cfService = service;
 	}
+	
+	@RequestMapping("/clusterfeature")
+	public ResponseEntity<Object> clusterresoruce(@RequestBody(required = false) String paramBody, HttpMethod method) {
+		 
+		switch (method) {
+			case GET:
+				// GET 요청: 조회
+				List<ClusterNodeFeatureVO> resultList  = cfService.getAllClusterFeatures();
+				if (resultList != null) {
+					return ResponseEntity.ok(resultList);
+				}
+								
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found");
+			case PUT:
+				// PUT 요청: 아이템 갱신
+				if (paramBody != null && !paramBody.isEmpty()) {
+					ClusterNodeFeatureVO vo = null;
+					try {
+						vo = JSONUtil.fromJsonToEmptyFromNull(paramBody, ClusterNodeFeatureVO.class);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					cfService.updateClusterFeature(vo);
+					return ResponseEntity.status(HttpStatus.OK).build();
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found to update");
+				}
+			default:
+				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("Invalid method");
+		}
+	}
+	
+	@RequestMapping("/clusternodefeature")
+	public ResponseEntity<Object> clusternoderesoruce(@RequestBody(required = false) String paramBody, HttpMethod method) {
+		 
+		switch (method) {
+			case GET:
+				// GET 요청: 조회
+				List<ClusterNodeFeatureVO> resultList  = cfService.getAllClusterNodeFeatures();
+				if (resultList != null) {
+					return ResponseEntity.ok(resultList);
+				}
+								
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found");
+			case PUT:
+				// PUT 요청: 아이템 갱신
+				if (paramBody != null && !paramBody.isEmpty()) {
+					ClusterNodeFeatureVO vo = null;
+					try {
+						vo = JSONUtil.fromJsonToEmptyFromNull(paramBody, ClusterNodeFeatureVO.class);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					cfService.updateClusterNodeFeature(vo);
+					return ResponseEntity.status(HttpStatus.OK).build();
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found to update");
+				}
+			default:
+				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("Invalid method");
+		}
+	}
 
-	@RequestMapping("/setting/{settingtype}")
-	public ResponseEntity<Object> minresoruce(@PathVariable("settingtype") String settingType, @RequestBody(required = false) String paramBody, HttpMethod method) {
+	@RequestMapping("/{settingtype}")
+	public ResponseEntity<Object> commonresoruce(@PathVariable("settingtype") String settingType, @RequestBody(required = false) String paramBody, HttpMethod method) {
 		String pkey = null;
 		String skey = null;
 		settingType = settingType.toLowerCase();
@@ -141,35 +209,5 @@ public class SettingRestController {
 			default:
 				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("Invalid method");
 		}
-	}
-	
-	/*
-
-	@RequestMapping("/setting/podscaling")
-	public ResponseEntity<Object> podScaling(@RequestBody(required = false) Map<String, Object> paramBody,
-			HttpMethod method) {
-		String pkey = "pod_scaling_policies";
-		String skey = null;
-
-		return cfService.getCommonFeatureByKey(pkey, skey);
-	}
-
-	@RequestMapping("/setting/nodescaling")
-	public ResponseEntity<Object> nodeScaling(@RequestBody(required = false) Map<String, Object> paramBody,
-			HttpMethod method) {
-		String pkey = "node_scaling_policies";
-		String skey = null;
-
-		return cfService.getCommonFeatureByKey(pkey, skey);
-	}
-
-	@RequestMapping("/setting/workloadfeature")
-	public ResponseEntity<Object> worklaodfeature(@RequestBody(required = false) Map<String, Object> paramBody,
-			HttpMethod method) {
-		String pkey = "node_scaling_policies";
-		String skey = null;
-
-		return cfService.getCommonFeatureByKey(pkey, skey);
-	}
-	*/
+	}	
 }

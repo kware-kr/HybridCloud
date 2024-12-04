@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 
 @Data
 public class CommonFeatureVO {
-    private String feaName;      // 설정 이름
+	private String feaName;      // 설정 이름
     private String feaSubName;   // 서브 설정 이름
     private String feaContent;   // 설정 내용 (JSON 데이터)
     private String feaDesc;      // 설정 설명

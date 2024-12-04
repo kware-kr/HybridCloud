@@ -86,4 +86,93 @@
         WHERE delete_at = 'N'
           AND fea_name = #{feaName} 
     </select>
+    
+    <!--  {{mo_cluster 클러스터 특성관련 -->
+    <select id="selectAllClusterFeatures" resultType="com.kware.hybrid.service.vo.ClusterNodeFeatureVO">
+        SELECT uid as cl_uid
+			, nm AS cluster_nm
+			, feature AS feature
+		FROM k_hybrid.mo_cluster mc
+		WHERE mc.delete_at = 'N'
+		ORDER BY uid
+    </select>
+    <update id="updateClusterFeature" parameterType="com.kware.hybrid.service.vo.ClusterNodeFeatureVO">
+        UPDATE k_hybrid.mo_cluster 
+        SET feature = #{feature}::jsonb
+		WHERE uid = #{clUid}
+    </update>
+    
+    <!--  }} mo_cluster 클러스터 특성관련 -->
+
+    <!--  {{mo_cluster_node 클러스터 특성관련 -->
+    <select id="selectAllClusterNodeFeatures" resultType="com.kware.hybrid.service.vo.ClusterNodeFeatureVO">
+       WITH LatestData
+		AS (
+			SELECT cl_uid
+				, node_nm
+				, collect_dt
+				, results
+				, ROW_NUMBER() OVER (PARTITION BY node_nm ORDER BY collect_dt DESC) AS rn
+			FROM k_hybrid.mo_resource_usage_node
+			WHERE results IS NOT NULL
+			)
+			, FilteredGpuModels
+		AS (
+			SELECT ld.cl_uid
+				, ld.node_nm
+				, string_agg(DISTINCT CASE WHEN gpu.value ->> 'model' IS NOT NULL
+							AND gpu.value ->> 'model' != '' THEN gpu.value ->> 'model' END, ',') AS gpu_models
+			FROM LatestData ld
+			LEFT JOIN LATERAL jsonb_each(ld.results -> 'mgpuList') AS gpu ON true
+			WHERE ld.rn = 1
+			GROUP BY ld.cl_uid
+				, ld.node_nm
+				, gpu.value ->> 'model'
+			)
+		SELECT 
+		   rs.uid AS node_uid
+		 , rs.cl_uid
+		 , rs.cluster_nm
+		 , jsonb_build_object(
+		    'cpu', capacityCpu/1000,
+		    'gpu', capacityGpu,
+		    'disk', capacityDisk/1073741824,
+		    'memory', capacityMemory/1073741824,
+		    'gpuModels', gpu_models,
+		    'nodeNm', node_nm
+		   ) AS nodeInfo
+		 , feature
+		FROM (
+			SELECT
+			      mcn.uid
+			    , ld.cl_uid 
+			    , mc.nm AS cluster_nm
+			    , ld.node_nm 
+			    , mcn.feature
+			--   , ld.results
+			    , fg.gpu_models
+			    , (ld.results->>'capacityCpu'):: int AS capacityCpu
+			    , (ld.results->>'capacityGpu'):: int AS capacityGpu
+			    , (ld.results->>'capacityDisk'):: bigint AS capacityDisk
+			    , (ld.results->>'capacityMemory'):: bigint AS capacityMemory
+			    , ld.collect_dt
+			FROM k_hybrid.mo_cluster_node mcn
+			    INNER JOIN k_hybrid.mo_cluster mc ON mcn.cl_uid = mc.uid 
+			    LEFT JOIN  LatestData ld ON ld.rn = 1 AND ld.cl_uid = mcn.cl_uid AND ld.node_nm = mcn.nm 
+			    left JOIN FilteredGpuModels fg ON fg.cl_uid = ld.cl_uid AND fg.node_nm = ld.node_nm
+		    WHERE mcn.delete_at = 'N'
+		) rs
+		ORDER BY cl_uid, node_uid
+    </select>
+    <update id="updateClusterNodeFeature" parameterType="com.kware.hybrid.service.vo.ClusterNodeFeatureVO">
+        UPDATE k_hybrid.mo_cluster_node 
+        SET feature = #{feature}::jsonb
+		WHERE uid = #{nodeUid}
+    </update>
+    
+    <!--  }} mo_cluster 클러스터 특성관련 -->    
+    
+    
+    
+    
 </mapper>
