@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,10 +35,14 @@ public class JSONUtil {
     @SuppressWarnings("unused")
     private static Logger logger = LogManager.getLogger(JSONUtil.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    static {
+    	objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Seoul")); // 로컬 시간대 설정
+    }
     
     private static final ObjectMapper jsonWriter = new ObjectMapper();
     static {   //ObjectMapper의 속성이 변경되므로, 별도로 하나 만듬
     	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    	jsonWriter.setTimeZone(TimeZone.getTimeZone("Asia/Seoul")); // 로컬 시간대 설정
     }
     
     private static final ObjectMapper notNullMapper = new ObjectMapper();
@@ -49,6 +54,8 @@ public class JSONUtil {
     	
     	//JSON 문자열에 포함된 필드가 객체에 정의되어 있지 않을 경우 오류를 발생시키지 않도록 한다.
     	notNullMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    	
+    	notNullMapper.setTimeZone(TimeZone.getTimeZone("Asia/Seoul")); // 로컬 시간대 설정
     }
     
     public static void printObjectMapperSettings(ObjectMapper objectMapper) {
