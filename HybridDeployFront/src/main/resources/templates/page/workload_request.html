@@ -2,8 +2,11 @@
 <html lang="en">
   <body>
     <main id="main" class="main">
-      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/page/page-monitoring.css" />
-      <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/design.css" />
+      <!-- <link rel="stylesheet" type="text/css" href="http://172.30.1.1:58085/assets/css/page/page-monitoring.css" />
+      <link rel="stylesheet" type="text/css" href="/assets/css/design.css" /> -->
+
+      <link rel="stylesheet" type="text/css" href="/assets/css/workload_request.css" />
+      <link rel="stylesheet" type="text/css" href="/assets/css/design.css" />
       <style>
         /* Pods 컨테이너 스타일 */
         .pods-container {
@@ -40,6 +43,10 @@
       </style>
 
       <section id="section">
+        <div style="display: inline-block; width: 100%">
+
+        </div>
+        <!--
         <div style="display: inline-block; width: 100%">
           <ul class="nav nav-tabs type_01" role="tablist" style="float: left; margin-bottom: 0px !important">
             <li class="nav-item">
@@ -90,30 +97,9 @@
                 ><span data-th="inspection">Ready</span> (1)</a
               >
             </li>
-            <!-- <li class="nav-item">
-              <a
-                class="nav-link btn_catetext ps-2"
-                id="teamFinalStat-tab"
-                data-bs-toggle="tab"
-                href="#teamFinalStat"
-                aria-controls="teamStat-tab"
-                role="tab"
-                aria-selected="true"
-                ><span data-th="stop">운영중지</span> (1)</a
-              >
-            </li> -->
           </ul>
-          <!-- <div class="sort_wrap" style="float: right">
-            <select
-              class="form-select round select_line"
-              id="select-country1"
-              name="teamApproveSttusCd"
-              onchange="searchStatus(this)"
-              style="width: 200px">
-              <option value="">설치일 순</option>
-              <option value="">설치장소 순</option>
-            </select>
-          </div> -->
+        
+          
           <div class="search_wrap" style="float: right; margin-right: 8px">
             <input
               type="text"
@@ -124,6 +110,7 @@
             <i class="icon_search"></i>
           </div>
         </div>
+        -->
         <!--
       <div class="tab-content">
           <div class="tab-pane" id="" role="tabpanel"></div>
@@ -131,7 +118,7 @@
       -->
         <div id="search-data-list">
           <div v-for="(request, index) in requestData" :key="index">
-            <request-card :data="request"></request-card>
+            <request-card :request="request"></request-card>
           </div>
 
           <div class="row align-items-center">
@@ -172,23 +159,25 @@
             }
           };
 
-          const { createApp, ref, onMounted, onUnmounted } = Vue;
+          const { createApp, ref, onMounted, onUnmounted, reactive } = Vue;
 
           const RequestCard = {
             template: `
               <div class="card mt-1">
                 <div class="list_item go-to-each-tenant">
 
-                  <div class="col-12 col-xl-12 d-flex justify-content-between" style="flex-wrap: wrap;">    
+                  <div class="col-12 col-xl-12 d-flex justify-content-between" style="flex-wrap: wrap;">   
+<!-- 
                     <div class="d2_text" style="color: rgb(29, 95, 158); margin-top:5px;">
                       <span class="btit_wrap"><i class="icon_equip"></i></span>
                     </div>
-
+-->
                     <!-- ML ID 항목 -->
                     <div class="col-12 col-xl-2" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
                       <div class="d2_title">ML ID</div>
-                      <div class="d2_text" style="color: rgb(29, 95, 158)">
-                        <span class="fw-bolder row-text">{{ data.mlId }}</span>
+                      <div class="d2_text" style="color: rgb(29, 95, 158); display: inline;">
+                        <span class="fw-bolder row-text" style="display: inline-flex; align-items: center;">
+                          <i class="bi pe-2" :class="data.icon" style="font-size: 20px; color: green;font-weight: bold;"></i>{{ data.mlId }}</span>
                       </div>
                     </div>
 
@@ -203,7 +192,7 @@
                     <!-- 요청 시간 항목 -->
                     <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
                       <div class="d2_title">요청 시간</div>
-                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.reqDt }}</span></div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.requestDt }}</span></div>
                     </div>
 
                     <!-- 배포 통지 시간 항목 -->
@@ -215,13 +204,13 @@
                     <!-- 최초 배포 시간 항목 -->
                     <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
                       <div class="d2_title">최초 배포 시간</div>
-                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.deployDt }}</span></div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ formatDate(data.apiJson.createdAt) }}</span></div>
                     </div>
 
                     <!-- 완료 시간 항목 -->
                     <div class="col-12 col-xl-1" style="display: flex; flex-direction: column; height: 62px; padding: 4px 10px;">
                       <div class="d2_title">완료 시간</div>
-                      <div class="d2_text"><span class="fw-bolder row-text">{{ data.completeDt }}</span></div>
+                      <div class="d2_text"><span class="fw-bolder row-text">{{ formatDate(data.apiJson.updatedAt) }}</span></div>
                     </div>
 
                     <!-- 버튼 그룹을 묶어서 표시 -->
@@ -254,22 +243,24 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(pod, index) in data.pods" :key="index">
-                        <td>{{ pod.name }} (Order: {{ pod.order }})</td>
-                        <td>{{ pod.node }}</td>
+                      <tr v-for="(container, index) in data.requestJson.containers" :key="index">
+                        <td>요청명: {{ container.name }} (Order: {{ container.attribute.order }})
+                          <br>파드명: {{ container.pod.pod }}
+                        </td>
+                        <td>{{ container.pod.node }}</td>
                         <td>
                           <ul style="padding-left: 20px; margin: 0;">
-                            <li>CPU: {{ pod.resources.requests.cpu }} / {{ pod.resources.limits.cpu }}</li>
-                            <li>Memory: {{ pod.resources.requests.memory }} / {{ pod.resources.limits.memory }}</li>
-                            <li>GPU: {{ pod.resources.limits.gpu }}</li>
+                            <li>CPU: {{ formatPodData(container.pod).cpu }}</li>
+                            <li>Memory: {{ formatPodData(container.pod).memory }}</li>
+                            <li>GPU: {{ formatPodData(container.pod).gpu }}</li>
                           </ul>
                         </td>
-                        <td>{{ pod.estimatedTime }}</td>
-                        <td>{{ pod.createDt }}</td>
-                        <td>{{ pod.scheduleDt }}</td>
-                        <td>{{ pod.expScheduleDt }}</td>  <!-- 예상 스케줄 날짜 -->
-                        <td>{{ pod.completeDt }}</td>
-                        <td>{{ pod.expCompleteDt }}</td>  <!-- 예상 완료 날짜 -->
+                        <td>{{ container.attribute.predictedExecutionTime }} min.</td>
+                        <td>{{ container.pod.createdTimestamp }}</td>
+                        <td>{{ container.pod.scheduledTimestamp }}</td>
+                        <td>{{ container.pod.expScheduleDt }}</td>  <!-- 예상 스케줄 날짜 -->
+                        <td>{{ container.pod.completedTimestamp }}</td>
+                        <td>{{ container.pod.expCompleteDt }}</td>  <!-- 예상 완료 날짜 -->
                       </tr>
                     </tbody>
                   </table>
@@ -284,7 +275,7 @@
                         <button type="button" class="btn-close" @click="closeRequestModal"></button>
                       </div>
                       <div class="modal-body">
-                        <pre>{{ data.requestDoc }}</pre>
+                        <pre>{{ data.requestJson }}</pre>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="closeRequestModal">닫기</button>
@@ -313,8 +304,10 @@
 
               </div>
             `,
-            props: ["data"],
+            props: ["request"],
             setup(props) {
+              const data = reactive({ ...props.request }); // props를 ref로 변환하여 반응성 유지
+
               const showPods = ref(false);
               const togglePods = () => {
                 showPods.value = !showPods.value;
@@ -341,21 +334,34 @@
               // 1초마다 갱신 함수 호출
               const fetchUpdatedData = async () => {
                 try {
-                  const response = await fetch(`/api/data?mlId=${props.data.mlId}`);
-                  const updatedData = await response.json();
-                  if (updatedData.completeDt) {
-                    props.data.completeDt = updatedData.completeDt;
-                    clearInterval(timer.value); // 완료시간이 갱신되면 타이머 중지
+                  processUrlPath = '/workload/request';
+                  const updatedData = await fetchData( processUrlPath, {
+                    mlId: data.mlId
+                  });
+
+                  if(updatedData && updatedData.length == 1)
+                    Object.assign(data,updatedData[0]);
+                  
+                    if (data.apiJson.status == 'Finished'){
+                      //props.data.completeDt = updatedData.completeDt;
+                      clearInterval(timer.value); // 완료시간이 갱신되면 타이머 중지
                   }
+
+                  console.log("Finished FetchUpdate:",data);
+
+                  showNotification("데이터 갱신 했습니다.!", "success"); // 성공 알림 main.js
                 } catch (error) {
                   console.error("Error fetching updated data:", error);
+                  showNotification("데이터 갱신 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
                 }
               };
 
               // Mount 시 타이머 시작
               onMounted(() => {
-                if (!props.data.completeDt) {
-                  timer.value = setInterval(fetchUpdatedData, 1000); // 1초마다 fetchUpdatedData 호출
+                
+                if (data.apiJson.status != 'Finished') {
+                  console.log("Finished onMounted Timer:",data);
+                  timer.value = setInterval(fetchUpdatedData, 10000); // 1초마다 fetchUpdatedData 호출
                 }
               });
 
@@ -366,17 +372,48 @@
                 }
               });
 
-              return { showPods, togglePods, showRequestModal, toggleRequestModal, closeRequestModal, showYmlModal, toggleYmlModal, closeYmlModal };
+              return { data, showPods, togglePods, showRequestModal, toggleRequestModal, closeRequestModal, showYmlModal, toggleYmlModal, closeYmlModal };
             },
             computed: {
               decodedValue() {
                 try {
-                  return atob(this.data.requestYml);
+                  return atob(this.data.requestJson.attribute.yaml);
                 } catch {
                   return "Invalid Base64 string";
                 }
               },
             },
+            methods:{
+              formatDate(input){
+                return formatDate(input);
+              },
+              formatPodData(pod) {
+                if (Object.keys(pod).length === 0 && pod.constructor === Object) 
+                  return '';
+                // CPU는 밀리코어로 변환
+                const formattedCpu = pod.mrequestsList && pod.mrequestsList.cpu ? `${pod.mrequestsList.cpu}m` : "N/A";
+                const formattedCpuLimit = pod.mlimitsList && pod.mlimitsList.cpu ? `${pod.mlimitsList.cpu}m` : "N/A";
+
+                // Memory는 GB로 변환
+                const formattedMemory = pod.mrequestsList && pod.mrequestsList.memory ? (pod.mrequestsList.memory / (1024 ** 3)).toFixed(2) + " GB" : "N/A";
+                const formattedMemoryLimit = pod.mlimitsList && pod.mlimitsList.memory ? (pod.mlimitsList.memory / (1024 ** 3)).toFixed(2) + " GB" : "N/A";
+
+                // GPU 갯수
+                const formattedGpu = pod.mrequestsList ? pod.mrequestsList.nvidia_com_gpu || '' : '';
+                const formattedGpuLimit = pod.mlimitsList ? pod.mlimitsList.nvidia_com_gpu || '' : '';
+
+                // 구분자 "/"가 있을 때만 표시하도록 처리
+                const cpuText = formattedCpu && formattedCpuLimit ? `${formattedCpu} / ${formattedCpuLimit}` : formattedCpu || formattedCpuLimit;
+                const memoryText = formattedMemory && formattedMemoryLimit ? `${formattedMemory} / ${formattedMemoryLimit}` : formattedMemory || formattedMemoryLimit;
+                const gpuText = formattedGpu && formattedGpuLimit ? `${formattedGpu} / ${formattedGpuLimit}` : formattedGpu || formattedGpuLimit;
+
+                return {
+                  cpu: cpuText,
+                  memory: memoryText,
+                  gpu: gpuText
+                };
+              }
+            }
           };
 
           const Pagination = {
@@ -457,27 +494,34 @@
                 currentPage: 1, // 현재 페이지
                 itemsPerPage: 5, // 페이지 당 항목 수
                 totalCount: 0, // 전체 항목 수 (초기에는 0)
+                processUrlPath: "/workload/request",
               };
             },
             computed: {
               // 총 페이지 수 계산
               totalPages() {
                 return Math.ceil(this.requestData.length / this.itemsPerPage);
-                //return 2;
               },
             },
             watch: {
               // itemsPerPage가 변경될 때
               itemsPerPage(newVal) {
                 this.currentPage = 1; // 페이지를 처음으로 리셋
-                this.fetchData(); // 새로운 페이지 크기에 맞춰 데이터를 다시 가져옴
+                //this.fetchData(); // 새로운 페이지 크기에 맞춰 데이터를 다시 가져옴
               },
             },
             // 컴포넌트가 마운트 될 때 req_workload.json을 fetch해서 데이터 로딩
             async mounted() {
-              this.fetchData();
+              this.requestData = await fetchData( this.processUrlPath, {
+                  currentPage: this.currentPage,
+                  itemsPerPage: this.itemsPerPage,
+                  searchKeyword: "", // 검색어를 추가하려면 여기에 입력
+              });
+
+              console.log(this.requestData);
             },
             methods: {
+              /*
               // 서버에 POST 요청을 보내 데이터 가져오기
               async fetchData() {
                 try {
@@ -506,11 +550,93 @@
                   console.error("Error fetching data:", error);
                 }
               },
+              */
               updatePage(page) {
                 this.currentPage = page; // 페이지 변경
               },
             },
           }).mount("#search-data-list");
+
+
+          function formatDate(input) {
+            const date = new Date(input);
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0"); // 0부터 시작하므로 +1
+            const day = String(date.getDate()).padStart(2, "0");
+
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            const seconds = String(date.getSeconds()).padStart(2, "0");
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+          }
+
+          async function fetchData(url, params) {
+            try {
+              const response = await axios({
+                method: 'post',
+                url: url,
+                data: params,
+              });
+
+              const responseData = response.data;
+              //console.log(responseData);
+
+              const parsedContentList = responseData.map((item) => {
+                item.apiJson = item.apiJson ? JSON.parse(item.apiJson) : {};
+                item.promPodsJson = item.promPodsJson ? JSON.parse(item.promPodsJson) : {};
+                item.requestJson = item.requestJson ? JSON.parse(item.requestJson) : {};
+                item.responseJson = item.responseJson ? JSON.parse(item.responseJson) : {};
+
+                item.requestJson.containers.sort((a, b) => a.attribute.order - b.attribute.order);
+
+                if(item.promPodsJson)
+                  linkContainersToPods(item.requestJson.containers, item.promPodsJson); // 요청 containers와 실제 pods와 연결 수행
+                linkContainersToPolicyResponse(item.requestJson.containers, item.responseJson.containers); // 요청 containers와 실제 pods와 연결 수행
+
+                if (item.apiJson.status == 'Finished') item.icon="bi-stop-btn-fill";
+                else if (item.apiJson.status == 'Started') item.icon="bi-skip-end-btn-fill";
+                else item.icon = "bi-slash-square-fill";
+
+
+                return item;
+              });
+
+              return parsedContentList;
+            } catch (error) {
+              showNotification("초기 데이터 로드 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
+              throw error; // 필요에 따라 에러를 다시 던질 수도 있음
+            }
+          }
+
+          function  linkContainersToPolicyResponse(containers, responses) {
+            // 각 container에 해당하는 pod를 찾아서 연결합니다.
+            return containers.map(container => {
+              const matchingResponse = responses.find(response => response.name.includes(container.name));  // name이 포함된 pod 찾기
+              if (matchingResponse) {
+                container.response = matchingResponse; // matchingPod를 container에 추가
+              }
+              if(!container.response)
+                container.response = {};
+              return container;
+            });
+          };
+
+          function  linkContainersToPods(containers, pods) {
+            // 각 container에 해당하는 pod를 찾아서 연결합니다.
+            return containers.map(container => {
+              const matchingPod = pods.find(pod => pod.pod.includes(container.name));  // name이 포함된 pod 찾기
+              if (matchingPod) {
+                container.pod = matchingPod; // matchingPod를 container에 추가
+              }
+              if(!container.pod)
+                container.pod = {};
+              return container;
+            });
+          };
+
+
         }
         //# sourceURL=workloadrequestJS
       </script>

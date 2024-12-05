@@ -9,6 +9,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   <!--     ************************ mo_resource_usage_node *********************************** -->
   
       <insert id="insertResourceUsageNode" parameterType="com.kware.policy.task.collector.service.vo.ResourceUsageNode">
+        UPDATE k_hybrid.mo_resource_usage_node
+        SET last_at = 'N'
+        WHERE cl_uid = #{clUid}
+         AND  node_nm = #{nodeNm}
+         AND last_at = 'Y';
+        
         INSERT INTO k_hybrid.mo_resource_usage_node (
             cl_uid,
             collect_dt,
@@ -107,6 +113,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
     
   <insert id="insertResourceUsagePod" parameterType="HashMap">
+  		UPDATE  k_hybrid.mo_resource_usage_pod
+  		   SET  last_at = 'N'
+  		 WHERE cl_uid = #{clUid}
+  		   AND ml_id  = #{mlId}
+  		   AND pod_uid= #{podUid}
+  		   AND last_at = 'Y';
+  
         INSERT INTO k_hybrid.mo_resource_usage_pod (
              collect_dt, 
              cl_uid, 
