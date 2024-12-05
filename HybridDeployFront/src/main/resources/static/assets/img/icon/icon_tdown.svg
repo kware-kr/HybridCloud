@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="114" viewBox="0 0 120 114">
+  <defs>
+    <filter id="사각형_14921" x="0" y="0" width="120" height="114" filterUnits="userSpaceOnUse">
+      <feOffset dy="2" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="15" result="blur"/>
+      <feFlood flood-color="#62646e" flood-opacity="0.102"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="그룹_98601" data-name="그룹 98601" transform="translate(45 43.081)">
+    <g transform="matrix(1, 0, 0, 1, -45, -43.08)" filter="url(#사각형_14921)">
+      <g id="사각형_14921-2" data-name="사각형 14921" transform="translate(45 43)" fill="#fff" stroke="#cad6e6" stroke-width="1">
+        <rect width="30" height="24" rx="5" stroke="none"/>
+        <rect x="0.5" y="0.5" width="29" height="23" rx="4.5" fill="none"/>
+      </g>
+    </g>
+    <rect id="사각형_15392" data-name="사각형 15392" width="16.445" height="9.717" transform="translate(5.232 7.101)" fill="#1e38a7" opacity="0"/>
+    <g id="그룹_98892" data-name="그룹 98892">
+      <rect id="사각형_15474" data-name="사각형 15474" width="20" height="20" transform="translate(5 1.92)" fill="#fff" opacity="0"/>
+      <path id="download" d="M5.8,0h2.15A.662.662,0,0,1,8.6.68v4.76h2.357a.57.57,0,0,1,.379.966L7.247,10.717a.5.5,0,0,1-.734,0L2.421,6.406A.57.57,0,0,1,2.8,5.439H5.159V.68A.662.662,0,0,1,5.8,0Zm7.954,10.652v3.173a.662.662,0,0,1-.645.68H.645A.662.662,0,0,1,0,13.825V10.652a.662.662,0,0,1,.645-.68H4.587L5.9,11.36a1.327,1.327,0,0,0,1.951,0L9.171,9.972h3.942A.662.662,0,0,1,13.758,10.652Zm-3.332,2.493a.538.538,0,1,0-.537.567A.554.554,0,0,0,10.426,13.145Zm1.72,0a.538.538,0,1,0-.537.567A.554.554,0,0,0,12.145,13.145Z" transform="translate(8.072 4.859)" fill="#2c395e"/>
+    </g>
+  </g>
+</svg>

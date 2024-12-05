@@ -1,0 +1,24 @@
+<svg id="그룹_98143" data-name="그룹 98143" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="19.584" viewBox="0 0 22 19.584">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="사각형_14989" data-name="사각형 14989" width="22" height="19.584" fill="none"/>
+    </clipPath>
+  </defs>
+  <rect id="사각형_14982" data-name="사각형 14982" width="20.536" height="18.175" transform="translate(0.732 0.704)" fill="#fff"/>
+  <g id="그룹_98142" data-name="그룹 98142">
+    <g id="그룹_98141" data-name="그룹 98141" clip-path="url(#clip-path)">
+      <path id="패스_82119" data-name="패스 82119" d="M21.268,19.584H.732a.719.719,0,0,1-.732-.7V.7A.719.719,0,0,1,.732,0H21.268A.719.719,0,0,1,22,.7V18.879a.719.719,0,0,1-.732.7m-19.8-1.409H20.536V1.409H1.464Z" transform="translate(0)" fill="#414a67"/>
+      <path id="패스_82120" data-name="패스 82120" d="M3.47,7.76V3.339H24.006V7.76" transform="translate(-2.738 -2.635)" fill="#00913a"/>
+      <path id="패스_82121" data-name="패스 82121" d="M21.268,5.83a.719.719,0,0,1-.732-.7V1.409H1.464V5.125a.719.719,0,0,1-.732.7A.719.719,0,0,1,0,5.125V.7A.719.719,0,0,1,.732,0H21.268A.719.719,0,0,1,22,.7V5.125a.719.719,0,0,1-.732.7" transform="translate(0)" fill="#414a67"/>
+      <path id="패스_82122" data-name="패스 82122" d="M15.434,12.373a.766.766,0,1,0-.766.737.751.751,0,0,0,.766-.737" transform="translate(-10.97 -9.181)" fill="#414a67"/>
+      <path id="패스_82123" data-name="패스 82123" d="M28.589,12.373a.766.766,0,1,0-.765.737.751.751,0,0,0,.765-.737" transform="translate(-21.35 -9.181)" fill="#414a67"/>
+      <path id="패스_82124" data-name="패스 82124" d="M41.745,12.373a.766.766,0,1,0-.766.737.751.751,0,0,0,.766-.737" transform="translate(-31.731 -9.181)" fill="#414a67"/>
+      <rect id="사각형_14983" data-name="사각형 14983" width="20.797" height="0.707" transform="translate(0.471 7.714)" fill="#414a67"/>
+      <rect id="사각형_14984" data-name="사각형 14984" width="0.661" height="13.186" transform="translate(5.786 5.2)" fill="#414a67"/>
+      <rect id="사각형_14985" data-name="사각형 14985" width="0.661" height="13.186" transform="translate(10.788 5.2)" fill="#414a67"/>
+      <rect id="사각형_14986" data-name="사각형 14986" width="0.661" height="13.186" transform="translate(15.638 5.2)" fill="#414a67"/>
+      <rect id="사각형_14987" data-name="사각형 14987" width="20.797" height="0.707" transform="translate(1.071 11.217)" fill="#414a67"/>
+      <rect id="사각형_14988" data-name="사각형 14988" width="20.797" height="0.707" transform="translate(0.17 14.501)" fill="#414a67"/>
+    </g>
+  </g>
+</svg>

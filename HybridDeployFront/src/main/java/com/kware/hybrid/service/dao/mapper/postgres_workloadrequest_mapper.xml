@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="workloadRequestMapper">
+
+    
+    <!-- Select By Primary Key -->
+    <select id="selectRunningWrokloadByMlid" parameterType="string" resultType="com.kware.hybrid.service.vo.WorkloadRequestVO">
+        SELECT murq.uid  
+        	, mcw.ml_id
+		    , murq.nm AS ml_nm
+			, mcw.cl_uid
+			, mc.nm AS cluster_nm
+			, mcw.info AS api_json
+			, (mrup.prom_pods) AS prompods_json
+			, murq.request_json->'request' AS request_json
+			, TO_CHAR(murq.request_dt, 'YYYY-MM-DD HH24:MI:SS') request_dt
+			, TO_CHAR(murq.noti_dt, 'YYYY-MM-DD HH24:MI:SS') noti_dt
+			, murp.info->'response' AS response_json
+		FROM k_hybrid.mo_cluster_workload mcw
+		INNER JOIN (
+			SELECT ml_id
+				, jsonb_agg(results - 'mcontainerList') AS prom_pods
+			FROM k_hybrid.mo_resource_usage_pod mrup
+			WHERE mrup.last_at = 'Y'
+			GROUP BY ml_id
+			) mrup ON mcw.ml_id LIKE mrup.ml_id || '%'
+		INNER JOIN k_hybrid.mo_user_request murq  ON murq.ml_id = mrup.ml_id  
+		INNER JOIN k_hybrid.mo_user_response murp ON murq.uid = murp.req_uid 
+		INNER JOIN k_hybrid.mo_cluster mc ON mc.uid = mcw.cl_uid 
+		WHERE 1 = 1
+		-- AND mcw.delete_at = 'N'
+		  AND mcw.ml_id = #{mlId}
+    </select>
+
+    <!-- Select All -->
+    <select id="selectRunningWrokload" resultType="com.kware.hybrid.service.vo.WorkloadRequestVO">
+        SELECT  murq.uid  
+        	, mcw.ml_id
+		    , murq.nm AS ml_nm
+			, mcw.cl_uid
+			, mc.nm AS cluster_nm
+			, mcw.info AS api_json
+			, (mrup.prom_pods) AS prom_pods_json
+			, murq.request_json->'request' AS request_json
+			, TO_CHAR(murq.request_dt, 'YYYY-MM-DD HH24:MI:SS') request_dt
+			, TO_CHAR(murq.noti_dt, 'YYYY-MM-DD HH24:MI:SS') noti_dt
+			, murp.info->'response' AS response_json
+		FROM k_hybrid.mo_cluster_workload mcw
+		INNER JOIN (
+			SELECT ml_id
+				, jsonb_agg(results - 'mcontainerList') AS prom_pods
+			FROM k_hybrid.mo_resource_usage_pod mrup
+			WHERE mrup.last_at = 'Y'
+			GROUP BY ml_id
+			) mrup ON mcw.ml_id LIKE mrup.ml_id || '%'
+		INNER JOIN k_hybrid.mo_user_request murq  ON murq.ml_id = mrup.ml_id  
+		INNER JOIN k_hybrid.mo_user_response murp ON murq.uid = murp.req_uid 
+		INNER JOIN k_hybrid.mo_cluster mc ON mc.uid = mcw.cl_uid 
+		WHERE 1 = 1
+		-- AND mcw.delete_at = 'N'
+		ORDER BY murq.request_dt desc
+    </select>
+    
+    
+    
+    
+</mapper>

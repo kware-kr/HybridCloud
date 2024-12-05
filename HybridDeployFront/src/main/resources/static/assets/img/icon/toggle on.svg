@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="45" height="32" viewBox="0 0 45 32">
+  <defs>
+    <filter id="타원_637" x="13" y="0" width="32" height="32" filterUnits="userSpaceOnUse">
+      <feOffset dy="2" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="toggle_on" data-name="toggle on" transform="translate(0 3)">
+    <rect id="사각형_2391" data-name="사각형 2391" width="40" height="22" rx="11" fill="#71bb16"/>
+    <g transform="matrix(1, 0, 0, 1, 0, -3)" filter="url(#타원_637)">
+      <g id="타원_637-2" data-name="타원 637" transform="translate(19 4)" fill="#fff" stroke="#a4bfc5" stroke-width="1">
+        <circle cx="10" cy="10" r="10" stroke="none"/>
+        <circle cx="10" cy="10" r="9.5" fill="none"/>
+      </g>
+    </g>
+  </g>
+</svg>

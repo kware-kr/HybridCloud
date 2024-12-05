@@ -1,0 +1,15 @@
+<svg id="icon_monitoring" data-name="icon monitoring" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="사각형_14" data-name="사각형 14" width="24" height="24" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="그룹_13" data-name="그룹 13" clip-path="url(#clip-path)">
+    <path id="패스_23" data-name="패스 23" d="M21.6,0H2.4A2.4,2.4,0,0,0,0,2.384V16.532a2.4,2.4,0,0,0,2.4,2.384H8.774v3.631H6.968a.726.726,0,1,0,0,1.452H17.032a.726.726,0,1,0,0-1.452H15.226V20.155H10.064V18.916H21.6A2.4,2.4,0,0,0,24,16.532V2.384A2.4,2.4,0,0,0,21.6,0m1.11,14.994H1.29V2.384A1.108,1.108,0,0,1,2.4,1.282H21.6a1.108,1.108,0,0,1,1.11,1.1Z" transform="translate(0 0)" fill="#fff"/>
+    <path id="패스_24" data-name="패스 24" d="M14.165,7.428A.429.429,0,0,0,13.735,7H8.746a.427.427,0,1,0,0,.854h4.989a.428.428,0,0,0,.43-.427" transform="translate(-5.362 -4.531)" fill="#fff"/>
+    <rect id="사각형_11" data-name="사각형 11" width="2.803" height="1.519" transform="translate(5.133 12.231)" fill="#fff"/>
+    <rect id="사각형_12" data-name="사각형 12" width="2.803" height="6.669" transform="translate(10.599 7.081)" fill="#fff"/>
+    <rect id="사각형_13" data-name="사각형 13" width="2.803" height="4.442" transform="translate(16.064 9.308)" fill="#fff"/>
+    <path id="패스_25" data-name="패스 25" d="M17.235,15.867a.811.811,0,0,0-.3-.058.8.8,0,1,0,.806.8.781.781,0,0,0-.031-.217l4.39-3.91a.807.807,0,0,0,.825-.135l4.138,1.763a.8.8,0,1,0,.28-.648L23.2,11.7a.8.8,0,1,0-1.578.258Z" transform="translate(-10.4 -7.081)" fill="#fff"/>
+  </g>
+</svg>
