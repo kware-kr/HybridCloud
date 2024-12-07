@@ -43,18 +43,22 @@
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 5px;
+    justify-content: center;
   }
 
   .node {
     display: flex;
     align-items: center;
     gap: 20px;
+    border: 1px solid #eee;
+    min-height: 30px;
   }
 
   .node-name {
-    width: 70px;
+    width: 200px;
     font-size: 12px;
     font-weight: bold;
+    padding-left: 3px;
   }
 
   .node-bar {
@@ -77,7 +81,7 @@
   }
 
   .pod .status-icon {
-    font-size: 12px;
+    font-size: 13px;
     color: white;
   }
 
@@ -115,7 +119,7 @@
     color: #fff;
     padding: 5px;
     border-radius: 5px;
-    font-size: 10px;
+    font-size: 12px;
     display: none; /* 기본적으로 숨겨놓음 */
     z-index: 1000;
     transition: top 0.3s ease, left 0.3s ease; /* top과 left의 변화를 0.3초 동안 부드럽게 이동 */

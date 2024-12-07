@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dashboardMapper">
+
+    <!-- Select All -->
+<!--     <select id="selectDashboard" resultType="com.kware.hybrid.service.vo.DashboardVO">
+
+		SELECT 
+			  mc.uid AS cl_uid
+			, mc.nm  AS name
+			, CASE WHEN cl_uid IS NULL THEN NULL ELSE jsonb_build_object( 'nodes', jsonb_agg(pods)) END AS nodes 
+		FROM
+			mo_cluster mc
+			LEFT JOIN (
+				SELECT aa.cl_uid, node, jsonb_build_object('name', node, 'pods',jsonb_agg(prom_pod)) pods FROM
+				(
+				SELECT a.req_uid
+					, req_ml_id
+				/-/-	, res_cl_uid
+				/-/-	, req_container
+				/-/-	, res_container->>'node' AS req_node
+					, COALESCE(mrup.results->>'node', res_container->>'node') node
+				/-/-	, res_container
+				/-/- 	, mcw.cl_uid
+					, COALESCE(mcw.cl_uid, res_cl_uid) AS cl_uid
+					, mcw.info ->> 'status' AS api_status
+				/-/-	, mcw.info
+					, (mrup.results-'mlimitsList'-'mcontainerList'-'mrequestsList' - 'musgeGpuMap') prom_pod
+				/-/-	, (mrup.results->>'node') AS pod_node
+				FROM (
+					SELECT murq.uid AS req_uid
+						, murq.ml_id AS req_ml_id
+						, murq.nm AS req_nm
+					/-/-	, murq.request_json
+					/-/-	, (container->>'name') req_container_name
+					/-/-	, (container->'attribute'->>'order') req_container_order
+						, jsonb_array_elements(murq.request_json->'request'->'containers') req_container
+					FROM k_hybrid.mo_user_request murq
+					WHERE noti_dt IS NOT NULL) a
+					INNER JOIN (
+						SELECT req_uid
+							, ml_id AS res_ml_id
+							, cl_uid AS res_cl_uid
+							, jsonb_array_elements(murp.info->'response'->'containers') res_container
+						/-/-	, (container ->> 'name') res_container_name
+						/-/-	, (container ->> 'node') AS res_container_node
+					FROM k_hybrid.mo_user_response murp ) b ON a.req_uid = b.req_uid AND a.req_container->>'name' = b.res_container->>'name'
+					JOIN k_hybrid.mo_cluster_workload mcw ON mcw.ml_id LIKE  a.req_ml_id || '%'
+					JOIN k_hybrid.mo_resource_usage_pod mrup ON mrup.ml_id = a.req_ml_id AND mrup.last_at = 'Y' AND mrup.results->>'pod' like ('%' || (a.req_container->>'name') || '%')
+				) aa
+			/-/-	WHERE api_status != 'Finished'
+				GROUP BY aa.cl_uid, node
+			) cc ON mc.uid = cc.cl_uid
+			GROUP BY uid, mc.nm , cc.cl_uid
+			
+    </select> -->
+    
+    <select id="selectDashboard" resultType="com.kware.hybrid.service.vo.DashboardVO">
+		SELECT aa.cl_uid, node, jsonb_build_object('name', node, 'pods',jsonb_agg(prom_pod)) pods FROM
+			(
+			SELECT a.req_uid
+				, req_ml_id
+			--	, res_cl_uid
+			--	, req_container
+			--	, res_container->>'node' AS req_node
+				, COALESCE(mrup.results->>'node', res_container->>'node') node
+			--	, res_container
+			-- 	, mcw.cl_uid
+				, COALESCE(mcw.cl_uid, res_cl_uid) AS cl_uid
+				, mcw.info ->> 'status' AS api_status
+			--	, mcw.info
+				, (mrup.results-'mlimitsList'-'mcontainerList'-'mrequestsList' - 'musgeGpuMap') prom_pod
+			--	, (mrup.results->>'node') AS pod_node
+			FROM (
+				SELECT murq.uid AS req_uid
+					, murq.ml_id AS req_ml_id
+					, murq.nm AS req_nm
+				--	, murq.request_json
+				--	, (container->>'name') req_container_name
+				--	, (container->'attribute'->>'order') req_container_order
+					, jsonb_array_elements(murq.request_json->'request'->'containers') req_container
+				FROM k_hybrid.mo_user_request murq
+				WHERE noti_dt IS NOT NULL) a
+				INNER JOIN (
+					SELECT req_uid
+						, ml_id AS res_ml_id
+						, cl_uid AS res_cl_uid
+						, jsonb_array_elements(murp.info->'response'->'containers') res_container
+					--	, (container ->> 'name') res_container_name
+					--	, (container ->> 'node') AS res_container_node
+				FROM k_hybrid.mo_user_response murp ) b ON a.req_uid = b.req_uid AND a.req_container->>'name' = b.res_container->>'name'
+				JOIN k_hybrid.mo_cluster_workload mcw ON mcw.ml_id LIKE  a.req_ml_id || '%'
+				JOIN k_hybrid.mo_resource_usage_pod mrup ON mrup.ml_id = a.req_ml_id AND mrup.last_at = 'Y' AND mrup.results->>'pod' like ('%' || (a.req_container->>'name') || '%')
+			) aa
+			WHERE api_status != 'Finished'
+			GROUP BY aa.cl_uid, node
+    </select>
+    
+    <select id="selectClusters" resultType="com.kware.hybrid.service.vo.DashboardVO">
+		SELECT cl_uid
+			, mc.nm AS cluster
+			, jsonb_agg(jsonb_build_object('id', mcn.uid, 'name', mcn.nm)) nodes
+		FROM k_hybrid.mo_cluster mc
+		INNER JOIN k_hybrid.mo_cluster_node mcn ON mc.uid = mcn.cl_uid
+			AND mcn.delete_at = 'N'
+		WHERE mc.delete_at = 'N'
+		GROUP BY cl_uid, cluster
+		ORDER BY cl_uid
+	 </select>
+</mapper>

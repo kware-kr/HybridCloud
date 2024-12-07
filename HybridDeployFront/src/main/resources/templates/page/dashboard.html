@@ -51,7 +51,7 @@
               </div>
               <!-- End Cluster Card -->
 
-              <!-- Customers Card -->
+              <!-- Issued Card -->
               <div class="col-xxl-4 col-xl-12">
                 <div class="card info-card customers-card">
                   <div class="card-body">
@@ -71,9 +71,9 @@
                   </div>
                 </div>
               </div>
-              <!-- End Customers Card -->
+              <!-- End Issued Card -->
 
-              <!-- Reports -->
+              <!-- 클러스터 상태 -->
               <div class="col-12">
                 <div class="card">
                   <div id="dashboard">
@@ -87,7 +87,7 @@
                   <div id="dashboard-tooltip" class="dashboard-tooltip"></div>
                 </div>
               </div>
-              <!-- End Reports -->
+              <!-- 클러스터 상태 -->
             </div>
           </div>
           <!-- End Left side columns -->
@@ -149,14 +149,31 @@
                   <div class="node-bar">
                     <div
                       v-for="pod in node.pods"
-                      :key="pod.id"
+                      :key="pod.podUid"
                       class="pod"
-                      :style="{ backgroundColor: clusterColor?.[pod.workload_id] || '#ccc' }"
+                      :style="{ backgroundColor: clusterColor?.[pod.mlId] || '#ccc' }"
                       @mouseover="showTooltip($event, pod)"
                       @mouseout="hideTooltip"
                     >
+                    <!-- Pending: 파드가 생성되었으나, 아직 모든 컨테이너가 실행되지 않은 상태.
+                          Running: 모든 컨테이너가 정상적으로 실행 중이거나, 최소 하나가 실행 중인 상태.
+                          Succeeded: 모든 컨테이너가 정상적으로 종료된 상태.
+                          Failed: 하나 이상의 컨테이너가 비정상적으로 종료된 상태.
+                          Unknown: 상태를 알 수 없음 (주로 통신 문제로 발생).
+                    -->
                       <span class="status-icon">
-                        {{ pod.status === 'running' ? '✔️' : pod.status === 'ready' ? '⏳' : '⭕' }}
+                        {{ pod.statusPhase === 'RUNNING' ? '✔️' : 
+                          pod.statusPhase === 'PENDING' ? '⏳' : 
+                          pod.statusPhase === 'SUCCEEDED' ? '🏆' : 
+                          pod.statusPhase === 'FAILED' ? '❌' : 
+                          pod.statusPhase === 'UNKNOWN' ? '❓' : '' }}
+<!--
+                          {{ pod.statusPhase === 'RUNNING' ? '✅' : 
+                            pod.statusPhase === 'PENDING' ? '🕒' : 
+                            pod.statusPhase === 'SUCCEEDED' ? '🏁' : 
+                            pod.statusPhase === 'FAILED' ? '💥' : 
+                            pod.statusPhase === 'UNKNOWN' ? '🤷' : '' }} -->
+
                       </span>
                     </div>
                   </div>
@@ -183,12 +200,13 @@
                 const tooltip = document.getElementById("dashboard-tooltip");
 
                 tooltip.innerHTML = `
-                <strong>워크로드:</strong> ${pod.workload_name}<br>
-                <strong>상태:</strong> ${pod.status}<br>
-                <strong>시작 시간:</strong> ${new Date(pod.start_time).toLocaleString()}<br>
-                <strong>예상 시작 시간:</strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
-                <strong>예상 종료 시간:</strong> ${new Date(pod.expected_end_time).toLocaleString()}<br>
-                <strong>종료 시간:</strong> ${pod.end_time ? new Date(pod.end_time).toLocaleString() : "N/A"}
+                <strong>워크로드 : </strong> ${pod.mlId}<br>
+                <strong>파드 : </strong> ${pod.pod}<br>
+                <strong>상태 : </strong> ${pod.statusPhase}<br>
+                <strong>시작 시간 : </strong> ${new Date(pod.createdTimestamp).toLocaleString()}<br>
+                <!-- <strong>예상 시작 시간 : </strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
+                <strong>예상 종료 시간 : </strong> ${new Date(pod.expected_end_time).toLocaleString()}<br> -->
+                <strong>종료 시간 : </strong> ${pod.completedTimestamp ? new Date(pod.completedTimestamp).toLocaleString() : "N/A"}
               `;
                 document.body.appendChild(tooltip);
 
@@ -284,7 +302,7 @@
                   value: item.workloads,
                   name: item.name,
                 }));
-                console.log("aaaa");
+                
                 this.chart.setOption({
                   series: [
                     {
@@ -301,9 +319,9 @@
             template: `
                 <div class="activity" style="overflow-y: auto;" :style="{ height: containerHeight }">
                     <div v-for="(activity, index) in activities" :key="activity.id" class="activity-item d-flex">
-                        <div class="activite-label">{{ formatTime(activity.timestamp) }}</div>
+                        <div class="activite-label">{{ formatTime(activity.regDt) }}</div>
                         <i class="bi bi-circle-fill activity-badge" :class="activityBadgeClass(activity)"></i>
-                        <div class="activity-content">{{ activity.message }}</div>
+                        <div class="activity-content">{{ activity.description }}</div>
                     </div>
                 </div>
             `,
@@ -313,11 +331,12 @@
                     lastActivityId: null,  // 마지막 활동 ID (새로운 메시지를 가져오기 위해)
                     containerHeight: '400px',  // 컨테이너 높이 (기본값)
                     intervalId: null,   // setInterval 생성 객체, 제거하기 위함
+                    processUrlPath: "/proxy/interface/common/events",
                 };
             },
             mounted() {
                 this.fetchActivities();  // 컴포넌트가 마운트될 때 활동 데이터 가져오기
-                this.intervalId = setInterval(this.fetchActivities, 1000);  // 1초마다 최신 활동 데이터 받아오기
+                this.intervalId = setInterval(this.fetchActivities, 10000);  // 1초마다 최신 활동 데이터 받아오기
 
                 this.updateContainerHeight();  // 화면 크기에 맞게 컨테이너 높이 설정
                 window.addEventListener('resize', this.updateContainerHeight);  // 화면 크기 변경 시 컨테이너 높이 업데이트
@@ -335,23 +354,27 @@
 
                     this.containerHeight = containerHeight;
                 },
-                async fetchActivities() {
-                    try {
-                        const url = this.lastActivityId 
-                            ? `recent_activity.json?after_id=${this.lastActivityId}` 
-                            : 'recent_activity.json';
+                fetchActivities() {
+                  const url = this.lastActivityId 
+                          ? `${this.processUrlPath}/${this.lastActivityId}` 
+                           : this.processUrlPath;
 
-                        const response = await fetch(url);
-                        const newActivities = await response.json();
-                        
-                        // 최신 15개만 유지
+                  axios.get(url)
+                      .then((response) => {
+                        const newActivities = response.data;
+
+                        console.log('newActivities', newActivities);
                         if (newActivities.length) {
-                            this.activities = [...newActivities, ...this.activities].slice(0, 100);
-                            this.lastActivityId = newActivities[0]?.id || this.lastActivityId;  // 가장 최신 메시지 ID 업데이트
-                        }
-                    } catch (error) {
-                        console.error("활동 데이터를 가져오는 중 오류 발생:", error);
-                    }
+                             this.activities = [...newActivities, ...this.activities].slice(0, 100);
+                             this.lastActivityId = newActivities[0]?.id || this.lastActivityId;  // 가장 최신 메시지 ID 업데이트
+                         }
+                        
+
+                      })
+                      .catch(() => {
+                        //alert("");
+                        showNotification("초기 데이터 로드 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
+                      });
                 },
                 formatTime(timestamp) {
                     const now = new Date();
@@ -367,7 +390,8 @@
                     return `${minutes}분 전`;
                 },
                 activityBadgeClass(activity) {
-                    return activity.type === 'success' ? 'text-success' : 'text-danger';
+                  return 'success' ;
+                    //return activity.type === 'success' ? 'text-success' : 'text-danger';
                 }
             }
         };
@@ -382,6 +406,9 @@
                 clusterColorMap: {}, // object[object]
                 previousClusters: [], // 이전 상태 저장
                 predefinedColors: [],
+                processUrlPath: '/dashboard',
+                //processUrlPath: 'dashboard_workload.json',
+                intervalId: null, // 타이머 ID를 저장할 변수
               };
             },
             computed: {
@@ -401,14 +428,58 @@
               },
             },
             methods: {
-              async fetchClusterData() {
-                try {
-                  const response = await fetch("dashboard_workload.json");
-                  const data = await response.json();
-                  this.updateClusters(data);
-                } catch (error) {
-                  console.error("클러스터 데이터를 불러오는 중 오류 발생:", error);
-                }
+              // 서버에서 초기값 가져오기
+              fetchInitialData() {
+                axios
+                  .get(this.processUrlPath) // 샘플 JSON 경로
+                  .then((response) => {
+                    if (response.data) {
+                      const responseData = response.data;
+                      const clustersData = responseData.clusters;
+                      const podsData     = responseData.pods;
+
+                      const parsedPodList = podsData.map((item) => {
+                        item.pods = item.pods ? JSON.parse(item.pods) : [];
+                        return item;
+                      });
+
+                      const parsedClusterList = clustersData.map((item) => {
+                        item.nodes = item.nodes ? JSON.parse(item.nodes) : [];
+                        item.nodes.map((node) =>{
+                          const matchingPod = parsedPodList.find(pod => pod.clUid == item.clUid && pod.node == node.name);
+                          if(matchingPod){
+                            node.pods = matchingPod.pods.pods;
+                            node.pods.sort((a, b) => new Date(b.createdTimestamp) - new Date(a.createdTimestamp));
+                          }else node.pods = [];
+
+                          return node;
+                        });
+
+                        return item;
+                      });
+
+                      //console.log('parsedClusterList', parsedClusterList);
+                      //console.log('parsedPodList', parsedPodList);
+
+                      //불필요한 키 삭제
+                      parsedClusterList.forEach((item) =>{
+                        delete item.node;
+                        delete item.pods;
+                      });
+
+                      //키 이름 변경 clUid->id cluster->name
+                      const requestData = parsedClusterList.map(({ clUid, cluster, ...rest }) => ({
+                          ...rest, id: clUid, name: cluster
+                      }));
+
+                      //console.log(requestData);
+
+                      this.updateClusters(requestData);
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("데이터를 가져오는 데 실패했습니다.", error);
+                  });
               },
               async fetchPredefinedColors() {
                 try {
@@ -419,7 +490,7 @@
                   console.error("색상 데이터를 불러오는 중 오류 발생:", error);
                 }
               },
-              processClusterData() {
+              processClusterData() { //상태정보 저장
                 this.clusters.forEach((cluster) => {
                   const stats = { name: cluster.name, workloads: 0, pods: 0 };
                   const workloadIds = new Set();
@@ -428,10 +499,10 @@
                   cluster.nodes.forEach((node) => {
                     node.pods.forEach((pod) => {
                       stats.pods++;
-                      workloadIds.add(pod.workload_id);
+                      workloadIds.add(pod.mlId);
 
-                      if (!workloadColorMap[pod.workload_id]) {
-                        workloadColorMap[pod.workload_id] = this.getIndexedColor(workloadIds.size - 1);
+                      if (!workloadColorMap[pod.mlId]) {
+                        workloadColorMap[pod.mlId] = this.getIndexedColor(workloadIds.size - 1);
                       }
                     });
                   });
@@ -467,11 +538,17 @@
             },
             async mounted() {
               await this.fetchPredefinedColors();
-              await this.fetchClusterData();
+              //await this.fetchClusterData();
+              this.fetchInitialData();
 
-              //setInterval(() => {
-              //    this.fetchClusterData(); // 5초마다 데이터 업데이트
-              //}, 5000);
+              this.intervalId = setInterval(() => {
+                  this.fetchInitialData(); // 5초마다 데이터 업데이트
+              }, 5000);
+            },
+            unmounted() {
+              if (this.intervalId !== null) {
+                clearInterval(this.intervalId);
+              }
             },
           });
           app.mount("#dynimic_app");
