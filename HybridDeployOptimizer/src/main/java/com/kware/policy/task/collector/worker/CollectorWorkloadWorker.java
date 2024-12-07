@@ -47,7 +47,7 @@ import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.RequestQueue;
-import com.kware.policy.task.selector.service.WorkloadRequestService;
+import com.kware.policy.task.common.service.CommonService;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +91,7 @@ public class CollectorWorkloadWorker extends Thread {
 	private final static String REG_mlId     = "\\{mlId\\}";
 	
 	ClusterManagerService service = null;
+	CommonService cmService = null;
 	
 	boolean isRunning = false;
 	//HashMap<String, Object> clusterInfo = null;
@@ -110,6 +111,10 @@ public class CollectorWorkloadWorker extends Thread {
 
 	public void setClusterManagerService(ClusterManagerService cmService) {
 		this.service = cmService;
+	}
+	
+	public void setCommonService(CommonService cmService) {
+		this.cmService = cmService;
 	}
 	
 	public void setAuthorizationToken(String authorization_token) {
@@ -538,6 +543,9 @@ public class CollectorWorkloadWorker extends Thread {
 		String code = detail_ctx.read(JPATH_CODE);
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
 			detail_ctx.delete(JPATH_ALL);
+			
+			this.cmService.createEvent("Workload 완료", "Workload"
+					, "워크로드 모든 TASK 종료 및 종료 API 호출.\n" + _mlId);
 			return true;	
 		} else {
 			log.error("에러: code가 10001이 아닙니다.");
@@ -560,6 +568,9 @@ public class CollectorWorkloadWorker extends Thread {
 		String code = detail_ctx.read(JPATH_CODE);
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
 			detail_ctx.delete(JPATH_ALL);
+			
+			this.cmService.createEvent("Workload 삭제", "Workload"
+					, "워크로드 종료 상태 확인 및 삭제 API 호출.\n" + _mlId);
 			return true;	
 		} else {
 			log.error("에러: code가 10001이 아닙니다.");

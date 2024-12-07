@@ -28,7 +28,7 @@ import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
-import com.kware.policy.task.selector.service.WorkloadRequestService;
+import com.kware.policy.task.common.service.CommonService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +48,9 @@ public class CollectorMain {
     
 	@Autowired
 	private PromQLService ptService;
+	
+	@Autowired
+	private CommonService comService;
 	
 	@Autowired
 	private ClusterManagerService cmService;
@@ -142,7 +145,7 @@ public class CollectorMain {
 	
 	public final class Cron {
 	    private Cron() {}
-	    private static final String minute = "1/3";    //테스트 중에 변경하기 쉽도록
+	    private static final String minute = "0/1";    //테스트 중에 변경하기 쉽도록  x/y   x분시작해서, y 간격
 	
 	    public static final String collectClusterTask_cron       =  "0 "  + minute + " * * * *"; 
 	    public static final String collectWorkloadTask_cron      =  "20 " + minute + " * * * *";
@@ -186,6 +189,7 @@ public class CollectorMain {
 		
 		CollectorWorkloadWorker worker = new CollectorWorkloadWorker();
 		worker.setClusterManagerService(cmService);
+		worker.setCommonService(comService);
 		worker.setApiBaseUrl(api_base_url);
 		worker.setAuthorizationToken(api_authorization_token);
 		worker.setPropertyForAPI(this.api_finish_enable, this.api_delete_enable);
