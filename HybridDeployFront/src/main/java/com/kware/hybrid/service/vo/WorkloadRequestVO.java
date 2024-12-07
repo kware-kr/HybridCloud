@@ -1,9 +1,11 @@
 package com.kware.hybrid.service.vo;
 
+import com.kware.common.openapi.vo.APIPagedRequest;
+
 import lombok.Data;
 
 @Data
-public class WorkloadRequestVO {
+public class WorkloadRequestVO extends APIPagedRequest{
     
     private Long uid; // murq.uid
     private String mlId; // mcw.ml_id

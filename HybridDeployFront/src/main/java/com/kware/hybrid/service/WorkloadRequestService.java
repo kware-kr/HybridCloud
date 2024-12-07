@@ -20,7 +20,11 @@ public class WorkloadRequestService {
         return dao.selectRunningWrokloadByMlid(mlId);
     }
 
-    public List<WorkloadRequestVO> getRunningWrokload() {
-        return dao.selectRunningWrokload();
-    }    
+    public List<WorkloadRequestVO> getRunningWrokload(WorkloadRequestVO vo) {
+        return dao.selectRunningWrokload(vo);
+    }
+    
+    public Integer getRunningWrokloadCount(WorkloadRequestVO vo) {
+        return dao.selectRunningWrokloadCount(vo);
+    }
 }

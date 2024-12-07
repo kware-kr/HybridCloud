@@ -44,9 +44,8 @@
 
       <section id="section">
         <div style="display: inline-block; width: 100%">
-
         </div>
-        <!--
+         <!--
         <div style="display: inline-block; width: 100%">
           <ul class="nav nav-tabs type_01" role="tablist" style="float: left; margin-bottom: 0px !important">
             <li class="nav-item">
@@ -61,6 +60,7 @@
                 ><span data-th="all">Total</span> (18)</a
               >
             </li>
+           
             <li class="nav-item">
               <a
                 class="nav-link btn_catetext ps-2"
@@ -98,8 +98,6 @@
               >
             </li>
           </ul>
-        
-          
           <div class="search_wrap" style="float: right; margin-right: 8px">
             <input
               type="text"
@@ -109,14 +107,27 @@
               placeholder="클러스터 선택으로 변경하자" />
             <i class="icon_search"></i>
           </div>
+
         </div>
-        -->
+      -->
+
         <!--
       <div class="tab-content">
           <div class="tab-pane" id="" role="tabpanel"></div>
       </div>
       -->
         <div id="search-data-list">
+          <div class="row align-items-center">
+            <div class="col-md-12 col-12 d-flex justify-content-between mt-2">
+              <div class="dataTables_length" id="participant-table_length">
+              </div>
+              <div class="dataTables_length d-flex justify-content-end">
+                <span class="me-2" style="font-weight: bold; font-size: larger;">전체 : {{ totalCount }}</span> 
+              </div>
+            </div>
+          </div>
+        
+
           <div v-for="(request, index) in requestData" :key="index">
             <request-card :request="request"></request-card>
           </div>
@@ -142,6 +153,8 @@
               </div>
             </div>
           </div>
+
+
         </div>
       </section>
 
@@ -159,7 +172,7 @@
             }
           };
 
-          const { createApp, ref, onMounted, onUnmounted, reactive } = Vue;
+          const { createApp, ref, onMounted, onUnmounted, reactive, watch } = Vue;
 
           const RequestCard = {
             template: `
@@ -233,7 +246,8 @@
                       <tr>
                         <th>Pod Name (Order)</th>
                         <th>Node</th>
-                        <th>Resources</th>
+                        <th>Resources req./lim.</th>
+                        <th>Resources usage</th>
                         <th>Estimated Time</th>
                         <th>Creation Date</th>
                         <th>Schedule Date</th>
@@ -247,20 +261,29 @@
                         <td>요청명: {{ container.name }} (Order: {{ container.attribute.order }})
                           <br>파드명: {{ container.pod.pod }}
                         </td>
-                        <td>{{ container.pod.node }}</td>
+                        <td>정책: {{ container.response.node }}<br>반영: {{ container.pod.node }}</td>
                         <td>
-                          <ul style="padding-left: 20px; margin: 0;">
-                            <li>CPU: {{ formatPodData(container.pod).cpu }}</li>
-                            <li>Memory: {{ formatPodData(container.pod).memory }}</li>
-                            <li>GPU: {{ formatPodData(container.pod).gpu }}</li>
+                          <ul class="p-0">
+                            <li>CPU: {{ formatPodData(container.pod,'cpu')    }}</li>
+                            <li>Mem: {{ formatPodData(container.pod,'memory') }}</li>
+                            <li>GPU: {{ formatPodData(container.pod,'gpu')    }}</li>
+                          </ul>
+                        </td>
+                        <td>
+                          <ul v-if="!container.pod.completedTimestamp" class="p-0">
+                            <li>CPU:    {{formatUsageData(container.pod.usageCpu1m , 'milicore') }}</li>
+                            <li>Mem:    {{formatUsageData(container.pod.usageMemory, 'GB')     }}</li>
+                            <li>Disk IO:{{formatUsageData(container.pod.usageDiskIo1m, 'MB')     }}</li>
+                            <li>N/W IO: {{formatUsageData(container.pod.usageNetwork1m, 'MB')    }}</li>
+                            <li>GPU:    {{formatUsageData(container.pod.musgeGpuMap, 'list')     }}</li>
                           </ul>
                         </td>
                         <td>{{ container.attribute.predictedExecutionTime }} min.</td>
-                        <td>{{ container.pod.createdTimestamp }}</td>
-                        <td>{{ container.pod.scheduledTimestamp }}</td>
-                        <td>{{ container.pod.expScheduleDt }}</td>  <!-- 예상 스케줄 날짜 -->
-                        <td>{{ container.pod.completedTimestamp }}</td>
-                        <td>{{ container.pod.expCompleteDt }}</td>  <!-- 예상 완료 날짜 -->
+                        <td>{{ container.pod.createdTimestamp }}   </td>
+                        <td>{{ container.pod.scheduledTimestamp }} </td>
+                        <td>{{ container.pod.expScheduleDt }}      </td>  <!-- 예상 스케줄 날짜 -->
+                        <td>{{ container.pod.completedTimestamp }} </td>
+                        <td>{{ container.pod.expCompleteDt }}      </td>  <!-- 예상 완료 날짜 -->
                       </tr>
                     </tbody>
                   </table>
@@ -308,6 +331,10 @@
             setup(props) {
               const data = reactive({ ...props.request }); // props를 ref로 변환하여 반응성 유지
 
+              watch(() => props.request, (newRequest) => {
+                Object.assign(data, newRequest); // 부모 데이터 변경 시 동기화
+              });
+
               const showPods = ref(false);
               const togglePods = () => {
                 showPods.value = !showPods.value;
@@ -339,20 +366,33 @@
                     mlId: data.mlId
                   });
 
-                  if(updatedData && updatedData.length == 1)
-                    Object.assign(data,updatedData[0]);
+
+                  if(updatedData.result && updatedData.result.length == 1)
+                    Object.assign(data,updatedData.result[0]);
                   
                     if (data.apiJson.status == 'Finished'){
                       //props.data.completeDt = updatedData.completeDt;
                       clearInterval(timer.value); // 완료시간이 갱신되면 타이머 중지
                   }
 
-                  console.log("Finished FetchUpdate:",data);
+                  console.log("FetchUpdate:",data);
 
-                  showNotification("데이터 갱신 했습니다.!", "success"); // 성공 알림 main.js
+                  //showNotification("데이터 갱신 했습니다.!", "success"); // 성공 알림 main.js
                 } catch (error) {
-                  console.error("Error fetching updated data:", error);
-                  showNotification("데이터 갱신 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
+                  if (error.response) {
+                    // 서버 응답이 있고, 상태 코드가 2xx가 아닌 경우
+                    if (error.response.status === 404) {
+                      console.error("404 Error: Data not found");
+                      showNotification("데이터가 존재하지 않습니다!", "warning"); // 알림 표시
+                    } else {
+                      console.error(`Error: ${error.response.status}, ${error.response.data}`);
+                      showNotification("서버 오류가 발생했습니다!", "danger");
+                    }
+                  } else if (error.request) {
+                    // 요청이 전송되었으나 응답을 받지 못한 경우
+                    console.error("No response received:", error.request);
+                    showNotification("서버와 연결할 수 없습니다!", "danger");
+                  }
                 }
               };
 
@@ -387,31 +427,41 @@
               formatDate(input){
                 return formatDate(input);
               },
-              formatPodData(pod) {
+              formatPodData(pod, type) {
                 if (Object.keys(pod).length === 0 && pod.constructor === Object) 
                   return '';
                 // CPU는 밀리코어로 변환
-                const formattedCpu = pod.mrequestsList && pod.mrequestsList.cpu ? `${pod.mrequestsList.cpu}m` : "N/A";
-                const formattedCpuLimit = pod.mlimitsList && pod.mlimitsList.cpu ? `${pod.mlimitsList.cpu}m` : "N/A";
-
-                // Memory는 GB로 변환
-                const formattedMemory = pod.mrequestsList && pod.mrequestsList.memory ? (pod.mrequestsList.memory / (1024 ** 3)).toFixed(2) + " GB" : "N/A";
-                const formattedMemoryLimit = pod.mlimitsList && pod.mlimitsList.memory ? (pod.mlimitsList.memory / (1024 ** 3)).toFixed(2) + " GB" : "N/A";
-
-                // GPU 갯수
-                const formattedGpu = pod.mrequestsList ? pod.mrequestsList.nvidia_com_gpu || '' : '';
-                const formattedGpuLimit = pod.mlimitsList ? pod.mlimitsList.nvidia_com_gpu || '' : '';
-
-                // 구분자 "/"가 있을 때만 표시하도록 처리
-                const cpuText = formattedCpu && formattedCpuLimit ? `${formattedCpu} / ${formattedCpuLimit}` : formattedCpu || formattedCpuLimit;
-                const memoryText = formattedMemory && formattedMemoryLimit ? `${formattedMemory} / ${formattedMemoryLimit}` : formattedMemory || formattedMemoryLimit;
-                const gpuText = formattedGpu && formattedGpuLimit ? `${formattedGpu} / ${formattedGpuLimit}` : formattedGpu || formattedGpuLimit;
-
-                return {
-                  cpu: cpuText,
-                  memory: memoryText,
-                  gpu: gpuText
-                };
+                if(type == 'cpu'){
+                  const formattedCpu      = pod.mrequestsList && pod.mrequestsList.cpu ? `${pod.mrequestsList.cpu}` : "";
+                  const formattedCpuLimit = pod.mlimitsList && pod.mlimitsList.cpu ? `${pod.mlimitsList.cpu} m` : "";
+                  return formattedCpu && formattedCpuLimit ? `${formattedCpu} / ${formattedCpuLimit}` : formattedCpu || formattedCpuLimit;
+                }else if(type == 'memory'){
+                  // Memory는 GB로 변환
+                  const formattedMemory      = pod.mrequestsList && pod.mrequestsList.memory ? (pod.mrequestsList.memory / (1024 ** 3)).toFixed(2) : "";
+                  const formattedMemoryLimit = pod.mlimitsList && pod.mlimitsList.memory ? (pod.mlimitsList.memory / (1024 ** 3)).toFixed(2) + " GB" : "";
+                  return formattedMemory && formattedMemoryLimit ? `${formattedMemory} / ${formattedMemoryLimit}` : formattedMemory || formattedMemoryLimit;
+                }else if(type == 'gpu'){
+                  // GPU 갯수
+                  const formattedGpu      = pod.mrequestsList ? pod.mrequestsList.nvidia_com_gpu || '' : '';
+                  const formattedGpuLimit = pod.mlimitsList ? pod.mlimitsList.nvidia_com_gpu || '' : '';
+                  return formattedGpu && formattedGpuLimit ? `${formattedGpu} / ${formattedGpuLimit}` : formattedGpu || formattedGpuLimit;
+                }
+              },
+              formatUsageData(value, type) {
+                if (!value) 
+                  return '';
+                // CPU는 밀리코어로 변환
+                if(type == 'milicore'){
+                  return value ? `${value}m` : "";
+                }else if(type == 'GB'){                  // Memory는 GB로 변환
+                  return value ? (value / (1024 ** 3)).toFixed(2) + " GB" : "";
+                }else if(type == 'MB'){                  // Memory는 GB로 변환
+                  return value ? (value / (1024 ** 2)).toFixed(2) + " MB" : "";
+                }else if(type == 'list'){
+                  if (Object.keys(value).length === 0 && value.constructor === Object) 
+                    return '';
+                  else return value;
+                }
               }
             }
           };
@@ -436,11 +486,11 @@
             },
             computed: {
               totalPagesArray() {
-                if (this.endPage == 0) {
+                //if (this.endPage == 0) {
                   this.adjustPageRange();
-                } else if (this.currentPage < this.startPage || this.currentPage > this.endPage) {
-                  this.adjustPageRange();
-                }
+                //} else if (this.currentPage < this.startPage || this.currentPage > this.endPage) {
+                //  this.adjustPageRange();
+                //}
                 return Array.from({ length: this.endPage - this.startPage + 1 }, (_, index) => this.startPage + index);
               },
             },
@@ -451,7 +501,7 @@
               },
               adjustPageRange() {
                 // 현재 페이지가 범위를 벗어났을 때만 범위 재조정
-                if (this.currentPage < this.startPage || this.currentPage > this.endPage || this.endPage === 0) {
+                if (this.currentPage < this.startPage || this.currentPage > this.endPage || this.endPage === 0 || this.totalPages != this.endPage) {
                   this.startPage = Math.max(1, this.currentPage - Math.floor(this.maxPagesToShow / 2));
                   this.endPage = Math.min(this.totalPages, this.startPage + this.maxPagesToShow - 1);
 
@@ -500,23 +550,39 @@
             computed: {
               // 총 페이지 수 계산
               totalPages() {
-                return Math.ceil(this.requestData.length / this.itemsPerPage);
+                const pagecnt = Math.ceil(this.totalCount / this.itemsPerPage);
+                return pagecnt;
               },
             },
             watch: {
               // itemsPerPage가 변경될 때
-              itemsPerPage(newVal) {
+              async itemsPerPage(newVal) {
                 this.currentPage = 1; // 페이지를 처음으로 리셋
-                //this.fetchData(); // 새로운 페이지 크기에 맞춰 데이터를 다시 가져옴
+                const response = await fetchData( this.processUrlPath, {
+                    pageNumber: this.currentPage,
+                    pageSize: this.itemsPerPage,
+                    totalElements: -1,
+                    searchKeyword: "", // 검색어를 추가하려면 여기에 입력
+                });
+
+                this.requestData = response.result;
+                //Object.assign(this.requestData,  response.result);
+                this.totalCount = response.totalElements;
               },
             },
             // 컴포넌트가 마운트 될 때 req_workload.json을 fetch해서 데이터 로딩
             async mounted() {
-              this.requestData = await fetchData( this.processUrlPath, {
-                  currentPage: this.currentPage,
-                  itemsPerPage: this.itemsPerPage,
+
+              const response = await fetchData( this.processUrlPath, {
+                  pageNumber: this.currentPage,
+                  pageSize: this.itemsPerPage,
+                  totalElements: this.totalCount,
                   searchKeyword: "", // 검색어를 추가하려면 여기에 입력
               });
+
+              this.requestData = response.result;
+              //Object.assign(this.requestData,  response.result);
+              this.totalCount = response.totalElements;
 
               console.log(this.requestData);
             },
@@ -551,14 +617,29 @@
                 }
               },
               */
-              updatePage(page) {
+              async updatePage(page) {
                 this.currentPage = page; // 페이지 변경
+                const response = await fetchData( this.processUrlPath, {
+                    pageNumber: this.currentPage,
+                    pageSize: this.itemsPerPage,
+                    totalElements: this.totalCount,
+                    searchKeyword: "", // 검색어를 추가하려면 여기에 입력
+                });
+
+                //this.requestData.splice(0, this.requestData.length, ...response.result);
+                //this.requestData = response.result;
+
+                this.requestData.length = 0;
+                Object.assign(this.requestData,  response.result);
+                this.totalCount = response.totalElements;
               },
             },
           }).mount("#search-data-list");
 
 
           function formatDate(input) {
+            if(!input)
+              return;
             const date = new Date(input);
 
             const year = date.getFullYear();
@@ -580,7 +661,7 @@
                 data: params,
               });
 
-              const responseData = response.data;
+              const responseData = response.data.result;
               //console.log(responseData);
 
               const parsedContentList = responseData.map((item) => {
@@ -591,8 +672,8 @@
 
                 item.requestJson.containers.sort((a, b) => a.attribute.order - b.attribute.order);
 
-                if(item.promPodsJson)
-                  linkContainersToPods(item.requestJson.containers, item.promPodsJson); // 요청 containers와 실제 pods와 연결 수행
+                
+                linkContainersToPods(item.requestJson.containers, item.promPodsJson); // 요청 containers와 실제 pods와 연결 수행
                 linkContainersToPolicyResponse(item.requestJson.containers, item.responseJson.containers); // 요청 containers와 실제 pods와 연결 수행
 
                 if (item.apiJson.status == 'Finished') item.icon="bi-stop-btn-fill";
@@ -603,7 +684,10 @@
                 return item;
               });
 
-              return parsedContentList;
+              return{
+                result: parsedContentList,
+                totalElements: response.data.totalElements,
+              } 
             } catch (error) {
               showNotification("초기 데이터 로드 중 오류가 발생했습니다.!", "danger"); // 성공 알림 main.js
               throw error; // 필요에 따라 에러를 다시 던질 수도 있음
@@ -626,9 +710,11 @@
           function  linkContainersToPods(containers, pods) {
             // 각 container에 해당하는 pod를 찾아서 연결합니다.
             return containers.map(container => {
-              const matchingPod = pods.find(pod => pod.pod.includes(container.name));  // name이 포함된 pod 찾기
-              if (matchingPod) {
-                container.pod = matchingPod; // matchingPod를 container에 추가
+              if (Object.keys(pods).length !== 0) {
+                const matchingPod = pods.find(pod => pod.pod.includes(container.name));  // name이 포함된 pod 찾기
+                if (matchingPod) {
+                  container.pod = matchingPod; // matchingPod를 container에 추가
+                }
               }
               if(!container.pod)
                 container.pod = {};

@@ -146,6 +146,9 @@ public class WorkloadRequestRestController {
 //		req.setStatus(RequestStatus.request.toString());
 		wlService.insertUserRequest(req);
 		// }}
+		
+		this.cmService.createEvent("Workload Request", "Request"
+				, "워크로드 요청 수신.\n" + wlRequest.getRequest().getMlId());
 
 		// {{노드 셀렉터
 		WorkloadResponse wlResponse = wlService.getResponseToSelectedNode(wlRequest);
@@ -153,6 +156,9 @@ public class WorkloadRequestRestController {
 
 		// DB 저장
 		wlService.insertMoUserResponse(wlResponse.getResponse());
+		
+		this.cmService.createEvent("Workload Response", "Request"
+				, "워크로드 요청 노드 선택 결과 발신.\n" + wlRequest.getRequest().getMlId());
 
 		// WorkloadRequest에 Response 입력
 		wlRequest.setResponse(wlResponse.getResponse());
@@ -205,6 +211,9 @@ public class WorkloadRequestRestController {
 
 		if (log.isInfoEnabled())
 			log.info("배포완료 통지 ID:{}", wlRequest.getRequest().getMlId());
+		
+		this.cmService.createEvent("Workload Deploy Noti", "Request"
+				, "워크로드 배포 완료 통지 수신.\n" + wlRequest.getRequest().getMlId());
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
