@@ -17,6 +17,7 @@ public class APIPagedRequest {
     private Timestamp   startDt;
     //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp   endDt;
+    private Integer     totalElements = -1; //전체 데이터를 1페이지에서만 가지고오고, 2페이지부터을 이 페이지로 대체하고 싶을때 사용
 
     public APIPagedRequest() {}
 

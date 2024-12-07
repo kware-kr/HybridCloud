@@ -24,12 +24,12 @@ public class APIPagedResponse<T> extends APIResponse<List<T>> {
      * @param totalElements
      * @param totalPages
      */
-    public APIPagedResponse(int code, String message, List<T> data, int pageNumber, int pageSize, long totalElements, int totalPages) {
+    public APIPagedResponse(int code, String message, List<T> data, int pageNumber, int pageSize, long totalElements) {
         super(code, message, data);
         this.pageNumber    = pageNumber;
         this.pageSize      = pageSize;
         this.totalElements = totalElements;
-        this.totalPages    = totalPages;
+        this.totalPages    = calculateTotalPages(totalElements, pageSize);
         this.pageElements  = data.size();
     }
     
@@ -42,7 +42,7 @@ public class APIPagedResponse<T> extends APIResponse<List<T>> {
      * @param pageSize
      */
     public APIPagedResponse(int code, String message, List<T> data, int pageNumber, int pageSize) {
-    	 this(code, message, data, pageNumber, pageSize, -1, -1);
+    	 this(code, message, data, pageNumber, pageSize, -1);
     }
     
     /**
@@ -65,5 +65,19 @@ public class APIPagedResponse<T> extends APIResponse<List<T>> {
      */
     public APIPagedResponse(int code, String message, List<T> data) {
     	this(code, message, data, 1);
+    }
+    
+    /**
+     * 전체 페이지 수 계산
+     * 
+     * @param totalElements 전체 요소 수
+     * @param pageSize      페이지 크기
+     * @return 전체 페이지 수
+     */
+    private int calculateTotalPages(long totalElements, int pageSize) {
+        if (totalElements <= 0 || pageSize <= 0) {
+            return -1; // 계산 불가한 경우
+        }
+        return (int) Math.ceil((double) totalElements / pageSize);
     }
 }
