@@ -44,7 +44,7 @@ dependencies {
 	//implementation 'io.github.wimdeblauwe:htmx-spring-boot'
 	
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.postgresql:postgresql'
 	
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	
