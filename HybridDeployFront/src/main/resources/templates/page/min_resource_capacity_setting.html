@@ -87,7 +87,8 @@
                   .get(this.processUrlPath) // 샘플 JSON 경로
                   .then((response) => {
                     if (response.data) {
-                      this.form = { ...this.form, ...response.data };
+                      responsedata = JSON.parse(response.data);
+                      this.form = { ...this.form, ...responsedata };
                       this.existingData = true;
                     } else {
                       this.existingData = false;

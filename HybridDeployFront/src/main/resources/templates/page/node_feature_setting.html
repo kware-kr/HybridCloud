@@ -28,8 +28,8 @@
                   </thead>
                   <tbody>
                     <tr v-for="(node, index) in nodeList" :key="node.nodeUid">
-                      <td>{{ node.clusterNm }}</td>
-                      <td>{{ node.nodeInfo.nodeNm }}</td>
+                      <td style="text-align: left">{{ node.clusterNm }}</td>
+                      <td style="text-align: left">{{ node.nodeInfo.nodeNm }}</td>
                       <td>{{ node.nodeInfo.cpu }}</td>
                       <td>{{ node.nodeInfo.memory }}</td>
                       <td>{{ node.nodeInfo.disk }}</td>

@@ -159,7 +159,9 @@
                   .get(this.processUrlPath) // 샘플 JSON 경로
                   .then((response) => {
                     if (response.data) {
-                      this.nodePolicy = { ...this.nodePolicy, ...response.data };
+                      responsedata = JSON.parse(response.data);
+                      this.nodePolicy = { ...this.nodePolicy, ...responsedata };
+                      //Object.assign(this.nodePolicy, responsedata); // 데이터 갱신
                       this.existingData = true;
                     } else {
                       this.existingData = false;
