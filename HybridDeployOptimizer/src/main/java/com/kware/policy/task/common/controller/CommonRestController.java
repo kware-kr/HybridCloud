@@ -18,6 +18,7 @@ import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.service.vo.CommonConfigGroup;
+import com.kware.policy.task.common.service.vo.CommonEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,4 +103,17 @@ public class CommonRestController {
 		List cfgGroupList = service.selectCommonConfigGroupList();
 		return ResponseEntity.ok(cfgGroupList);
 	}
+	
+	@GetMapping("/events/{id}")
+	public List<CommonEvent> getAllEvents(@PathVariable long id) {
+		CommonEvent event = new CommonEvent();
+		event.setId(id);
+		return service.getAllEvents(event);
+	}
+
+	@GetMapping("/events")
+	public List<CommonEvent> getAllEvents() {
+		return service.getAllEvents(null);
+	}
+	
 }

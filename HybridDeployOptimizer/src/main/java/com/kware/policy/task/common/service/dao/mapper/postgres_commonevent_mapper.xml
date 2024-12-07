@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EventMapper">
+    <!-- Insert -->
+    <insert id="insertEvent" parameterType="com.kware.policy.task.common.service.vo.CommonEvent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mo_events (name, event_type, description)
+        VALUES (#{name}, #{eventType}, #{description})
+    </insert>
+
+    <!-- Select by ID -->
+    <select id="getEventById" parameterType="int" resultType="com.kware.policy.task.common.service.vo.CommonEvent">
+        SELECT id, name, event_type, description, reg_dt 
+        FROM mo_events 
+        WHERE id = #{id}
+    </select>
+
+    <!-- Select all -->
+    <select id="getAllEvents" resultType="com.kware.policy.task.common.service.vo.CommonEvent">
+        SELECT id
+          , name
+          , event_type
+          , description
+          , reg_dt 
+        FROM mo_events 
+        WHERE 1 =1 
+          AND reg_dt >= CURRENT_TIMESTAMP - INTERVAL '1 day'
+        <if test="id != null">
+	        AND id > #{id}
+	    </if>
+        ORDER BY reg_dt DESC
+        <if test="pageNumber != null and pageSize != null">
+          LIMIT #{pageSize} OFFSET (#{pageNumber} - 1) * #{pageSize}
+        </if>
+    </select>
+</mapper>
