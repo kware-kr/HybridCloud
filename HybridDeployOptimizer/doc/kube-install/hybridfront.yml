@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hybridfront
+  namespace: kware-product
+  labels:
+    app: hybridfront
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hybridfront
+  template:
+    metadata:
+      labels:
+        app: hybridfront
+    spec:
+      containers:
+        - name: hybridfront
+          image: rnd.kware.co.kr/hybridfront:0.1.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: POSTGRES_IP_PORT
+              value: "postgres-service:5432"
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: OPTIMIZER_API_URL
+              value: 'http://hybridoptimizer-service:8889'
+          volumeMounts:
+            - name: app-logs
+              mountPath: /app/logs
+      volumes:
+        - name: app-logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kware-product
+  name: hybridfront-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30009
+  selector:
+    app: hybridfront
