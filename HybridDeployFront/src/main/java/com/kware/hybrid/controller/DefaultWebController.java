@@ -45,7 +45,7 @@ public class DefaultWebController {
 		 * 해결책: aaa.html ./aaa.html 즉 여기는 파일시스템 경로를 의미한다.  
 		 */
 		String uri = request.getRequestURI();
-		uri = "/json/" + uri.substring(1, uri.length());
+		uri = "json/" + uri.substring(1, uri.length());
 		
 		if(log.isDebugEnabled()) {
 			log.debug("JSON Url:" + uri);
