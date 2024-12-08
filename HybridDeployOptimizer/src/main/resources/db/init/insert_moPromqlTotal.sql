@@ -1,4 +1,3 @@
-DELETE FROM k_hybrid.mo_promql_total;
 INSERT INTO k_hybrid.mo_promql_total
 (uid, grp_nm, nm, cont, extract_path, memo, type_cd, default_at, delete_at, reg_uid, reg_dt, updt_uid, updt_dt)
 VALUES(1, '노드 기본정보', '노드 Labels', 'kube_node_info * on(node, ref_id) group_right(internal_ip) kube_node_labels', '{"key": "node_info", "node": "$.metric.node", "cl_uid": "$.metric.ref_id", "labels": "$.metric.startWith(label)", "instance": "$.metric.internal_ip", "timestamp": "$.value[0]"}'::jsonb, NULL, NULL, 'Y', 'N', NULL, '2024-10-23 23:56:48.660', NULL, '2024-10-23 23:56:48.660');

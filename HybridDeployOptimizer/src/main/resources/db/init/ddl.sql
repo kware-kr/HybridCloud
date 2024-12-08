@@ -9,6 +9,7 @@ CREATE TABLE k_hybrid.mo_cluster (
 	info jsonb NOT NULL, -- cluster 정보
 	memo text NULL, -- cluster 설명
 	prom_url varchar(256) NULL, -- 프로메테우스 url
+	feature jsonb NULL, -- 특성저장
 	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
 	hash_val varchar(32) NULL, -- 데이터무결성 해쉬값
 	reg_uid int8 NULL,
@@ -26,6 +27,8 @@ COMMENT ON COLUMN k_hybrid.mo_cluster.info IS 'cluster 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster.memo IS 'cluster 설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster.prom_url IS '프로메테우스 url';
 COMMENT ON COLUMN k_hybrid.mo_cluster.hash_val IS '데이터무결성 해쉬값';
+COMMENT ON COLUMN k_hybrid.mo_cluster.feature IS '특성저장';
+
 
 -- DROP TABLE k_hybrid.mo_cluster_history;
 
@@ -45,10 +48,7 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_history.tbl_nm IS '관련테이블 명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_history.contents IS '컬럼 전체 내용';
 COMMENT ON COLUMN k_hybrid.mo_cluster_history.reg_dt IS '등록일';
 
--- Permissions
 
-ALTER TABLE k_hybrid.mo_cluster_history OWNER TO postgres;
-GRANT ALL ON TABLE k_hybrid.mo_cluster_history TO postgres;
 
 -- DROP TABLE k_hybrid.mo_cluster_node;
 
@@ -80,6 +80,39 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_node.info IS 'cluster 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.gpuinfo IS 'GPU정보를 별도로 추가한다.';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.hash_val IS '무결성검증 해쉬값';
+
+
+
+CREATE TABLE k_hybrid.mo_cluster_node (
+	uid serial4 NOT NULL, -- uuid
+	cl_uid int4 NOT NULL, -- Cluster UID
+	nm varchar(128) NOT NULL, -- cluster 이름
+	no_uuid varchar(128) NULL, -- uuid
+	info jsonb NULL, -- cluster 정보
+	gpuinfo jsonb NULL, -- GPU정보를 별도로 추가한다.
+	memo text NULL, -- 설명
+	feature jsonb NULL, -- 특성저장
+	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
+	hash_val varchar(32) NULL, -- 무결성검증 해쉬값
+	reg_uid int8 NULL,
+	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updt_uid int8 NULL,
+	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	PRIMARY KEY (uid)
+);
+CREATE UNIQUE INDEX mo_cluster_node_cl_uid_idx ON k_hybrid.mo_cluster_node USING btree (cl_uid, nm);
+
+-- Column comments
+
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.uid IS 'uuid';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.cl_uid IS 'Cluster UID';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.nm IS 'cluster 이름';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.no_uuid IS 'uuid';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.info IS 'cluster 정보';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.gpuinfo IS 'GPU정보를 별도로 추가한다.';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.memo IS '설명';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.hash_val IS '무결성검증 해쉬값';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.feature IS '특성저장';
 
 
 -- DROP TABLE k_hybrid.mo_cluster_node_feature;
@@ -153,6 +186,27 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_workload.info IS 'ML 상세 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.hash_val IS '무결성검증 해쉬값';
 
+
+CREATE TABLE k_hybrid.mo_common_feature (
+	fea_name varchar(64) NOT NULL, -- 설정 이름
+	fea_sub_name varchar(64) DEFAULT 'none'::character varying NOT NULL, -- 서브 설정 이름
+	fea_content jsonb NULL, -- 설정 내용
+	fea_desc varchar(128) NULL, -- 설정 설명
+	delete_at bpchar(1) DEFAULT 'N'::bpchar NOT NULL,
+	reg_uid int8 NULL,
+	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updt_uid int8 NULL,
+	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	PRIMARY KEY (fea_name, fea_sub_name)
+);
+
+-- Column comments
+
+COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_name IS '설정 이름';
+COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_sub_name IS '서브 설정 이름';
+COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_content IS '설정 내용';
+COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_desc IS '설정 설명';
+
 -- DROP TABLE k_hybrid.mo_common_feature_base;
 
 CREATE TABLE k_hybrid.mo_common_feature_base (
@@ -164,7 +218,7 @@ CREATE TABLE k_hybrid.mo_common_feature_base (
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
 	updt_uid int8 NULL,
 	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	CONSTRAINT mo_common_feature_base_pkey PRIMARY KEY (cfg_name)
+	PRIMARY KEY (cfg_name)
 );
 
 -- Column comments
@@ -172,6 +226,24 @@ CREATE TABLE k_hybrid.mo_common_feature_base (
 COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_name IS '설정 이름';
 COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_content IS '설정 내용';
 COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_desc IS '설정 설명';
+
+CREATE TABLE k_hybrid.mo_events (
+	id bigserial NOT NULL, -- 아이디
+	"name" varchar(255) NOT NULL, -- 이벤트명
+	event_type varchar(100) NOT NULL, -- 이벤트유형
+	description text NULL, -- 이벤트설명
+	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL, -- 등록일자
+	PRIMARY KEY (id)
+);
+
+-- Column comments
+
+COMMENT ON COLUMN k_hybrid.mo_events.id IS '아이디';
+COMMENT ON COLUMN k_hybrid.mo_events."name" IS '이벤트명';
+COMMENT ON COLUMN k_hybrid.mo_events.event_type IS '이벤트유형';
+COMMENT ON COLUMN k_hybrid.mo_events.description IS '이벤트설명';
+COMMENT ON COLUMN k_hybrid.mo_events.reg_dt IS '등록일자';
+
 
 -- DROP TABLE k_hybrid.mo_promql_result;
 
@@ -253,6 +325,7 @@ CREATE TABLE k_hybrid.mo_resource_usage_node (
 	cl_uid int4 NOT NULL, -- Cluster UID
 	node_nm varchar(128) NOT NULL, -- 노드 명
 	results jsonb NOT NULL, -- jsonb result
+	last_at varchar DEFAULT 'Y'::character varying NOT NULL, -- 최종데이터여부
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL -- 등록시간
 );
 CREATE INDEX mo_resource_usage_node_collect_dt_idx ON k_hybrid.mo_resource_usage_node USING btree (collect_dt DESC);
@@ -265,6 +338,7 @@ COMMENT ON COLUMN k_hybrid.mo_resource_usage_node.cl_uid IS 'Cluster UID';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_node.node_nm IS '노드 명';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_node.results IS 'jsonb result';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_node.reg_dt IS '등록시간';
+COMMENT ON COLUMN k_hybrid.mo_resource_usage_node.last_at IS '최종데이터여부';
 
 
 -- DROP TABLE k_hybrid.mo_resource_usage_pod;
@@ -275,6 +349,7 @@ CREATE TABLE k_hybrid.mo_resource_usage_pod (
 	ml_id varchar(128) NOT NULL, -- mlworkload id
 	pod_uid varchar(128) NOT NULL, -- pod_uid
 	results jsonb NOT NULL, -- jsonb result
+	last_at varchar DEFAULT 'Y'::character varying NOT NULL, -- 최종데이터여부
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL -- 등록시간
 );
 CREATE INDEX mo_resource_usage_pod_collect_dt_idx ON k_hybrid.mo_resource_usage_pod USING btree (collect_dt DESC);
@@ -288,6 +363,7 @@ COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.ml_id IS 'mlworkload id';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.pod_uid IS 'pod_uid';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.results IS 'jsonb result';
 COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.reg_dt IS '등록시간';
+COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.last_at IS '최종데이터여부';
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
