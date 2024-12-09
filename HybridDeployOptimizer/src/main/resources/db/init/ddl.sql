@@ -336,7 +336,7 @@ COMMENT ON COLUMN k_hybrid.mo_resource_usage_pod.last_at IS '최종데이터여�
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE k_hybrid.mo_user_request;
+-- DROP TABLE k_hybrid.mo_user_request;
 
 CREATE TABLE k_hybrid.mo_user_request (
 	uid bigserial NOT NULL, -- 일련번호
