@@ -7,11 +7,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="ptCommonMapper">
 	<!--  mo_common_config_group -->
 	<select id="selectCommonConfigGroupList" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
-	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_config_group
+	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_feature_base
         WHERE delete_at = 'N'
 	</select>
 	<select id="selectCommonConfigGroup" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
-	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_config_group
+	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_feature_base
         WHERE delete_at = 'N'
           AND cfg_name = #{cfgName}
 	</select>
