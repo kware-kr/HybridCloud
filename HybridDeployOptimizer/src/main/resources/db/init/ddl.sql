@@ -60,37 +60,6 @@ CREATE TABLE k_hybrid.mo_cluster_node (
 	info jsonb NULL, -- cluster 정보
 	gpuinfo jsonb NULL, -- GPU정보를 별도로 추가한다.
 	memo text NULL, -- 설명
-	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
-	hash_val varchar(32) NULL, -- 무결성검증 해쉬값
-	reg_uid int8 NULL,
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	updt_uid int8 NULL,
-	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	PRIMARY KEY (uid)
-);
-CREATE UNIQUE INDEX mo_cluster_node_cl_uid_idx ON k_hybrid.mo_cluster_node(cl_uid, nm);
-
--- Column comments
-
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.uid IS 'uuid';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.cl_uid IS 'Cluster UID';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.nm IS 'cluster 이름';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.no_uuid IS 'uuid';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.info IS 'cluster 정보';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.gpuinfo IS 'GPU정보를 별도로 추가한다.';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.memo IS '설명';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node.hash_val IS '무결성검증 해쉬값';
-
-
-
-CREATE TABLE k_hybrid.mo_cluster_node (
-	uid serial4 NOT NULL, -- uuid
-	cl_uid int4 NOT NULL, -- Cluster UID
-	nm varchar(128) NOT NULL, -- cluster 이름
-	no_uuid varchar(128) NULL, -- uuid
-	info jsonb NULL, -- cluster 정보
-	gpuinfo jsonb NULL, -- GPU정보를 별도로 추가한다.
-	memo text NULL, -- 설명
 	feature jsonb NULL, -- 특성저장
 	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
 	hash_val varchar(32) NULL, -- 무결성검증 해쉬값
