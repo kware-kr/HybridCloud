@@ -328,10 +328,10 @@ public class CollectorClusterWorker extends Thread {
 				if(!oldObj.getHashVal().equals(cluster.getHashVal()))
 					this.service.updateClusterAndInsertHistory(cluster);
 			}else {				
-				oldObj = null;
-				if(this.isFirst) {
-					oldObj = this.service.selectCluster(cluster);
-				}
+				//oldObj = null;
+				//if(this.isFirst) { //중간에도 사라졌다(DB삭제 완료)가 다시 나타나는 경우 문제 발생, insert 오류 지만, 메모리는 현재 데이터로 유지가 됨.
+				oldObj = this.service.selectCluster(cluster);
+				//}
 				if(oldObj == null) {
 					this.service.insertCluster(cluster);
 				}else {
@@ -427,17 +427,23 @@ public class CollectorClusterWorker extends Thread {
 			ClusterNode oldObj = this.apiQ.getApiClusterNodeMap().get(node.getUniqueKey());
 			if(oldObj != null) {
 				node.setUid(oldObj.getUid());
-				if(!oldObj.getHashVal().equals(node.getHashVal()))
+				if(!oldObj.getHashVal().equals(node.getHashVal()) || oldObj.getDeleteAt() != node.getDeleteAt()) {
 					this.service.updateClusterNodeAndInsertHistory(node);
-			}else {			
-				oldObj = null;
-				if(this.isFirst) {
-					oldObj = this.service.selectClusterNode(node); // 키값이 DB에서 생성되었기에 unique 인덱스로 쿼리를 진행함
-					node.setUid(oldObj.getUid());
+					if(oldObj.getDeleteAt() != node.getDeleteAt()) {
+						log.info("{}의 삭제여부가 {}=>{}, hashvalue: old: {}, new:{}", node.getNm()
+								, oldObj.getDeleteAt(), node.getDeleteAt()
+								, oldObj.getHashVal() , node.getHashVal());
+					}
 				}
+			}else {			
+				//oldObj = null;
+				//if(this.isFirst) {
+				oldObj = this.service.selectClusterNode(node); // 키값이 DB에서 생성되었기에 unique 인덱스로 쿼리를 진행함						
+				//}
 				if(oldObj == null) {
 					this.service.insertClusterNode(node);
 				}else {
+					node.setUid(oldObj.getUid());
 					this.service.updateClusterNode(node);
 				}
 			}
