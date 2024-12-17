@@ -110,6 +110,9 @@ public class BestFitBinPacking {
     	
         // 우선순위 큐를 사용하여 노드의 스코어를 기준으로 정렬
         Queue<NodeScore> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(NodeScore::getScore));
+        
+        if(log.isDebugEnabled())
+        	log.debug("{}=======================================================================================================>>{}", _clUid, curContainer.getName());
 
         // 각 노드를 순회하며 요청을 처리할 수 있는지 확인하고 스코어를 계산하여 우선순위 큐에 추가
         for (PromMetricNode node : nodes) {
@@ -122,6 +125,8 @@ public class BestFitBinPacking {
         	}
         }
 
+        if(log.isDebugEnabled())
+        	log.debug("=======================================================================================================>>");
         // 우선순위 큐에서 전체 노드를 추출하여 PromMetricNode 리스트로 반환 즉 정렬수행
         List<PromMetricNode> bestFitNodes = new ArrayList<>();
         if(maxCount == 0) //전체를 가져오고 싶을때
@@ -263,6 +268,7 @@ public class BestFitBinPacking {
         String buf = "pCpu=" + totalPendingCpu + ", pMemory=" + totalPendingMemory + ", pGpu=" + totalPendingGpu + ", pDisk=" + totalPendingDisk;
         log.info("!!!Node Score {} \nPending: {}", ds.toString(), buf);
         return ds.getScore();
+        
 
         //return Math.abs(cpuScore) + Math.abs(memoryScore) + Math.abs(diskScore) + Math.abs(gpuScore);
     }

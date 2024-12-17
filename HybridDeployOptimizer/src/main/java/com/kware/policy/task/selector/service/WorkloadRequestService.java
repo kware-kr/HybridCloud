@@ -93,13 +93,14 @@ public class WorkloadRequestService {
 		Integer clUid = null;
 		
 		List<PromMetricNode> sel_cluster_nodes = bbp.getBestCluster(wlRequest);
-		if(sel_cluster_nodes == null) {
-			
+		if(sel_cluster_nodes == null || sel_cluster_nodes.size() == 0) {
+			log.error("선택 된 node size 0");
 		}else {
 			clUid = sel_cluster_nodes.get(0).getClUid();
 			for(int i = 0 ; i < containers.size(); i++) {
 				Container container =  containers.get(i);
-				//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
+				//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 
+				//전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
 				List<PromMetricNode>  tempNodes = bbp.allocate(container, clUid);  
 				log.info("select node list: {}", tempNodes);
 	
@@ -119,7 +120,6 @@ public class WorkloadRequestService {
 				
 				sel_nodes.add(node); //null이어도 등록한다.
 			}
-			
 			sel_cluster_nodes.clear();
 		}
 
@@ -159,7 +159,7 @@ public class WorkloadRequestService {
     	//rsResult.setClusterName("Workload-cluster-01");
     	WorkloadResponseStatus status = null;
     	boolean isOK = true;
-    	if(sel_nodes != null) {	
+    	if(sel_nodes != null && sel_nodes.size() != 0) {	
     		res.setClUid(clUid.toString());//clUid는 null일 수 없다.
     		for(int i = 0 ; i < containers.size(); i++) {
     			Container container =  containers.get(i);
@@ -184,6 +184,8 @@ public class WorkloadRequestService {
     			}
 	    	//}}
     		}
+    	}else {
+    		isOK = false;
     	}
     	
     	//1개라도 선택하지 못하면

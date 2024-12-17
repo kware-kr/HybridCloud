@@ -18,8 +18,8 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/hybrid-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
-			<maxHistory>60</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<maxHistory>90</maxHistory>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 
@@ -32,7 +32,7 @@
 			<fileNamePattern>${APP_LOG_ROOT}/backup/metric-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
 			<maxHistory>30</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 	
@@ -44,8 +44,8 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/request-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
-			<maxHistory>1000</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<maxHistory>1095</maxHistory>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 	
@@ -58,7 +58,7 @@
 			<fileNamePattern>${APP_LOG_ROOT}/backup/parse-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
 			<maxHistory>30</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 	
@@ -71,7 +71,7 @@
 			<fileNamePattern>${APP_LOG_ROOT}/backup/queue-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
 			<maxHistory>30</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 	
@@ -83,7 +83,7 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/messagequeue-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>1GB</maxFileSize>
-			<totalSizeCap>1GB</totalSizeCap>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 	
@@ -97,7 +97,7 @@
             <fileNamePattern>${APP_LOG_ROOT}/backup/error-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
             <maxFileSize>1GB</maxFileSize>
             <maxHistory>1000</maxHistory>
-			<totalSizeCap>1GB</totalSizeCap>
+			<!-- <totalSizeCap>1GB</totalSizeCap> -->
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
