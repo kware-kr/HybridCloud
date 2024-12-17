@@ -395,18 +395,18 @@ GRANT ALL ON SCHEMA k_hybrid TO postgres;
 --hyber table생성
 
 /* k_hybrid.mo_promql_result */
-SELECT public.create_hypertable('k_hybrid.mo_promql_result'::regclass, 'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_promql_result_hyper',  chunk_time_interval => interval '6 months');
+SELECT public.create_hypertable('k_hybrid.mo_promql_result'::regclass, 'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_promql_result_hyper',  chunk_time_interval => interval '3 months');
 ALTER TABLE k_hybrid.mo_promql_result SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC'); 
-SELECT public.add_compression_policy('k_hybrid.mo_promql_result', compress_after => INTERVAL '7 days');
+SELECT public.add_compression_policy('k_hybrid.mo_promql_result', compress_after => INTERVAL '3 days');
 
 /* k_hybrid.mo_resource_usage_node */
 
-SELECT public.create_hypertable('k_hybrid.mo_resource_usage_node'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_node_hyper', chunk_time_interval => interval '6 months');
+SELECT public.create_hypertable('k_hybrid.mo_resource_usage_node'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_node_hyper', chunk_time_interval => interval '3 months');
 ALTER TABLE k_hybrid.mo_resource_usage_node SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC', timescaledb.compress_segmentby = 'cl_uid'); 
-SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_node', compress_after => INTERVAL '7 days');
+SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_node', compress_after => INTERVAL '3 days');
 
 /* k_hybrid.mo_resource_usage_pod */
 
-SELECT public.create_hypertable('k_hybrid.mo_resource_usage_pod'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_pod_hyper', chunk_time_interval => interval '6 months');
+SELECT public.create_hypertable('k_hybrid.mo_resource_usage_pod'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_pod_hyper', chunk_time_interval => interval '3 months');
 ALTER TABLE k_hybrid.mo_resource_usage_pod SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC', timescaledb.compress_segmentby = 'cl_uid'); 
-SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_pod', compress_after => INTERVAL '7 days');
+SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_pod', compress_after => INTERVAL '3 days');
