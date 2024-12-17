@@ -18,8 +18,8 @@
 		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 			<fileNamePattern>${APP_LOG_ROOT}/backup/hybrid-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
 			<maxFileSize>100MB</maxFileSize>
-			<maxHistory>1000</maxHistory>
-			<totalSizeCap>2GB</totalSizeCap>
+			<maxHistory>1095</maxHistory>
+			<!-- <totalSizeCap>2GB</totalSizeCap> -->
 		</rollingPolicy>
 	</appender>
 
