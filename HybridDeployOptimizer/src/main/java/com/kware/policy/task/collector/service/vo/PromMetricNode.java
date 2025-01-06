@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.kware.common.config.serializer.HumanReadableSizeSerializer;
 import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.policy.task.common.constant.StringConstant;
-import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -35,10 +34,6 @@ public class PromMetricNode extends PromMetricDefault{
 	private String noUuid;   //API에 있는 정보를 설정
 	private Boolean status;  //API에 있는 정보 설정
 
-//	private String metricKeys; //jsondata
-//	private BigDecimal metricValue;
-//	private Timestamp prqlDt;
-	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp promTimestamp;
 	
@@ -79,7 +74,7 @@ public class PromMetricNode extends PromMetricDefault{
 	Double  usageDiskRead1m    = 0.0;
 	
 	
-	Double betFitScore = 0.0;
+	//Double betFitScore = 0.0;
 	
 
 	//이건 맵이 아니면 좋겠는데..
@@ -95,93 +90,6 @@ public class PromMetricNode extends PromMetricDefault{
 		return this.clUid + StringConstant.STR_UNDERBAR + this.node;
 	}
 
-	
-	private static final int WEIGHT_CPU    = 1;
-    private static final int WEIGHT_MEMORY = 1;
-    private static final int WEIGHT_GPU    = 1;
-    private static final int WEIGHT_DISK   = 1;
-    
-    private static final int WEIGHT_DISK_USAGE    = 1;
-    private static final int WEIGHT_NETWORK_USAGE = 1;
-    
-    
-	/**
-     * 현재 노드의 스코어를 계산하여 반환
-     * @param request 요청
-     * @return double 노드의 스코어
-     */
-    @JsonIgnore
-    public double getScore() {
-    	return getScore(null, false);
-    }
-    
-/** 20240920 현재 적용 안됨: 
-Disk  : 남은 공간 5~10% 또는 5GiB~10GiB 유지.
-CPU   : 남은 1~2코어 이하로 줄어들지 않도록 설정.
-Memory: 남은 메모리 5~10% 또는 4GiB~8GiB 유지.
-inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 수집하지 않고 있음
-
-정적으로 적용해야겠다.
-     */
-    
-    /**
-     * 리소스 요청을 반영한 스코어 계산
-     * @param req
-     * @param islimit
-     * @return
-     */
-    public double getScore(WorkloadRequest req, boolean islimit) {
-    	//쿠버네티스 bin packing 리소스 계산: https://kubernetes.io/ko/docs/concepts/scheduling-eviction/resource-bin-packing/
-    	
-        // 각 리소스에 대한 사용 비율을 계산
-        //double cpuScore    = Math.abs((availableCpu - request.getTotalLimitCpu()) / (double) capacityCpu);
-        //double memoryScore = Math.abs((availableMemory - request.getTotalLimitMemory()) / (double) capacityMemory);
-        //double gpuScore    = Math.abs((availableGpu - request.getTotalLimitGpu()) / (double) capacityGpu);
-        //double diskScore   = Math.abs((availableDisk - request.getTotalLimitDisk()) / (double) capacityDisk);
-        
-    	// 대략적인 정규화 min-max기준 
-        //double cpuScore    = Math.abs(availableCpu);    //밀리코어
-        //double gpuScore    = Math.abs(availableGpu) * 1000;  // 코어 * 1000
-        //double memoryScore = Math.abs(availableMemory) / (1024 * 1024);  //MB
-        //double diskScore   = Math.abs(availableDisk)  / (1024 * 1024) ;  //MB
-
-     // 가중치를 적용한 스코어 계산
-		/*   double weightedScore = WEIGHT_CPU    * cpuScore +
-		                       WEIGHT_MEMORY * memoryScore +
-		                       WEIGHT_GPU    * gpuScore +
-		                       WEIGHT_DISK   * diskScore;*/
-//    	if(this.unscheduable) return -1;
-
-        double cpuRequest     = req == null ? 0.0: islimit == true? req.getTotalLimitCpu()   : req.getTotalRequestCpu();
-        double memoryRequest  = req == null ? 0.0: islimit == true? req.getTotalLimitMemory(): req.getTotalRequestMemory();
-        double gpuRequest     = req == null ? 0.0: islimit == true? req.getTotalLimitGpu()   : req.getTotalRequestGpu();
-        double diskRequest    = req == null ? 0.0: islimit == true? req.getTotalLimitDisk()  : req.getTotalRequestDisk();
-        double podRequest     = req == null ? 0.0: 1.0;
-        /*
-        double cpuScore    = getSingleScore(this.capacityCpu                  , this.availableCpu                   , cpuRequest   , WEIGHT_CPU);
-        double memoryScore = getSingleScore(this.capacityMemory/ (1024 * 1024), this.availableMemory / (1024 * 1024), memoryRequest, WEIGHT_MEMORY);
-        double diskScore   = getSingleScore(this.capacityDisk/ (1024 * 1024)  , this.availableDisk / (1024 * 1024)  , diskRequest  , WEIGHT_DISK);
-        double gpuScore    = getSingleScore(this.capacityGpu/ (1024 * 1024)   , this.availableGpu / (1024 * 1024)   , gpuRequest   , WEIGHT_GPU);
-        */
-        double cpuScore    = getSingleScore(this.capacityCpu   , this.availableCpu   , cpuRequest   , WEIGHT_CPU);
-        double memoryScore = getSingleScore(this.capacityMemory, this.availableMemory, memoryRequest, WEIGHT_MEMORY);
-        double diskScore   = getSingleScore(this.capacityDisk  , this.availableDisk  , diskRequest  , WEIGHT_DISK);
-        double gpuScore    = getSingleScore(this.capacityGpu   , this.availableGpu   , gpuRequest   , WEIGHT_GPU);
-        double podScore    = getSingleScore(this.capacityPods  , this.availablePods  , podRequest   , 1);
-        //int weightedSum = WEIGHT_CPU + WEIGHT_MEMORY + WEIGHT_GPU + WEIGHT_DISK;
-        
-        double weightedScore = (cpuScore + memoryScore + diskScore + gpuScore); 
-        return weightedScore;
-    }
-    
-    private double getSingleScore(double capacity, double avaiable, double request, int weight ) {
-    	double totalrequest    = (capacity - avaiable) + request;
-    	double usagePercentage = 100 - ((double)totalrequest / capacity) * 100;
-    	int rawScore           = (int)Math.floor(usagePercentage / 10);
-    	
-    	return rawScore * weight;
-    }
-    
     
 	//{{setter 함수
 	public void setTaintEffect(String _val) { //NoSchedule, 
@@ -435,7 +343,7 @@ inode : 남은 inode가 5% 이하로 떨어지지 않도록 설정.//inode은 �
 				+ ", availableDisk=" + availableDisk + ", availableMemory=" + availableMemory + ", availablePods="
 				+ availablePods + ", usageNetworkTransmit1m=" + usageNetworkTransmit1m + ", usageNetworkReceive1m="
 				+ usageNetworkReceive1m + ", usageDiskWrite1m=" + usageDiskWrite1m + ", usageDiskRead1m="
-				+ usageDiskRead1m + ", betFitScore=" + betFitScore + ", statusConditions=" + statusConditions
+				+ usageDiskRead1m + ", statusConditions=" + statusConditions
 				+ ", taintEffects=" + taintEffects + ", mPodList=" + mPodList + ", mGpuList=" + mGpuList + "]";
 	}
 }

@@ -43,7 +43,7 @@ public class PromQueue extends DefaultQueue{
     	queueLog.info("Queue Log Start ====================================================="); //로그 파일 생성하는 목적
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
 
-        promDequesMap = new HashMap<>();
+        this.promDequesMap = new HashMap<>();
     }
     
     @Override
@@ -57,7 +57,7 @@ public class PromQueue extends DefaultQueue{
     //{{ //////////////deque LIFO, FIFO모두 사용가능 ==> LIFO로 사용하자. //////////////////////
     
     private BlockingDeque<?> getPromDeque(PromDequeName name) {
-        return promDequesMap.computeIfAbsent(name, k -> new LinkedBlockingDeque<>());
+        return this.promDequesMap.computeIfAbsent(name, k -> new LinkedBlockingDeque<>());
     }
     
     /**
@@ -77,7 +77,7 @@ public class PromQueue extends DefaultQueue{
 //	}
 	
 	public int getProDequeSize(PromDequeName name) {
-		BlockingDeque<?> deque = promDequesMap.get(name);
+		BlockingDeque<?> deque = this.promDequesMap.get(name);
     	if(deque == null) 
     		return 0;
     		
@@ -86,7 +86,7 @@ public class PromQueue extends DefaultQueue{
   	//-----------------------------------------------------------------------------------------------
   	
     public int getPromDequesSize(PromDequeName name) {
-    	BlockingDeque deque = promDequesMap.get(name);
+    	BlockingDeque deque = this.promDequesMap.get(name);
     	if(deque == null) 
     		return 0;
     		
@@ -94,7 +94,7 @@ public class PromQueue extends DefaultQueue{
     }
 
 	public void addPromDequesObject(PromDequeName name, Object obj) {
-		BlockingDeque deque = promDequesMap.get(name);
+		BlockingDeque deque = this.promDequesMap.get(name);
     	if(deque == null) {
     		deque = getPromDeque(name);
     	}
@@ -102,14 +102,14 @@ public class PromQueue extends DefaultQueue{
     }
     
     public Object getPromDequesFirstObject(PromDequeName name) {
-    	BlockingDeque<?> deque = promDequesMap.get(name);
+    	BlockingDeque<?> deque = this.promDequesMap.get(name);
     	if(deque == null)
     		return null;
     	else return deque.peekFirst();
     }
     
     public void clearePromDeques(PromDequeName name) {
-    	BlockingDeque<?> q = promDequesMap.remove(name);
+    	BlockingDeque<?> q = this.promDequesMap.remove(name);
     	if(q == null) return;
     	
         Iterator<?> iterator = q.iterator();
@@ -125,7 +125,7 @@ public class PromQueue extends DefaultQueue{
      *  여기는 실제 종료시점이므로 불필요함
      */
     public void removeAllDeque() {
-    	Iterator<PromDequeName> iterator = promDequesMap.keySet().iterator();
+    	Iterator<PromDequeName> iterator = this.promDequesMap.keySet().iterator();
         while (iterator.hasNext()) { // 큐 내부의 모든 요소를 순회하면서 제거
         	clearePromDeques(iterator.next());
         }
@@ -138,7 +138,7 @@ public class PromQueue extends DefaultQueue{
      */
     
     public List<PromMetricNode> getLastPromMetricNodesReadOnly() {
-		BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
+		BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)this.promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
     	if(nodes == null)
     		return null;
@@ -151,7 +151,7 @@ public class PromQueue extends DefaultQueue{
      * @return ReadOnly List<PromMetricNode>
      */
     public List<PromMetricNode> getAppliablePromMetricNodesReadOnly() {
-    	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
+    	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)this.promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
     	
     	if(nodes == null)
@@ -160,25 +160,11 @@ public class PromQueue extends DefaultQueue{
     }
     
     /**
-     * 배포가능한 노드 리스트 제공(배포할 수 없는 노드는 제외)- master 등 요청정보와 단순 비교
-     * @return ReadOnly List<PromMetricNode>
-     */
-    public List<PromMetricNode> getAppliablePromMetricNodesReadOnly(WorkloadRequest req) {
-    	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)promDequesMap.get(PromDequeName.METRIC_NODEINFO);
-    	PromMetricNodes  nodes= nodeDeque.peekFirst();
-    	if(nodes == null)
-    		return null;
-    	
-    	return nodes.getUnmodifiableAppliableNodeList(req.getTotalLimitCpu(), req.getTotalLimitMemory(), req.getTotalLimitDisk(), req.getTotalLimitGpu());
-    }
-    
-    
-    /**
      * Metric에서 수집된 다양한 최신 읽기전용 POD 데이터를 조회
      * @return ReadOnly List<PromMetricPod>
      */
     public List<PromMetricPod> getLastPromMetricPodsReadOnly() {
-    	BlockingDeque<PromMetricPods> deque = (BlockingDeque<PromMetricPods>)promDequesMap.get(PromDequeName.METRIC_PODINFO);
+    	BlockingDeque<PromMetricPods> deque = (BlockingDeque<PromMetricPods>)this.promDequesMap.get(PromDequeName.METRIC_PODINFO);
     	PromMetricPods pods = deque.peekFirst();
     	
     	if(pods == null)
@@ -192,7 +178,7 @@ public class PromQueue extends DefaultQueue{
     public void removeExpiredDequeElements(PromDequeName name, long _miliseconds) {
     	
     	long cutoffTime = System.currentTimeMillis() - _miliseconds;
-    	BlockingDeque<?> q = promDequesMap.get(name);
+    	BlockingDeque<?> q = this.promDequesMap.get(name);
     	
     	
     	//{{데이터 로그 생성

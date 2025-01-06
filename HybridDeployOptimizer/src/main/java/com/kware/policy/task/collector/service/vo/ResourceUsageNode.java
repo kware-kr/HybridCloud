@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Db에서 특정기간의  사용정보를 조회한 결과,    
+ */
 @Getter
 @Setter
 public class ResourceUsageNode extends APIPagedRequest{
@@ -22,5 +25,5 @@ public class ResourceUsageNode extends APIPagedRequest{
     @Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
     private Timestamp regDt;
     
-    private String results; //json
+    private String results; //jsonb를 String으로 변환
 }

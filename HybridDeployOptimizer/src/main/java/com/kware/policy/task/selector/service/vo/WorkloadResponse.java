@@ -1,13 +1,13 @@
 package com.kware.policy.task.selector.service.vo;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
@@ -53,15 +53,16 @@ public class WorkloadResponse {
         	this.cluster = clUid;
         }
 
-		public void addContainers(ContainerResult rsResult) {
+		public void addContainer(ContainerResult rsResult) {
 			containers.add(rsResult);
 		}
 		
-		public void addContainers(String name, String clUid, String node, String priorityClass, String preemptionPolicy) {
+		public void addContainer(String name, String clUid, String node, LocalDateTime startTime, String priorityClass, String preemptionPolicy) {
 			ContainerResult t = new ContainerResult();
 			t.setName(name);
 			t.setClUid(clUid);
 			t.setNode(node);
+			t.setStartTime(startTime);
 			t.setPriorityClass(priorityClass);
 			t.setPreemptionPolicy(preemptionPolicy);
 			
@@ -104,6 +105,9 @@ public class WorkloadResponse {
 				return this.noUuid;
 			}
 			*/
+            
+            @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
+            LocalDateTime startTime;
             
             @JsonIgnore //DB상에는 cluster가 cl_uid로 되어있음
             public String getClUid() {

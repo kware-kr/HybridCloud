@@ -57,6 +57,7 @@ public class StringConstant {
 	};
 	
 	public static enum PodStatusPhase{
+		UNSUBMITTED,
 		PENDING,
 	    RUNNING,
 	    SUCCEEDED,

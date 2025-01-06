@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -20,6 +21,7 @@ public class YAMLUtil {
 	final static ObjectMapper mapper = new ObjectMapper(yamlFactory);
     static {
     	//mapper.setSerializationInclusion(Include.NON_NULL);
+    	mapper.registerModule(new JavaTimeModule());
     	yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
     }
     

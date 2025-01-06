@@ -28,8 +28,13 @@ public class APIQueue extends DefaultQueue{
  
     //{{API
     public static enum APIMapsName{	CLUSTER, NODE, WORKLOAD, WORKLOADPOD 	};
-    //keyinfo=> cluster: cluid, node: cluid + "_" + name, workload: mlid, workloadpod: pod uid
-    private final Map<APIMapsName, ConcurrentHashMap<String, ? extends ClusterDefault>> apiMap;//API결과 저장, 최신 정보 1개만 저장, (현재는 지우고 저장하지 않음. 수정필요)
+    //keyinfo=> 
+    //  cluster    : cluid
+    //, node       : cluid + "_" + name
+    //, workload   : mlid
+    //, workloadpod: pod uid
+    private final Map<APIMapsName, ConcurrentHashMap<String, ? extends ClusterDefault>> apiMap;
+    //API를 통해 수집한 결과 저장, 최신 정보 1개만 유지
     //}}
     
 

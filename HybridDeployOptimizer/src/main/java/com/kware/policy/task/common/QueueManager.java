@@ -5,6 +5,7 @@ import org.springframework.scheduling.TaskScheduler;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.common.queue.WorkloadContainerQueue;
 
 /**
  * 전역으로 사용할 스레드에 안전한 큐와 맵을 생성함
@@ -17,6 +18,7 @@ public class QueueManager {
 	APIQueue apiQ = null;
 	PromQueue promQ = null;
 	RequestQueue requestQ = null;
+	WorkloadContainerQueue wcontainerQ = null;
 
 	public static QueueManager getInstance() {
 		return instance;        
@@ -26,6 +28,7 @@ public class QueueManager {
 		apiQ = new APIQueue();
 		promQ = new PromQueue();
 		requestQ = new RequestQueue();
+		wcontainerQ = new WorkloadContainerQueue();
 	}
 
 	
@@ -37,6 +40,7 @@ public class QueueManager {
         apiQ.setScheduler(taskScheduler);
         promQ.setScheduler(taskScheduler);
         requestQ.setScheduler(taskScheduler);
+        //wcontainerQ.setScheduler(taskScheduler); //현재는 관련없어서 주석처리함
     }
 	
 	public APIQueue getApiQ() {
@@ -51,15 +55,8 @@ public class QueueManager {
 		return requestQ;
 	}
 	
-	
-	
-	//---------------------------------------------------------------------------------------------------
-	
-	
-	
-	
-	
-	
-	
-	
+	public WorkloadContainerQueue getWorkloadContainerQ() {
+		return wcontainerQ;
+	}
+	//---------------------------------------------------------------------------------------------------	
 }

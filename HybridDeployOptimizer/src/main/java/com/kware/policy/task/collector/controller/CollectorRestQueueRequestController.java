@@ -117,7 +117,7 @@ public class CollectorRestQueueRequestController {
 		Map<String, WorkloadRequest> map = requestQ.getWorkloadRequestReadOlnyMap();
 		List<Container> list = new ArrayList<Container>();
 		map.forEach((key, val) -> {
-			if(val.getClUid().equals(clId)) {
+			if(val.getRequest().getClUid().equals(clId)) {
 				for(Container container : val.getRequest().getContainers()) {
 					if(node.endsWith(container.getNodeName())) {
 						list.add(container);

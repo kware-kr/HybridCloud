@@ -9,12 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.jsoup.Jsoup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.flatbuffers.Constants;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.kware.common.util.HashUtil;
@@ -45,7 +43,7 @@ import net.minidev.json.JSONArray;
 
 @Slf4j
 @SuppressWarnings({"rawtypes","unchecked"})
-public class CollectorClusterWorker extends Thread {
+public class CollectorClusterApiWorker extends Thread {
 	
 	final QueueManager qm = QueueManager.getInstance();
 	APIQueue apiQ   = qm.getApiQ();
@@ -219,9 +217,9 @@ public class CollectorClusterWorker extends Thread {
 	private List<Map<String, Object>> annlyApiResultFromClusterList(DocumentContext _ctx) {
 		List<Map<String, Object>> resultList = null;
 
-		String code = _ctx.read(CollectorClusterWorker.JPATH_CODE); 		// 정상상태인지 code 값 확인
+		String code = _ctx.read(CollectorClusterApiWorker.JPATH_CODE); 		// 정상상태인지 code 값 확인
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
-			resultList = _ctx.read(CollectorClusterWorker.JPATH_API_RESULT);
+			resultList = _ctx.read(CollectorClusterApiWorker.JPATH_API_RESULT);
 			//resultList = (List)SerializationUtils.clone((ArrayList)resultList);
 		} else {
 			log.error("에러: code가 10001이 아닙니다.");
@@ -239,12 +237,12 @@ public class CollectorClusterWorker extends Thread {
 		List<Map<String, Object>> resultList = null;
 
 		// code 값 확인
-		String code = _ctx.read(CollectorClusterWorker.JPATH_CODE);
+		String code = _ctx.read(CollectorClusterApiWorker.JPATH_CODE);
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
-			if(_ctx.read(CollectorClusterWorker.JPATH_API_RESULT) == null)
+			if(_ctx.read(CollectorClusterApiWorker.JPATH_API_RESULT) == null)
 				return null;
 			
-			resultList = _ctx.read(CollectorClusterWorker.JPATH_API_RESULT_NODES);
+			resultList = _ctx.read(CollectorClusterApiWorker.JPATH_API_RESULT_NODES);
 			//resultList = (List)SerializationUtils.clone((ArrayList)resultList);
 		} else {
 			log.error("에러: code가 10001이 아닙니다.");
@@ -259,7 +257,7 @@ public class CollectorClusterWorker extends Thread {
 	 * @param _cluserMap
 	 */
 	private void supplementCluster(DocumentContext _ctx, Map<String, Object> _cluserMap) {
-		Map<String, Object> allMap = _ctx.read(CollectorClusterWorker.JPATH_API_RESULT);
+		Map<String, Object> allMap = _ctx.read(CollectorClusterApiWorker.JPATH_API_RESULT);
 		
 		if(allMap == null)
 			return;

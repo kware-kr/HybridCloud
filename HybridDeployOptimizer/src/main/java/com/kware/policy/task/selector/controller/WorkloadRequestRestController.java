@@ -115,10 +115,10 @@ public class WorkloadRequestRestController {
 	@PostMapping("/do/schedule/nodeselect")
 	public ResponseEntity<?> getNodeBFBP(@RequestBody String requestString) throws Exception {
 		APIResponseCode status = null;
-		// WorkloadRequest wlRequest = YAMLUtil.read(requestString,
-		// WorkloadRequest.class);
-		if (log.isDebugEnabled())
-			log.debug("배포요청 전문: {}", requestString);
+		// WorkloadRequest wlRequest = YAMLUtil.read(requestString, WorkloadRequest.class);
+		
+		//if (log.isDebugEnabled())
+		//	log.debug("배포요청 전문: {}", requestString);
 
 		WorkloadRequest wlRequest = null;
 		String errorMessage = null;
@@ -136,7 +136,7 @@ public class WorkloadRequestRestController {
 			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
 			return ResponseEntity.ok(ares);
 		}
-		wlRequest.aggregate(true);
+		//wlRequest.aggregate(true);
 
 		// {{ WorkloadRequest DB저장
 		WorkloadRequest.Request req = wlRequest.getRequest();
@@ -230,95 +230,6 @@ public class WorkloadRequestRestController {
 		return ResponseEntity.ok(ares);
 	}
 
-	/**
-	 * 배포가능한 노드의 전체 스코어 BestFitBinPacking 알고리즘 적용한 계산 테스트
-	 * 
-	 * @param yamlstring
-	 * @return
-	 */
-	@PostMapping("/do/schedule/node_score_bfbp")
-	public ResponseEntity<?> getNodeScoreBFBP(@RequestBody String requestString) throws Exception {
-		// try {
-		APIResponseCode status = null;
-		WorkloadRequest wlRequest = null;
-		String errorMessage = null;
-		try {
-			wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
-		} catch (Exception e) {
-			errorMessage = extractErrorMessage(e);
-			if (errorMessage != null)
-				log.error("Parser Error: {}", errorMessage, e);
-			else
-				throw e;
-		}
-		if (wlRequest == null) {
-			status = APIResponseCode.INPUT_ERROR;
-			APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
-			return ResponseEntity.ok(ares);
-		}
-
-		wlRequest.aggregate(true);
-
-		// {{ WorkloadRequest DB저장
-		WorkloadRequest.Request req = wlRequest.getRequest();
-		// 단순한 DB저장을 위해 원본 그대로를 json으로 변환하기 위함
-		req.setRequestJson(requestString);
-//		req.setStatus(RequestStatus.request.toString());
-		wlService.insertUserRequest(req);
-		// }}
-
-		// {{노드 셀렉터
-		List<PromMetricNode> sel_nodes = wlService.getNodeScoreTest(wlRequest, 0); // 전체 노드의 순서
-		// }}
-
-		return ResponseEntity.ok(sel_nodes);
-	}
-
-	/**
-	 * 단순한 용량으로 스코어 계산
-	 * 
-	 * @param yamlstring
-	 * @return
-	 * @throws Exception
-	 */
-	// @PostMapping("/do/schedule/node_score_for_capacity")
-	@RequestMapping(value = "/do/schedule/node_score_for_capacity", method = { RequestMethod.POST, RequestMethod.GET })
-	public ResponseEntity<?> getNodeScroeCapacity(@RequestBody(required = false) String requestString)
-			throws Exception {
-		List<PromMetricNode> nodes = null;
-		WorkloadRequest wlRequest = null;
-		if (requestString == null) {
-			nodes = promQ.getLastPromMetricNodesReadOnly();
-		} else {
-			APIResponseCode status = null;
-			String errorMessage = null;
-			try {
-				wlRequest = JSONUtil.fromJsonToEmptyFromNull(requestString, WorkloadRequest.class);
-			} catch (Exception e) {
-				errorMessage = extractErrorMessage(e);
-				if (errorMessage != null)
-					log.error("Parser Error: {}", errorMessage, e);
-				else
-					throw e;
-			}
-			if (wlRequest == null) {
-				status = APIResponseCode.INPUT_ERROR;
-				APIResponse<String> ares = new APIResponse(status.getCode(), status.getMessage() + errorMessage, null);
-				return ResponseEntity.ok(ares);
-			}
-
-			wlRequest.aggregate(true);
-			nodes = promQ.getAppliablePromMetricNodesReadOnly(wlRequest);
-		}
-
-		for (PromMetricNode node : nodes) {
-			double a = node.getScore();
-			node.setBetFitScore(a);
-			log.info("NodeScore: {} , cl: {}, node:[{}, {}]", a, node.getClUid(), node.getNode(), node.getUid());
-		}
-
-		return ResponseEntity.ok(nodes);
-	}
 
 	/**
 	 * 워크로드 특성에 특정 설정에 해당하는 config name을 통해서 상세정보를 확인함

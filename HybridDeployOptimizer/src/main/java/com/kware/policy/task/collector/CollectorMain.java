@@ -18,17 +18,20 @@ import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.ResourceUsageService;
 import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.PromQL;
-import com.kware.policy.task.collector.worker.CollectorClusterWorker;
+import com.kware.policy.task.collector.worker.CollectorClusterApiWorker;
 import com.kware.policy.task.collector.worker.CollectorSinglePromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorUnifiedPromMetricWorker;
-import com.kware.policy.task.collector.worker.CollectorWorkloadWorker;
-import com.kware.policy.task.collector.worker.ResourceUsageWorker;
+import com.kware.policy.task.collector.worker.CollectorWorkloadApiWorker;
+import com.kware.policy.task.collector.worker.ResourceUsageDBSaveWorker;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.WorkloadContainerQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.service.CommonService;
+import com.kware.policy.task.selector.service.WorkloadRequestService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,6 +61,9 @@ public class CollectorMain {
 	@Autowired
 	private ResourceUsageService ruService;
 	
+	@Autowired
+	private WorkloadRequestService wrService;
+	
 	@Value("${hybrid.collector.threads}")
     private int col_threads_nu;
 	
@@ -79,9 +85,11 @@ public class CollectorMain {
 	private String api_prometheus_unified_url;
 	
 	final QueueManager qm = QueueManager.getInstance();
+	final WorkloadCommandManager wcm = WorkloadCommandManager.getInstance();
 	
 	APIQueue  apiQ  = qm.getApiQ();
 	PromQueue promQ = qm.getPromQ();
+	//WorkloadContainerQueue wcQ = qm.getWorkloadContainerQ();
 	
 	boolean isFirst = false;
 	
@@ -133,6 +141,11 @@ public class CollectorMain {
 			collectMetricTaskUnified();
 			
 			isFirst = false;
+			
+			
+			//requestService 등록
+			wcm.setWorkloadRequestService(wrService);
+			
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -165,7 +178,7 @@ public class CollectorMain {
 			log.debug("CollectClusterTask 시작");
 		}
 		
-		CollectorClusterWorker worker = new CollectorClusterWorker();
+		CollectorClusterApiWorker worker = new CollectorClusterApiWorker();
 		worker.setClusterManagerService(cmService);
 		worker.setApiBaseUrl(api_base_url);
 		worker.setAuthorizationToken(api_authorization_token);
@@ -187,7 +200,7 @@ public class CollectorMain {
 			log.debug("collectWorkloadTask 시작");
 		}
 		
-		CollectorWorkloadWorker worker = new CollectorWorkloadWorker();
+		CollectorWorkloadApiWorker worker = new CollectorWorkloadApiWorker();
 		worker.setClusterManagerService(cmService);
 		worker.setCommonService(comService);
 		worker.setApiBaseUrl(api_base_url);
@@ -327,7 +340,7 @@ public class CollectorMain {
 		}
 		
 		//{{ 노드와 파드의 리소스 사용량을 매 분마다 저장: 추후 모니터링 그래프 활용할 수 있도록
-		ResourceUsageWorker worker = new ResourceUsageWorker();
+		ResourceUsageDBSaveWorker worker = new ResourceUsageDBSaveWorker();
 		worker.setResourceUsageServiceService(this.ruService);
 		worker.start();
 		//}}

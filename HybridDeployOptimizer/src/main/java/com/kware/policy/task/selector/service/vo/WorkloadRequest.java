@@ -1,6 +1,6 @@
 package com.kware.policy.task.selector.service.vo;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -22,30 +22,6 @@ public class WorkloadRequest extends CommonQueueDefault{
     private Request request;
     private WorkloadResponse.Response response;
     
-    @JsonIgnore
-    private long complete_notice_militime = 0L;  //배포완료 통지 메시지 받은 시간
-    
-    @JsonIgnore
-    private Integer clUid = null;
-    
-    @JsonIgnore
-    private Integer totalRequestCpu = 0;
-    @JsonIgnore
-    private Long    totalRequestMemory = 0L;
-    @JsonIgnore
-    private Integer totalRequestGpu = 0;
-    @JsonIgnore
-    private Long    totalRequestDisk = 0L;
-    @JsonIgnore
-    private Integer totalLimitCpu = 0;
-    @JsonIgnore
-    private Long    totalLimitMemory = 0L;
-    @JsonIgnore
-    private Integer totalLimitGpu = 0;
-    @JsonIgnore
-    private Long    totalLimitDisk = 0L;
-    
-    
 	/*   public enum WorkloadType{
 		ML, DL, INF    //이 특성에 맞는 가중치를 적용해야하나?
 	}
@@ -59,14 +35,6 @@ public class WorkloadRequest extends CommonQueueDefault{
     	return container.getNodeKey();
     }
     
-    public void setClUid(Integer clUid) {
-    	this.clUid = clUid;
-    	//컨테이너에 클래스 ID 설정
-    	for(Container c : this.request.getContainers()) {
-    		c.setClUid(clUid);
-    	}
-    }
-
     @Data
     public static class Request {
     	/**
@@ -79,12 +47,12 @@ public class WorkloadRequest extends CommonQueueDefault{
         private String id;    //db:ml_uid
         
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-        private Date date;
+        private Date date;  //문서상의 요청일자
         private List<Container> containers;
         private RequestWorkloadAttributes attribute;
         
         @JsonIgnore
-        private String requestJson;  //db:info json String
+        private String requestJson;  //db:info json String 요청원본
         
         @JsonIgnore
         private String notiJson;  //db:info json String
@@ -96,15 +64,23 @@ public class WorkloadRequest extends CommonQueueDefault{
         private Long uid;     //db:uid
         
         
+        @JsonIgnore
+        private Integer clUid = null;
+        
+        
+        //{{
+        @JsonIgnore
+        private LocalDateTime  deployedAt;    //쿠버네티스 배포 시간(api의 createAt)
         
         @JsonIgnore
-        private Timestamp requestDt;
+        private LocalDateTime  requestDt;     //문서를 수신한 일자
         
         @JsonIgnore
-        private Timestamp notiDt;
+        private LocalDateTime  notiDt;        //배포완료 통지 일자
         
         @JsonIgnore
-        private Timestamp completeDt;
+        private LocalDateTime  completeDt;    //워크로드 완료일자
+        //}}
 
         
         @JsonIgnore //DB상에는 id가 ml_id로 되어있음
@@ -121,6 +97,14 @@ public class WorkloadRequest extends CommonQueueDefault{
         	return this.id;
         }
         
+        public void setClUid(Integer clUid) {
+        	this.clUid = clUid;
+        	//컨테이너에 클래스 ID 설정
+        	for(Container c : containers) {
+        		c.setClUid(clUid);
+        	}
+        }
+        
         public void setContainers( List<Container> _containers) {
         	this.containers = _containers;
         	for(Container t: containers) {
@@ -133,6 +117,8 @@ public class WorkloadRequest extends CommonQueueDefault{
     @Setter
     public static class Container extends CommonQueueDefault{
         private String name;
+        @JsonIgnore
+        private Integer nameIdx;
         
         private RequestContainerAttributes attribute;
         private Resources resources;
@@ -158,6 +144,14 @@ public class WorkloadRequest extends CommonQueueDefault{
         public String getNodeKey() {
         	return this.clUid + StringConstant.STR_UNDERBAR + this.getNodeName();
         }
+
+		@Override
+		public String toString() {
+			return "Container [name=" + name + ", attribute=" + attribute.toString() + ", resources=" + resources.toString() + ", mlId="
+					+ mlId + ", nodeName=" + nodeName + ", clUid=" + clUid + "]";
+		}
+        
+        
     }
 
     @Data
@@ -179,6 +173,13 @@ public class WorkloadRequest extends CommonQueueDefault{
         		
         	}
         }
+
+		@Override
+		public String toString() {
+			return "Resources [requests=" + requests.toString() + ", limits=" + limits.toString() + "]";
+		}
+        
+        
     }
 
     @Getter
@@ -225,14 +226,26 @@ public class WorkloadRequest extends CommonQueueDefault{
 		public void setEphemeralStorage(Long _ephemeralStorage) {
 			this.ephemeralStorage = _ephemeralStorage;
 		}
+
+		@Override
+		public String toString() {
+			return "ResourceDetail [cpu=" + cpu + ", memory=" + memory + ", gpu=" + gpu + ", ephemeralStorage="
+					+ ephemeralStorage + "]";
+		}
     }
 
     @Data
     public static class RequestContainerAttributes {
         private Integer      maxReplicas;
         private Integer      totalSize;
-        private Integer      predictedExecutionTime;
+        private Integer      predictedExecutionTime; //분
         private Integer      order;
+        
+		@Override
+		public String toString() {
+			return "RequestContainerAttributes [maxReplicas=" + maxReplicas + ", totalSize=" + totalSize
+					+ ", predictedExecutionTime=" + predictedExecutionTime + ", order=" + order + "]";
+		}
     }
     
     @Data
@@ -247,70 +260,14 @@ public class WorkloadRequest extends CommonQueueDefault{
         private String       workloadFeature;
         private String       userId;
         private String       yaml;
-    }
-    
-    /** 
-     * 다중컨테이너가 있을때 request, limit을 합산 처리
-     * 워크플로우나, job의 parallelism 등으로 인하여 순차 처리시에는 맥스 값으로 처리해야 할 수 있다.
-     * 200241101 실제 의미없는 함수가 될 수 있음: 작업순서추가로 인함, 동일한 시간에 수행되는 경우도 있지만, 순서대로 처리해야하는 경우 있음.
-     */
-    public void aggregate(boolean isSum) {
-    	if(isSum) {
-	        for (Container container : request.getContainers()) {
-	            Resources resources = container.getResources();
-	            if(resources.getRequests() != null) {
-		            totalRequestCpu    += resources.getRequests().getCpu();
-		            totalRequestMemory += resources.getRequests().getMemory();
-		            totalRequestGpu    += resources.getRequests().getGpu();
-		            totalRequestDisk   += resources.getRequests().getEphemeralStorage();
-	            }
-	            if(resources.getLimits() != null) {
-		            totalLimitCpu      += resources.getLimits().getCpu();
-		            totalLimitMemory   += resources.getLimits().getMemory();
-		            totalLimitGpu      += resources.getLimits().getGpu();
-		            totalLimitDisk     += resources.getLimits().getEphemeralStorage();
-	            }
-	        }
-    	}else {
-    		for (Container container : request.getContainers()) {
-	            Resources resources = container.getResources();
-	            if(resources.getRequests() != null) {
-		            totalRequestCpu    = Math.max(totalRequestCpu   , resources.getLimits().getCpu());
-		            totalLimitMemory   = Math.max(totalRequestMemory, resources.getLimits().getMemory());
-		            totalLimitGpu      = Math.max(totalRequestGpu   , resources.getLimits().getGpu());
-		            totalLimitDisk     = Math.max(totalRequestDisk  , resources.getLimits().getEphemeralStorage());
-	            }
-	            if(resources.getLimits() != null) {
-		            totalLimitCpu      = Math.max(totalLimitCpu   , resources.getLimits().getCpu());
-		            totalLimitMemory   = Math.max(totalLimitMemory, resources.getLimits().getMemory());
-		            totalLimitGpu      = Math.max(totalLimitGpu   , resources.getLimits().getGpu());
-		            totalLimitDisk     = Math.max(totalLimitDisk  , resources.getLimits().getEphemeralStorage());
-	            }
-	        }
-    	}
-        //스코어 연산이나 스케줄링에 필요함
-        if(totalLimitCpu    < totalRequestCpu)    totalLimitCpu    = totalRequestCpu;
-        if(totalLimitMemory < totalRequestMemory) totalLimitMemory = totalRequestMemory;
-        if(totalLimitGpu    < totalRequestGpu)    totalLimitGpu    = totalRequestGpu;
-        if(totalLimitDisk   < totalRequestDisk)   totalLimitDisk   = totalRequestDisk;
-    }
-    
-    /**
-     * 해당컨테이너의 리소스의 limit, request중에 최대값을 가져오는 함수
-     */
-    public void getContainerMaxResourceDetail(int containerIndex) {
-    	Resources resources = this.request.getContainers().get(containerIndex).getResources();
-    	//제한 값과 요청 값 비교 후 더 큰 값으로 설정
-    	totalLimitCpu    = Math.max(resources.getLimits().getCpu()             , resources.getRequests().getCpu());
-    	totalLimitMemory = Math.max(resources.getLimits().getMemory()          , resources.getRequests().getMemory());
-    	totalLimitGpu    = Math.max(resources.getLimits().getGpu()             , resources.getRequests().getGpu());
-    	totalLimitDisk   = Math.max(resources.getLimits().getEphemeralStorage(), resources.getRequests().getEphemeralStorage());
-    	
-    	totalRequestCpu    = totalLimitCpu;    
-        totalRequestMemory = totalLimitMemory;
-        totalRequestGpu    = totalLimitGpu;   
-        totalRequestDisk   = totalLimitDisk;  
-
+        
+		@Override
+		public String toString() {
+			return "RequestWorkloadAttributes [workloadType=" + workloadType + ", isCronJob=" + isCronJob
+					+ ", devOpsType=" + devOpsType + ", cudaVersion=" + cudaVersion + ", gpuDriverVersion="
+					+ gpuDriverVersion + ", workloadFeature=" + workloadFeature + ", userId=" + userId + ", yaml="
+					+ yaml + "]";
+		}
     }
     
     
@@ -342,76 +299,7 @@ public class WorkloadRequest extends CommonQueueDefault{
             return 0L;
         }
     }
-    
- /*   
-    public static void main(String[] args) throws IOException {
-    	//yml 파싱테스트
-    	File f = new File(".");
-    	System.out.println(f.getAbsolutePath());
-    	
-    	YAMLFactory yamlFactory = new YAMLFactory();
-        yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
-        
-        ObjectMapper mapper = new ObjectMapper(yamlFactory);
-        
-
-
-        // YAML 파일을 읽어 Java 객체로 변환
-        WorkloadResponse response = mapper.readValue(new File("./doc/mlReponse01.yaml"), WorkloadResponse.class);
-        WorkloadRequest request   = mapper.readValue(new File("./doc/mlRequest01.yaml"), WorkloadRequest.class);
-        
-        response = YAMLUtil.read(new File("./doc/mlReponse01.yaml"), WorkloadResponse.class);
-        request  = YAMLUtil.read(new File("./doc/mlRequest01.yaml"), WorkloadRequest.class);
-        request.aggregate();
-        
-        response.getResponse().setDate(new Date());
-        
-        // Java 객체를 다시 String 객체로 변환
-        String outputYamlRequest = mapper.writeValueAsString(request);
-        System.out.println(outputYamlRequest);
-        String outputYamlResponse = mapper.writeValueAsString(response);
-        System.out.println(outputYamlResponse);
-        
-        WorkloadRequest request1 = mapper.readValue(outputYamlRequest, WorkloadRequest.class);
-        
-        WorkloadResponse response1 = mapper.readValue(outputYamlResponse, WorkloadResponse.class);
-        
-
-        
-        // Java 객체를 다시 YAML 파일로 변환
-        mapper.writeValue(new File("./doc/output_request.yaml"), request1);
-        mapper.writeValue(new File("./doc/output_response.yaml"), response1);
-        
-    	
-    	//객체의 hashcode와 equals를 테스트함
-    	QueueManager qm = QueueManager.getInstance();
-    	WorkloadRequest req0 = new WorkloadRequest();
-    	WorkloadRequest req1 = new WorkloadRequest();
-    	req0.setClUid(1);
-    	req0.setNode("gpu-0");
-    	
-    	req1.setClUid(1);
-    	req1.setNode("gpu-0");
-    	req1.setVersion("0.8");
-    	
-    	WorkloadRequest.Request wRequest0 = new WorkloadRequest.Request();
-    	WorkloadRequest.Request wRequest1 = new WorkloadRequest.Request();
-    	req0.setRequest(wRequest0);
-    	req1.setRequest(wRequest1);
-    	
-    	req0.request.setId("laksdjlaskjdflaskfj");
-    	req1.request.setId("laksdjlaskjdflaskfj2");
-    	
-    	qm.setWorkloadRequest(req0);
-    	qm.setWorkloadRequest(req1);
-    	
-    	System.out.println("aaaa0:" + wRequest0.hashCode());
-    	System.out.println("aaaa1:" + wRequest1.hashCode());
-
-    	System.exit(1);
-    }
-*/
-
+ 
 	@Override
 	//request.id만을 비교하여 동일한 객체인지 비교함
 	public boolean equals(Object obj) {

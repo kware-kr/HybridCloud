@@ -1,11 +1,8 @@
 package com.kware.policy.task.selector.service.algo;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
@@ -39,6 +36,7 @@ public class FirstFitDecreasingBinPacking {
      * @param request WorkloadRequest
      * @return List<PromMetricNode> 최적의 노드 리스트
      */
+    /*
     public List<PromMetricNode> allocate(WorkloadRequest request) {
         List<PromMetricNode> bestNodes = new ArrayList<>();
 
@@ -59,13 +57,14 @@ public class FirstFitDecreasingBinPacking {
 
         return bestNodes;
     }
-
+*/
     /**
      * 노드가 이미 할당된 요청과 새로운 요청을 수용할 수 있는지 확인
      * @param node PromMetricNode
      * @param request WorkloadRequest
      * @return boolean 수용 가능 여부
      */
+    /*
     private boolean canAccommodatePendingRequests(PromMetricNode node, WorkloadRequest request) {
         String key = node.getClUid() + "-" + node.getUid();
         Set<WorkloadRequest> pendingRequests = requestNodeMap.getOrDefault(key, new HashSet<>());
@@ -80,29 +79,6 @@ public class FirstFitDecreasingBinPacking {
                 node.getAvailableGpu()    >= request.getTotalLimitGpu()    + totalPendingGpu    &&
                 node.getAvailableDisk()   >= request.getTotalLimitDisk()   + totalPendingDisk;
     }
-
-    public static void main(String[] args) {
-        // 노드 리스트를 생성
-        List<PromMetricNode> nodes = new ArrayList<>();
-
-        // 노드들을 추가
-        // 예: nodes.add(new PromMetricNode(...));
-
-        // WorkloadRequest 생성
-        WorkloadRequest request = new WorkloadRequest();
-        // request 객체를 설정
-
-        // 외부에서 requestNodeMap을 입력받음
-        ConcurrentHashMap<String, Set<WorkloadRequest>> requestNodeMap = new ConcurrentHashMap<>();
-        // requestNodeMap을 설정
-
-        FirstFitDecreasingBinPacking binPacking = new FirstFitDecreasingBinPacking(nodes, requestNodeMap);
-        List<PromMetricNode> bestNodes = binPacking.allocate(request);
-
-        // 최적 노드에 요청을 추가
-        if (!bestNodes.isEmpty()) {
-            String key = bestNodes.get(0).getClUid() + "-" + bestNodes.get(0).getUid();
-            requestNodeMap.computeIfAbsent(key, k -> new HashSet<>()).add(request);
-        }
-    }
+*/
+   
 }

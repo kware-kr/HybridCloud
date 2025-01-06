@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -41,6 +42,8 @@ public class JSONUtil {
     
     private static final ObjectMapper jsonWriter = new ObjectMapper();
     static {   //ObjectMapper의 속성이 변경되므로, 별도로 하나 만듬
+    	jsonWriter.registerModule(new JavaTimeModule());
+        
     	jsonWriter.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     	jsonWriter.setTimeZone(TimeZone.getTimeZone("Asia/Seoul")); // 로컬 시간대 설정
     }
@@ -210,7 +213,6 @@ public class JSONUtil {
     @SuppressWarnings("unchecked")
     public static String getJsonStringFromMap( Map map ) {
         JSONObject jsonObject = new JSONObject(map);
-
         // JSONObject를 JSON 문자열로 변환
         return jsonObject.toJSONString();
     }

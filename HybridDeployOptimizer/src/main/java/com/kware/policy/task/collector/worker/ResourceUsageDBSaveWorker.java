@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class ResourceUsageWorker extends Thread {
+public class ResourceUsageDBSaveWorker extends Thread {
 	final QueueManager qm = QueueManager.getInstance();
 		
 	APIQueue apiQ   = qm.getApiQ();

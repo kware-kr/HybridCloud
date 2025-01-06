@@ -36,16 +36,21 @@ import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
+import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.collector.service.vo.PromQL;
 import com.kware.policy.task.collector.service.vo.PromQLResult;
 import com.kware.policy.task.collector.worker.anal.MetricResultAnalyzer;
 import com.kware.policy.task.common.PromQLManager;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
+import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.common.queue.WorkloadContainerQueue;
+import com.kware.policy.task.common.vo.WorkloadCommand;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +72,8 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 	
 	APIQueue  apiQ  = qm.getApiQ();
 	PromQueue promQ = qm.getPromQ();
+	RequestQueue  requestQ = qm.getRequestQ();
+	WorkloadContainerQueue wlContainerQ = qm.getWorkloadContainerQ();
 	
 	private final String STR_query  = "query";
 	
@@ -175,7 +182,7 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				//shutdown 후에 모든 job이 종료될 동안 대기한다. 최대 10초를 대기한다.
 				executorService.awaitTermination(10, TimeUnit.SECONDS);
 				
-				//{{API에만 있는 데이터를 수집한 데이터에 추가 처리.
+				//{{노드관련 API로 수집한 정보를 현재 수집한 데이터에 추가 처리.
 				//key: node.getUniqueKey() val:ClusterNode
 				log.info("=========================================================================================================");
 				this.prom_nodes.getAllNodeList().forEach(k->{
@@ -199,11 +206,21 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				});
 				log.info("=========================================================================================================");
 				//}}API에만 있는 데이터 추가 처리.
+				
+				//{{
+				//requestQ, WorkloadContainerQueue에 데이터 추가작업 진행
+				
+				this.prom_pods.getAllPodList().forEach(k->{
+					//ContainerWrapper class update
+					WorkloadCommand<PromMetricPod> command = new WorkloadCommand<PromMetricPod>(WorkloadCommand.CMD_POD_ENTER,k);
+					WorkloadCommandManager.addCommand(command);
+				});
+				
+				//}}
 			} catch (InterruptedException e) {
 				log.error("awaitTermination Error:", e);
 			}
-			
-			
+
 			//여기서 블러킹 큐에 등록해야겠다.
 			this.promQ.addPromDequesObject(PromDequeName.METRIC_NODEINFO, this.prom_nodes);
 			this.promQ.addPromDequesObject(PromDequeName.METRIC_PODINFO , this.prom_pods);
@@ -216,8 +233,6 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 				log.debug("프로메테우스 전체 파드:{}", this.prom_pods.getAllPodList());
 				log.info("***********************************************************************************************************");
 			}
-			
-			
 			
 			//미리 등록하면 빈 껌질을 가지고 처리하는 경우가 발생하네
 			

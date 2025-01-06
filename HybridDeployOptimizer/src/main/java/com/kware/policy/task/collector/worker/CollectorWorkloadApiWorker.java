@@ -40,6 +40,7 @@ import com.kware.policy.task.collector.service.vo.ClusterWorkloadResource;
 import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
@@ -48,6 +49,7 @@ import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.common.service.CommonService;
+import com.kware.policy.task.common.vo.WorkloadCommand;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +57,7 @@ import net.minidev.json.JSONArray;
 
 @Slf4j
 @SuppressWarnings("rawtypes")
-public class CollectorWorkloadWorker extends Thread {
+public class CollectorWorkloadApiWorker extends Thread {
 	final QueueManager qm = QueueManager.getInstance();
 	/*
 	 * @SuppressWarnings("unchecked") ConcurrentHashMap<String, ClusterWorkload>
@@ -267,6 +269,13 @@ public class CollectorWorkloadWorker extends Thread {
 						if(mPods != null) {
 							for(Map.Entry<String, ClusterWorkloadResource> resourceE : workload.getResourceMap().entrySet() ) {
 								Map<String, ClusterWorkloadPod> podMap = resourceE.getValue().getPodMap();
+								
+								//워크로드 api갯수와 requesqQ의 container 갯수가 틀리면 처리하지 않는다.
+								int request_container_cnt = this.requestQ.getWorkloadContainerSize(mlId);
+								int api_pod_cnt = podMap.size();
+								if(api_pod_cnt < request_container_cnt) //최소한 같거나 더 많으면..
+									continue;
+								
 								for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
 									String wPodUid = null;
 									ClusterWorkloadPod wPod =  entry.getValue();
@@ -350,8 +359,9 @@ public class CollectorWorkloadWorker extends Thread {
 				wl = (ClusterWorkload)obj;
 				this.service.deleteClusterWorkload(wl);
 
-				//RequestQues에서 요청 워크로드를 삭제
-				this.requestQ.reomveWorkloadRequest(wl.getMlId());
+				//WraperQueue에서 제거
+				WorkloadCommand<String> command = new WorkloadCommand<String>(WorkloadCommand.CMD_WLD_COMPLETE,wl.getMlId());
+				WorkloadCommandManager.addCommand(command);				
 			}
 		}
 	}
@@ -433,6 +443,7 @@ public class CollectorWorkloadWorker extends Thread {
 		return workload;
 	}
 	
+	//DB입력
 	private void insertWorklod(ClusterWorkload oldWorkload, ClusterWorkload cruWorkload) {
 		try {
 			//기존에 이미 등록되어 있으면. 

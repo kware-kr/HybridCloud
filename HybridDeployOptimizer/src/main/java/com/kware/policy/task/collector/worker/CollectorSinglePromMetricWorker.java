@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  * DB에 저장할때는 쿼리켤과를 파싱해서 각 키별로 저장한다. data:{ result:[{},{}]}인데 각 배열값에는 metric: value 가 있는 각1개씩 DB에 저장한다.
  */
 @Slf4j
+@Deprecated
 public class CollectorSinglePromMetricWorker extends Thread {
 
 	private static final Logger metricLog = LoggerFactory.getLogger("metric-log");
