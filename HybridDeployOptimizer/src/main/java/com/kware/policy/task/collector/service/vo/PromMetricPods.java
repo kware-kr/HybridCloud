@@ -48,6 +48,10 @@ public class PromMetricPods extends PromMetricDefault{
 		return Collections.unmodifiableList(new ArrayList<>(mPodMap.values()));
 	}
 	
+	public Map<String, PromMetricPod> getUnmodifiableAllPodMap(){
+		return Collections.unmodifiableMap(mPodMap);
+	}
+	
 	/**
 	 * 요청한 클래스터에 있는 파드 리스트 제공
 	 * @param _clusterId

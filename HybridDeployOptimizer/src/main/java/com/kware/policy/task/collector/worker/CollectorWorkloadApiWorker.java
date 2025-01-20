@@ -93,7 +93,7 @@ public class CollectorWorkloadApiWorker extends Thread {
 	private final static String REG_mlId     = "\\{mlId\\}";
 	
 	ClusterManagerService service = null;
-	CommonService cmService = null;
+	CommonService comService = null;
 	
 	boolean isRunning = false;
 	//HashMap<String, Object> clusterInfo = null;
@@ -115,8 +115,8 @@ public class CollectorWorkloadApiWorker extends Thread {
 		this.service = cmService;
 	}
 	
-	public void setCommonService(CommonService cmService) {
-		this.cmService = cmService;
+	public void setCommonService(CommonService comService) {
+		this.comService = comService;
 	}
 	
 	public void setAuthorizationToken(String authorization_token) {
@@ -166,6 +166,7 @@ public class CollectorWorkloadApiWorker extends Thread {
 			List<Map<String, Object>> workloadList = new ArrayList<Map<String, Object>>();
 			int pageNumber    = 0;
 			int totalElements = 0;
+			int currentElements = 0;
 			boolean isLast = false;
 			while(!isLast) {
 				pageNumber++;
@@ -192,14 +193,18 @@ public class CollectorWorkloadApiWorker extends Thread {
 				
 				//pageabel를 사용하므로 result.content를 가져옴
 				List<Map<String, Object>> workloadList_temp = this.annlyApiResultFromWorkloadList(list_ctx);
+				if(workloadList_temp == null)
+					break;
+				
 				workloadList.addAll(workloadList_temp);
+				currentElements = workloadList_temp.size(); 
 				workloadList_temp.clear();
 				
 				isLast = list_ctx.read(JPATH_last);
 				totalElements = list_ctx.read(JPATH_totlaElement);
 				
 				if(isLast == false) {
-					if(totalElements <= workloadList_temp.size()) // 혹시 못빠져나놀가봐
+					if(totalElements <= currentElements) // 혹시 못빠져나놀가봐
 						break;
 				}
 			}
@@ -555,7 +560,7 @@ public class CollectorWorkloadApiWorker extends Thread {
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
 			detail_ctx.delete(JPATH_ALL);
 			
-			this.cmService.createEvent("Workload 완료", "Workload"
+			this.comService.createEvent("Workload 완료", "Workload"
 					, "워크로드 모든 TASK 종료 및 종료 API 호출.\n" + _mlId);
 			return true;	
 		} else {
@@ -580,7 +585,7 @@ public class CollectorWorkloadApiWorker extends Thread {
 		if (APIConstant.API_RESULT_CODE_OK.equals(code)) {
 			detail_ctx.delete(JPATH_ALL);
 			
-			this.cmService.createEvent("Workload 삭제", "Workload"
+			this.comService.createEvent("Workload 삭제", "Workload"
 					, "워크로드 종료 상태 확인 및 삭제 API 호출.\n" + _mlId);
 			return true;	
 		} else {

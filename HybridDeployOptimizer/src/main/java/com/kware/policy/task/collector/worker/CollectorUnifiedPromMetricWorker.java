@@ -50,6 +50,7 @@ import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.common.queue.WorkloadContainerQueue;
+import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.vo.WorkloadCommand;
 
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +125,12 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 	ClusterManagerService cmService = null;
 	public void setClusterManagerService(ClusterManagerService cmService) {
 		this.cmService = cmService;
+	}
+	
+	//공통 서비스
+	CommonService comService = null;
+	public void setCommonService(CommonService comService) {
+		this.comService = comService;
 	}
 	
 	public void setAuthorizationToken(String authorization_token) {

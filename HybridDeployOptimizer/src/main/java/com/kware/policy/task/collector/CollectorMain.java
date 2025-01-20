@@ -16,10 +16,8 @@ import com.kware.common.db.InitDatabase;
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.ResourceUsageService;
-import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.PromQL;
 import com.kware.policy.task.collector.worker.CollectorClusterApiWorker;
-import com.kware.policy.task.collector.worker.CollectorSinglePromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorUnifiedPromMetricWorker;
 import com.kware.policy.task.collector.worker.CollectorWorkloadApiWorker;
 import com.kware.policy.task.collector.worker.ResourceUsageDBSaveWorker;
@@ -28,9 +26,9 @@ import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
-import com.kware.policy.task.common.queue.WorkloadContainerQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.service.CommonService;
+import com.kware.policy.task.feature.FeatureMain;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +61,9 @@ public class CollectorMain {
 	
 	@Autowired
 	private WorkloadRequestService wrService;
+	
+	@Autowired
+	private FeatureMain feaMain;
 	
 	@Value("${hybrid.collector.threads}")
     private int col_threads_nu;
@@ -144,7 +145,9 @@ public class CollectorMain {
 			
 			
 			//requestService 등록
-			wcm.setWorkloadRequestService(wrService);
+			//wcm.setWorkloadRequestService(wrService);
+			//wcm.setCommonService(comService);
+			wcm.setInitSevice(wrService, comService, feaMain);
 			
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -210,72 +213,6 @@ public class CollectorMain {
 		worker.setIsFirst(isFirst);
 		worker.start();
 	}
-		
-	//클러스터별 프로메테우스 운영: 통합으로 변경되면서 사용안함.
-	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	public void collectMetricTaskSingle() {
-		
-		if(log.isDebugEnabled()) {
-			log.debug("collectMetricTask 시작");
-		}
-				
-		//DB테이블에서 쿼리의종류인 promql 리스트를 조회한다.
-		//metric extract 정보를 전체 조회한다.
-		List<PromQL> lPromqlList = ptService.selectPromqlListAll();
-		PromQLManager mp = PromQLManager.getInstance();
-		for(PromQL p: lPromqlList) {
-			mp.setExtractPath(p);
-		}
-		
-		//{{ 큐에 먼저 등록한다.: 큐는 순서가 중요해서 각 스레드에서 등록하면, 동일한 시간 데이터가 여러개 들어가서,
-		// 메인 스케줄러에서 등록해서 해당 데이터를 제공한다.
-		//lifo구조를 사용한다.
-		Long current_millitime = System.currentTimeMillis();
-		/*
-		PromMetricNodes nodes = new PromMetricNodes();
-		nodes.setTimestamp(current_millitime);
-		log.info("nodelist 등록");
-		nodeDeque.addFirst(nodes);
-		
-		
-		PromMetricPods  pods = new PromMetricPods();
-		pods.setTimestamp(current_millitime);
-		log.info("podlist 등록");
-		podDeque.addFirst(pods);
-		*/
-		//}}
-
-		//{{ 각 클러스터별로 프로메테우스를 가져올때는 클러스터에 있는 플로메테우스의 URL를 가지고 처리한다.
-		List<Cluster> lClusterList = ptService.selectClusterList();
-		Cluster rs = null;
-		for(int i = 0 ; i < lClusterList.size(); i++) {
-		//for(int i = 0 ; i < 1; i++) {
-			rs = lClusterList.get(i);
-			CollectorSinglePromMetricWorker worker = new CollectorSinglePromMetricWorker(current_millitime);
-			worker.setPrometheusService(ptService);
-			worker.setClusterInfo(rs);
-			//worker.setThreadsNumber(this.col_threads_nu);
-			worker.setThreadsNumber(1);
-			worker.setAuthorizationToken(prometheus_authorization_token);
-			worker.start();
-		}
-		//}}
-		
-		if(log.isDebugEnabled()) {
-			log.debug("current {} nodeDeque size={}", PromDequeName.METRIC_NODEINFO.toString(), promQ.getPromDequesSize(PromDequeName.METRIC_NODEINFO));
-			log.debug("current {} podDeque size={}" , PromDequeName.METRIC_PODINFO.toString() , promQ.getPromDequesSize(PromDequeName.METRIC_PODINFO));
-		}
-		
-		if(lClusterList != null) {
-			lClusterList.clear();
-			lClusterList = null;
-		}
-	}
-	
-	//@Scheduled(cron = "0 0 8-23 * * *") // 매 1분마다 실행하며 이작업은 이전 호출이 완료된 시점부터 계산된다.
-	//@Scheduled(initialDelay = 5000, fixedDelay = 60000) 
-	
-	
 	
 	@Scheduled(cron = CollectorMain.Cron.collectMetricTaskUnified_cron) //
 	public void collectMetricTaskUnified() {
@@ -295,6 +232,7 @@ public class CollectorMain {
 		for(PromQL p: lPromqlList) {
 			mp.setExtractPath(p);
 		}
+		lPromqlList.clear();
 		
 		//{{ 큐에 먼저 등록한다.: 큐는 순서가 중요해서 각 스레드에서 등록하면, 동일한 시간 데이터가 여러개 들어가서,
 		// 메인 스케줄러에서 등록해서 해당 데이터를 제공한다.

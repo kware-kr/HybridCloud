@@ -44,6 +44,10 @@ public class PromMetricNodes extends PromMetricDefault{
 		return Collections.unmodifiableList(new ArrayList<>(mNodeList.values()));
 	}
 	
+	public Map<String, PromMetricNode> getUnmodifiableAllNodeMap(){
+		return Collections.unmodifiableMap(mNodeList);
+	}
+	
 	/**사용가능한 리스트 제공**/
 	public List<PromMetricNode> getUnmodifiableAppliableNodeList(){
 		List<PromMetricNode> list = mNodeList.values().stream()

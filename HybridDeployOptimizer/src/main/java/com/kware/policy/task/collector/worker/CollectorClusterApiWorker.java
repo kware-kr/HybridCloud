@@ -25,13 +25,16 @@ import com.kware.policy.task.collector.service.vo.ClusterNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodeGPU;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
+import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.common.QueueManager;
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.constant.APIConstant;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
+import com.kware.policy.task.common.vo.WorkloadCommand;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
@@ -100,10 +103,12 @@ public class CollectorClusterApiWorker extends Thread {
 		this.isFirst = isFirst;
 	}
 	
+	boolean isNodeChange = false;
+	
 	@Override
 	public void run() {
+		isNodeChange  = false;
 		this.isRunning = true;
-
 		try {
 			
 			/**
@@ -178,6 +183,10 @@ public class CollectorClusterApiWorker extends Thread {
 			removedMap = apiQ.removeNotIfSessionId(APIMapsName.NODE, SESSIONID);
 			delete(removedMap);
 			removedMap.clear();
+			
+			if(isNodeChange) {
+				this.sendNodeChangeEvent();
+			}
 			
 			if(log.isDebugEnabled()) {
 				log.debug("current {} map size={}", APIMapsName.CLUSTER.toString(), apiQ.getApiQueueSize(APIMapsName.CLUSTER));
@@ -323,8 +332,9 @@ public class CollectorClusterApiWorker extends Thread {
 			Cluster oldObj = this.apiQ.getApiClusterMap().get(cluster.getUniqueKey());
 			
 			if(oldObj != null) {
-				if(!oldObj.getHashVal().equals(cluster.getHashVal()))
+				if(!oldObj.getHashVal().equals(cluster.getHashVal())) {
 					this.service.updateClusterAndInsertHistory(cluster);
+				}
 			}else {				
 				//oldObj = null;
 				//if(this.isFirst) { //중간에도 사라졌다(DB삭제 완료)가 다시 나타나는 경우 문제 발생, insert 오류 지만, 메모리는 현재 데이터로 유지가 됨.
@@ -432,6 +442,7 @@ public class CollectorClusterApiWorker extends Thread {
 								, oldObj.getDeleteAt(), node.getDeleteAt()
 								, oldObj.getHashVal() , node.getHashVal());
 					}
+					isNodeChange = true;
 				}
 			}else {			
 				//oldObj = null;
@@ -444,6 +455,7 @@ public class CollectorClusterApiWorker extends Thread {
 					node.setUid(oldObj.getUid());
 					this.service.updateClusterNode(node);
 				}
+				isNodeChange = true;
 			}
 		} catch (Exception e) {
 			log.error("데이터 Insert 에러 ClusterNode:\n{}", node, e);
@@ -489,4 +501,10 @@ public class CollectorClusterApiWorker extends Thread {
 		
 		return json_string;
 	}	
+	
+	private void sendNodeChangeEvent() {
+		//ContainerWrapper class update
+		WorkloadCommand<PromMetricPod> command = new WorkloadCommand<PromMetricPod>(WorkloadCommand.CMD_NODE_CHANGE,null);
+		WorkloadCommandManager.addCommand(command);
+	}
 }
