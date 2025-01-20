@@ -242,7 +242,7 @@ public class WorkloadRequestRestController {
 	public ResponseEntity<?> getConfigGroup(@PathVariable("feature") CommonConfigGroup.ConfigName cfgname)
 			throws Exception {
 		CommonConfigGroup ccGroup = null;
-		ccGroup = cmService.selectCommonConfigGroup(cfgname);
+		ccGroup = cmService.getCommonConfigGroup(cfgname);
 
 		List<Map> rsList = new ArrayList<Map>();
 		JsonNode node = ccGroup.getContent();

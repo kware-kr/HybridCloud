@@ -138,7 +138,7 @@ public class WorkloadRequest extends CommonQueueDefault{
         
         @JsonIgnore
         //노드셀렉터가 선택한 이후에  노드명을 설정
-        private Integer clUid;    
+        private Integer clUid;
         
         @JsonIgnore
         public String getNodeKey() {
@@ -229,8 +229,8 @@ public class WorkloadRequest extends CommonQueueDefault{
 
 		@Override
 		public String toString() {
-			return "ResourceDetail [cpu=" + cpu + ", memory=" + memory + ", gpu=" + gpu + ", ephemeralStorage="
-					+ ephemeralStorage + "]";
+			return "ResourceDetail [cpu=" + cpu + ", memory=" + memory 
+					+ ", gpu=" + gpu + ", ephemeralStorage=" + ephemeralStorage + "]";
 		}
     }
 
@@ -240,11 +240,13 @@ public class WorkloadRequest extends CommonQueueDefault{
         private Integer      totalSize;
         private Integer      predictedExecutionTime; //분
         private Integer      order;
+        private Boolean      checkpoint = Boolean.FALSE;
         
 		@Override
 		public String toString() {
 			return "RequestContainerAttributes [maxReplicas=" + maxReplicas + ", totalSize=" + totalSize
-					+ ", predictedExecutionTime=" + predictedExecutionTime + ", order=" + order + "]";
+					+ ", predictedExecutionTime=" + predictedExecutionTime + ", order=" + order 
+					+ ", checkpoint="             + checkpoint + "]";
 		}
     }
     
@@ -263,10 +265,10 @@ public class WorkloadRequest extends CommonQueueDefault{
         
 		@Override
 		public String toString() {
-			return "RequestWorkloadAttributes [workloadType=" + workloadType + ", isCronJob=" + isCronJob
-					+ ", devOpsType=" + devOpsType + ", cudaVersion=" + cudaVersion + ", gpuDriverVersion="
-					+ gpuDriverVersion + ", workloadFeature=" + workloadFeature + ", userId=" + userId + ", yaml="
-					+ yaml + "]";
+			return "RequestWorkloadAttributes [workloadType="  + workloadType         + ", isCronJob=" + isCronJob
+					+ ", devOpsType="       + devOpsType       + ", cudaVersion="     + cudaVersion 
+					+ ", gpuDriverVersion="	+ gpuDriverVersion + ", workloadFeature=" + workloadFeature 
+					+ ", userId="           + userId           + ", yaml="            + yaml + "]";
 		}
     }
     

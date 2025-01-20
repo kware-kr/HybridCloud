@@ -172,10 +172,10 @@ public class BestFitBinPacking {
         int	 nodeAvailableGpu    = node.getAvailableGpu();  
         long nodeAvailableDisk   = node.getAvailableDisk()   - minFree.getFreeDiskSpaceBytes();
         
-        return nodeAvailableCpu    >= _wrapper.getLimitsCpu()                 + totalPendingCpu    &&
-               nodeAvailableMemory >= _wrapper.getLimitsMemory()             + totalPendingMemory &&
-               nodeAvailableGpu    >= _wrapper.getLimitsGpu()                 + totalPendingGpu    &&
-               nodeAvailableDisk   >= _wrapper.getLimitsEphemeralStorage()   + totalPendingDisk;
+        return nodeAvailableCpu    >= _wrapper.getLimitsCpu()              + totalPendingCpu    &&
+               nodeAvailableMemory >= _wrapper.getLimitsMemory()           + totalPendingMemory &&
+               nodeAvailableGpu    >= _wrapper.getLimitsGpu()              + totalPendingGpu    &&
+               nodeAvailableDisk   >= _wrapper.getLimitsEphemeralStorage() + totalPendingDisk;
     }
 
 
@@ -242,8 +242,9 @@ public class BestFitBinPacking {
         diskIoScore           = Math.log(diskIoScore);
         networkIoScore        = Math.log(networkIoScore);
         
-        DoScore ds = new DoScore(node.getNode(), node.getClUid(), Math.abs(cpuScore), Math.abs(memoryScore) , Math.abs(diskScore), Math.abs(gpuScore) 
-        		                                                      , weight.getCpu()   , weight.getMemory()    , weight.getDisk()   , weight.getGpu());
+        DoScore ds = new DoScore(node.getNode()    , node.getClUid()
+        		               , Math.abs(cpuScore), Math.abs(memoryScore) , Math.abs(diskScore), Math.abs(gpuScore)
+        		               , weight.getCpu()   , weight.getMemory()    , weight.getDisk()   , weight.getGpu());
         
         String buf = "pCpu=" + totalPendingCpu + ", pMemory=" + totalPendingMemory + ", pGpu=" + totalPendingGpu + ", pDisk=" + totalPendingDisk;
         log.info("!!!Node Score {} \nPending: {}", ds.toString(), buf);

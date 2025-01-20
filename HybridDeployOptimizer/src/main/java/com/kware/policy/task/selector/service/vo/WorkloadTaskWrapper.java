@@ -63,7 +63,7 @@ public class WorkloadTaskWrapper {
 	private Integer predictedExecutionTime = 0; // 분
 	private Integer order = 0;
 	
-	private Boolean enabeldCheckPoint; //체크포인트가 설정되어 있는가?
+	private Boolean checkpoint; //체크포인트가 설정되어 있는가?
 
 	//Request > RequestWorkloadAttributes: 동일한 워크로드에 공통사항
 	private String workloadType;
@@ -141,6 +141,7 @@ public class WorkloadTaskWrapper {
 		this.totalSize   = a.getTotalSize();
 		this.maxReplicas = a.getMaxReplicas();
 		this.predictedExecutionTime = a.getPredictedExecutionTime();
+		this.checkpoint = a.getCheckpoint();
 	}
 
 	private void setRequestWorkloadAttributes(RequestWorkloadAttributes reqAttr) {
@@ -215,10 +216,10 @@ public class WorkloadTaskWrapper {
 		return "WorkloadTaskWrapper [name=" + name + ", order=" + order + ", status=" + status + ", estimatedStartTime="
 				+ estimatedStartTime + ", estimatedEndTime=" + estimatedEndTime + ", predictedExecutionTime="
 				+ predictedExecutionTime + ", scheduledTimestamp=" + scheduledTimestamp + ", requestsCpu=" + requestsCpu
-				+ ", requestsMemory=" + requestsMemory + ", requestsGpu=" + requestsGpu + ", limitsCpu=" + limitsCpu
-				+ ", limitsMemory=" + limitsMemory + ", limitsGpu=" + limitsGpu + ", maxReplicas=" + maxReplicas
-				+ ", enabeldCheckPoint=" + enabeldCheckPoint + ", workloadType=" + workloadType + ", workloadFeature="
-				+ workloadFeature + ", pod=" + pod + ", mlId=" + mlId + "]";
+				+ ", requestsMemory=" + requestsMemory  + ", requestsGpu=" + requestsGpu + ", limitsCpu=" + limitsCpu
+				+ ", limitsMemory="   + limitsMemory    + ", limitsGpu=" + limitsGpu + ", maxReplicas=" + maxReplicas
+				+ ", checkpoint="     + checkpoint      + ", workloadType=" + workloadType 
+				+ ", workloadFeature="+ workloadFeature + ", pod=" + pod + ", mlId=" + mlId + "]";
 	}
 
 	

@@ -77,13 +77,8 @@ public class WorkloadRequestService {
 	public WorkloadResponse getResponseToSelectedNode(WorkloadRequest wlRequest) {
 			
 		List<PromMetricNode>  nodes = promQ.getLastPromMetricNodesReadOnly();
-		//Map<String, Map<String, Container>>  notApplyRequestMap = requestQ.getWorkloadRequestNotApplyReadOnlyMap();
-		//Map<String, Map<String, Container>>  notApplyRequestMap = new HashMap(); //임시
 		Map<String, Map<String, WorkloadTaskWrapper>> notApplyRequestMap = wcQ.getNotCompletedTasks(); //wcQ.getNotRunningTasks();
 		Map<String, Cluster> culsters = apiQ.getApiClusterMap();
-		
-		
-//		wlRequest.aggregate(true);
 
 		//{{Workload Type
 	//	WorkloadRequest.WorkloadType workloadtype = wlRequest.getRequest().getAttribute().getWorkloadType();
@@ -102,44 +97,6 @@ public class WorkloadRequestService {
 		//WorkloadTaskContainerWrapper 생성
 		List<WorkloadTaskWrapper> wrapperList = wcQ.makeWorkloadTaskContainerForInit(req.getAttribute(),req.getContainers());
 		bbp.setClusterNodes(wrapperList);
-		
-	/*
-		List<PromMetricNode> sel_cluster_nodes = bbp.getBestCluster(wrapperList);
-		if(sel_cluster_nodes == null || sel_cluster_nodes.size() == 0) {
-			log.error("선택 된 node size 0");
-		}else {
-			clUid = sel_cluster_nodes.get(0).getClUid();
-			for(int i = 0 ; i < wrapperList.size(); i++) {
-				WorkloadTaskWrapper w =  wrapperList.get(i);
-				//clUid가 null이면 현재 클러스터설정을 첫번째 컨테이너로만 계산 하는데, 수정필요하겠다, 
-				//전체 값으로, 그리고 순서를 가진 것중에서는 앞의 선서와 다른 경우에는 바로 앞의 것은 포함하지 않도록
-				List<PromMetricNode>  tempNodes = null;// bbp.allocate(w, 2, clUid);  
-				log.info("select node list: {}", tempNodes);
-	
-				//첫번째 노드를 선택함
-				PromMetricNode node = tempNodes.size() > 0 ? tempNodes.get(0):null;
-				tempNodes.clear();
-				
-				if(node != null) {
-					clUid = node.getClUid();//한개의 워크로드는 동일한 클러스터에서 수행한다.
-					wlRequest.getRequest().setClUid(clUid);
-					
-					w.setNodeName(node.getNode());
-					w.setClUid(clUid);
-					
-					//노드가 선택되면 notApplyRequestMap에 추가해 주어야 한다.
-					requestQ.setWorkloadRequest(wlRequest);
-					
-					
-					
-					
-				}
-				
-				sel_nodes.add(node); //null이어도 등록한다.
-			}
-			sel_cluster_nodes.clear();
-		}
-*/
 		
 		WorkloadResponse wlResponse = new WorkloadResponse();
     	wlResponse.setVersion(WorkloadRequestService.interface_version);
@@ -173,25 +130,10 @@ public class WorkloadRequestService {
 			String strClUid = clUid.toString();
     		res.setClUid(strClUid);//clUid는 null일 수 없다.
     		for(WorkloadTaskWrapper w:  wrapperList) {
-		    	/*
-		    	//{{이게 for loop 돌아야 한다.
-		    	WorkloadResponse.Response.ContainerResult crResult = new WorkloadResponse.Response.ContainerResult();
-		    	
-		    	crResult.setNode(node.getNode());
-		    	//crResult.setNoUuid(node.getNoUuid());
-	
-		    	//{{이건 어떻게 해야하나
-		    	crResult.setPreemptionPolicy(null);
-		    	crResult.setPriorityClass(null);
-		    	//}}
-		    	*/
-
 				res.addContainer(w.getName(), strClUid, w.getNodeName(), w.getEstimatedStartTime(),  null, null);
 	    	//}}
     		}
 	    	
-	    	
-    	//1개라도 선택하지 못하면
 	    	status = WorkloadResponseStatus.SUCCESS;
     	}else {
     		status = WorkloadResponseStatus.SUCCESS_NO_NODE;    		
@@ -201,11 +143,7 @@ public class WorkloadRequestService {
     	res.setMessage(status.getMessage());
     	//}}
     	   	
-    	//res.setResult(rsResult);
     	wlResponse.setResponse(res);
-    	
-    	//qm.
-    	
     	try {
     		res.setInfo(JSONUtil.getJsonstringFromObject(wlResponse));
 		} catch (JsonProcessingException e) {
