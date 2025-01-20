@@ -18,8 +18,8 @@
                       <th>Node 레벨</th>
                       <th>GPU 레벨</th>
                       <th>보안 레벨</th>
-                      <th>워크로드 유형</th>
-                      <th>배포 단계</th>
+                      <th>우선순위</th>
+                      <th>선점정책</th>
                       <th>클라우드 유형</th>
                       <th style="width: 50px">상태</th>
                       <th style="width: 60px">저장</th>
@@ -68,13 +68,13 @@
                           @input="checkChanges(workload)" />
                       </td>
                       <td>
-                        <select v-model="workload.workloadType" class="form-select" @change="checkChanges(workload)">
-                          <option v-for="type in options.workloadTypes" :value="type.value" :key="type.value">{{ type.label }}</option>
+                        <select v-model="workload.priorityClass" class="form-select" @change="checkChanges(workload)">
+                          <option v-for="type in options.priorityClasses" :value="type.value" :key="type.value">{{ type.label }}</option>
                         </select>
                       </td>
                       <td>
-                        <select v-model="workload.deploymentStage" class="form-select" @change="checkChanges(workload)">
-                          <option v-for="stage in options.deploymentStages" :value="stage.value" :key="stage.value">{{ stage.label }}</option>
+                        <select v-model="workload.preemptionPolicy" class="form-select" @change="checkChanges(workload)">
+                          <option v-for="stage in options.preemptionPolicies" :value="stage.value" :key="stage.value">{{ stage.label }}</option>
                         </select>
                       </td>
                       <td>

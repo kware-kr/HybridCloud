@@ -21,7 +21,7 @@
                       <th>GPU 이름</th>
                       <th>성능 레벨 (1~10)</th>
                       <th>GPU 레벨 (1~10)</th>
-                      <th>보안 레벨 (1~10)</th>
+                      <th>보안 레벨 (1~5)</th>
                       <th style="width: 50px">상태</th>
                       <th style="width: 60px">저장</th>
                     </tr>
@@ -37,7 +37,7 @@
                       <td style="text-align: left">{{ node.nodeInfo.gpuModels }}</td>
                       <td><input type="number" v-model.number="node.feature.performanceLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
                       <td><input type="number" v-model.number="node.feature.gpuLevel"         min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
-                      <td><input type="number" v-model.number="node.feature.securityLevel"    min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
+                      <td><input type="number" v-model.number="node.feature.securityLevel"    min="1" max="5" class="form-control" @input="checkChanges(node)" /></td>
                       <td>
                         <i style="font-weight: bold; font-size: 20px" :class="changedNodes[node.nodeUid]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'"></i>
                       </td>

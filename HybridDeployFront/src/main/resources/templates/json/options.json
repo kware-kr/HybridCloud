@@ -15,7 +15,7 @@
     "cloudTypes": [
       { "value": "PUB", "label": "Public" },
       { "value": "PRI", "label": "Private" },
-      { "value": "ONP", "label": "On-premise" }
+      { "value": "ONP", "label": "On-Premises" }
     ],
       "predefinedColors": [
         "#FF0000", "#FFA500", "#32CD32", "#8B0000", "#A0522D",
@@ -46,6 +46,18 @@
         "#00CED1", "#00BFFF", "#ADD8E6", "#B0E0E6", "#AFEEEE",
         "#FF6347", "#FFB6C1", "#FF8C00", "#FFFFE0", "#F0E68C",
         "#BDB76B", "#800000", "#A52A2A", "#D2691E", "#C04000"
+    ],
+    "priorityClasses": [
+      { "value": "hyCriticalPriority", "label": "CriticalPriority" },
+      { "value": "hyHighPriority"    , "label": "HighPriority" },
+      { "value": "hyMediumPriority"  , "label": "MediumPriority" },
+      { "value": "hyLowPriority"     , "label": "LowPriority" },
+      { "value": "hyVeryLowPriority" , "label": "VeryLowPriority" }
+    ]
+    ,
+    "preemptionPolicies": [
+      { "value": "PreemptLowerPriority", "label": "선점"  },
+      { "value": "Never"               , "label": "비선점" }
     ]
   }
   
