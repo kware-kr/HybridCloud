@@ -1,6 +1,8 @@
 package com.kware.policy.task.common.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,13 +20,40 @@ public class CommonService {
 	//{{db관련 서비스
 	@Autowired
 	protected CommonDao dao;
+	
+	//gpu의 개별 스코어를 등록함
+	HashMap<String, Double> gpuScoreMap = new HashMap<String, Double>();
+	private static final int MAX_COUNT = 100;
+	private static final AtomicInteger counter = new AtomicInteger(0); 
+	
 
-	public List<?> selectCommonConfigGroupList() {
+	public List<?> getCommonConfigGroupList() {
 		return dao.selectCommonConfigGroupList();
 	}
 
-	public CommonConfigGroup selectCommonConfigGroup(CommonConfigGroup.ConfigName cfgName) {
+	public CommonConfigGroup getCommonConfigGroup(CommonConfigGroup.ConfigName cfgName) {
 		return dao.selectCommonConfigGroup(cfgName);
+	}
+	
+	public Double getCommonGpuScore(String product) {
+		Double score = gpuScoreMap.get(product);
+		if(score == null) {
+			score = dao.selectCommonGpuScore(product);
+			if(score != null) {
+				gpuScoreMap.put(product, score);
+			}
+		}else if(score == 0) {
+			int currentCount = counter.incrementAndGet();
+			if (currentCount == MAX_COUNT) {
+				counter.set(0); // 다시 0으로 초기화
+				score = dao.selectCommonGpuScore(product);
+				if(score != null) {
+					score = 0.;
+				}
+				gpuScoreMap.put(product, score);
+			}
+		}
+		return score;
 	}
 	//}}db 관련 서비스
 	

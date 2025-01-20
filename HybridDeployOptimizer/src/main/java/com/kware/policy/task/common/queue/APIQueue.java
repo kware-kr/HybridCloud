@@ -42,7 +42,7 @@ public class APIQueue extends DefaultQueue{
     	queueLog.info("Queue Log Start ====================================================="); //로그 파일 생성하는 목적
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
 
-    	apiMap    = new HashMap<>();
+    	apiMap = new ConcurrentHashMap<>();
     }
 
     

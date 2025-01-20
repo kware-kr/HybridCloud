@@ -5,66 +5,43 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 <!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
 <mapper namespace="featureMapper">
-	<select id="selectFeatureBaseListALL" resultType="com.kware.policy.task.feature.service.vo.CommonFeatureBase">
-		SELECT
-			  cfg_name
-			, cfg_content
-		FROM mo_common_feature_base m
+	<select id="selectCommonFeatuerListALL" resultType="HashMap">
+		SELECT fea_name
+			-- , fea_sub_name
+			, fea_content::text
+		FROM k_hybrid.mo_common_feature
 		WHERE delete_at = 'N'
+		ORDER BY fea_name
+			, fea_sub_name;
 	</select>
 	
 	<!-- *********************    -->
 	
 	<!-- 모든 데이터 조회 -->
-    <select id="selectClusterNodeFeatureListAll" resultType="com.kware.policy.task.feature.service.vo.ClusterNodeFeature">
-        SELECT a.no_uid
-			, a.gen_level
-			, a.gpu_level
-			, a.sec_level
-			, a.cloud_type
-			, a.etc
-			, b.cl_uid 
-			, b.nm 
-		FROM k_hybrid.mo_cluster_node_feature a
-		     INNER JOIN k_hybrid.mo_cluster_node b ON b.uid = a.no_uid 
-		WHERE a.deleted_dt IS NULL;
+    <select id="selectClusterNodeFeatureListAll" resultType="HashMap">
+        SELECT cl_uid
+			, nm
+			, feature::text
+			, auto_feature::text
+		FROM k_hybrid.mo_cluster_node
+		WHERE delete_at = 'N'
+    </select>
+    
+    <!-- 모든 데이터 조회 -->
+    <select id="selectClusterFeatureListAll" resultType="HashMap">
+	    SELECT uid AS cl_uid
+			, feature::text
+		FROM k_hybrid.mo_cluster
+		WHERE delete_at = 'N'
     </select>
 
-    <!-- 데이터 삽입 -->
-    <insert id="insertClusterNodeFeature" parameterType="com.kware.policy.task.feature.service.vo.ClusterNodeFeature">
-        <!-- 입력전에는 무조건 히스토리를 만든다 -->
-    	UPDATE mo_cluster_node_feature
-		SET deleted_dt = CURRENT_TIMESTAMP
-		WHERE no_uid = #{noUid}
-		  AND deleted_dt IS NULL;
-		  
-		INSERT INTO k_hybrid.mo_cluster_node_feature (
-			no_uid
-			, gen_level
-			, gpu_level
-			, sec_level
-			, cloud_type
-			, etc
-		)VALUES (
-			  #{noUid}
-			, #{genLevel}
-			, #{gpuLevel}
-			, #{secLevel}
-			, #{cloudType}
-			, #{etc}::jsonb
-			);
-    </insert>
-
-    <!-- 데이터 업데이트 -->
-    <update id="insertClusterNodeFeatureHistory" parameterType="com.kware.policy.task.feature.service.vo.ClusterNodeFeature">
-        UPDATE mo_cluster_node_feature
-		SET deleted_dt = CURRENT_TIMESTAMP
-		WHERE no_uid = 1
-		  AND deleted_dt IS NULL
+       <!-- 데이터 업데이트 -->
+    <update id="updateClusterNodeAutoFeature" parameterType="HashMap">
+        UPDATE mo_cluster_node
+		SET auto_feature = #{autoFeature}::jsonb,
+		    feature = (case when feature is null then #{autoFeature}::jsonb else feature end)
+		WHERE cl_uid = #{clUid}
+		  AND nm=#{nm}
     </update>
-	
-	
-	
-
 </mapper>
 

@@ -444,11 +444,13 @@ public class WorkloadContainerQueue  extends DefaultQueue{
                 .collect(Collectors.toMap(
                         Map.Entry::getKey, // cl_uid_node_name
                         entry -> entry.getValue().entrySet().stream()
-                                .filter(innerEntry -> innerEntry.getValue() != null 
-                                        && ( innerEntry.getValue().getStatus() == PodStatusPhase.UNSUBMITTED 
-                                          || innerEntry.getValue().getStatus() == PodStatusPhase.PENDING
-                                          || innerEntry.getValue().getStatus() == PodStatusPhase.RUNNING)
-                                 )
+                                .filter(innerEntry -> {
+                                    WorkloadTaskWrapper wrapper = innerEntry.getValue(); // 값 캐싱
+                                    return wrapper != null && 
+                                           (wrapper.getStatus() == PodStatusPhase.UNSUBMITTED 
+                                         || wrapper.getStatus() == PodStatusPhase.PENDING 
+                                         || wrapper.getStatus() == PodStatusPhase.RUNNING);
+                                })
                                 .collect(Collectors.toMap(
                                         Map.Entry::getKey, // mlid_container-name
                                         Map.Entry::getValue // WorkloadTaskContainerWrapper

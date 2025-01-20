@@ -2,11 +2,11 @@ package com.kware.policy.task.common.queue;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.slf4j.Logger;
@@ -18,7 +18,6 @@ import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
 import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
-import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +42,7 @@ public class PromQueue extends DefaultQueue{
     	queueLog.info("Queue Log Start ====================================================="); //로그 파일 생성하는 목적
     	log.error("Error Log Start ====================================================="); //로그 파일 생성하는 목적
 
-        this.promDequesMap = new HashMap<>();
+        this.promDequesMap = new ConcurrentHashMap<>();
     }
     
     @Override
@@ -139,6 +138,10 @@ public class PromQueue extends DefaultQueue{
     
     public List<PromMetricNode> getLastPromMetricNodesReadOnly() {
 		BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)this.promDequesMap.get(PromDequeName.METRIC_NODEINFO);
+		
+		if(nodeDeque == null)
+			return null;
+		
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
     	if(nodes == null)
     		return null;
@@ -150,7 +153,7 @@ public class PromQueue extends DefaultQueue{
      * 배포가능한 노드 리스트 제공(배포할 수 없는 노드는 제외)- master 등
      * @return ReadOnly List<PromMetricNode>
      */
-    public List<PromMetricNode> getAppliablePromMetricNodesReadOnly() {
+    public List<PromMetricNode> getAppliablePromMetricNodesReadOnlyToList() {
     	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)this.promDequesMap.get(PromDequeName.METRIC_NODEINFO);
     	PromMetricNodes  nodes= nodeDeque.peekFirst();
     	
@@ -159,11 +162,20 @@ public class PromQueue extends DefaultQueue{
     	return nodes.getUnmodifiableAppliableNodeList();
     }
     
+    public Map<String, PromMetricNode> getAppliablePromMetricNodesReadOnlyToMap() {
+    	BlockingDeque<PromMetricNodes> nodeDeque = (BlockingDeque<PromMetricNodes>)this.promDequesMap.get(PromDequeName.METRIC_NODEINFO);
+    	PromMetricNodes  nodes= nodeDeque.peekFirst();
+    	
+    	if(nodes == null)
+    		return null;
+    	return nodes.getUnmodifiableAllNodeMap();
+    }
+    
     /**
      * Metric에서 수집된 다양한 최신 읽기전용 POD 데이터를 조회
      * @return ReadOnly List<PromMetricPod>
      */
-    public List<PromMetricPod> getLastPromMetricPodsReadOnly() {
+    public List<PromMetricPod> getLastPromMetricPodsReadOnlyToList() {
     	BlockingDeque<PromMetricPods> deque = (BlockingDeque<PromMetricPods>)this.promDequesMap.get(PromDequeName.METRIC_PODINFO);
     	PromMetricPods pods = deque.peekFirst();
     	
@@ -173,6 +185,16 @@ public class PromQueue extends DefaultQueue{
     	return pods.getUnmodifiableAllPodList();
     }
     //}}
+    
+    public Map<String, PromMetricPod> getLastPromMetricPodsReadOnlyToMap() {
+    	BlockingDeque<PromMetricPods> deque = (BlockingDeque<PromMetricPods>)this.promDequesMap.get(PromDequeName.METRIC_PODINFO);
+    	PromMetricPods pods = deque.peekFirst();
+    	
+    	if(pods == null)
+    		return null;
+    	
+    	return pods.getUnmodifiableAllPodMap();
+    }
     
     //_miliseconds가 지난 데이터를 삭제하는 루틴
     public void removeExpiredDequeElements(PromDequeName name, long _miliseconds) {

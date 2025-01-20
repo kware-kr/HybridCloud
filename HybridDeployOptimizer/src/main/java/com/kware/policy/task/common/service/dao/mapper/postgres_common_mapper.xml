@@ -15,5 +15,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         WHERE delete_at = 'N'
           AND cfg_name = #{cfgName}
 	</select>
+	
+	<select id="selectCommonGpuScore" resultType="Double">
+	    SELECT max(score) AS score FROM k_hybrid.mo_common_gpu_spec
+		WHERE product like '%' || REPLACE(REPLACE(REPLACE(REPLACE(product,'NVIDIA',''),'GB',''), '-', '%'), ' ', '%')  || '%'
+	</select>
+	
 </mapper>
 

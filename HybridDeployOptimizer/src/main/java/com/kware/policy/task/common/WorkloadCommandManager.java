@@ -1,17 +1,27 @@
 package com.kware.policy.task.common;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricPod;
+import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.common.queue.WorkloadContainerQueue;
+import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.vo.WorkloadCommand;
+import com.kware.policy.task.feature.FeatureMain;
+import com.kware.policy.task.feature.eval.GpuPerformanceEvaluator;
+import com.kware.policy.task.feature.eval.NodePerformanceEvaluator;
+import com.kware.policy.task.feature.eval.SecurityLevelEvaluator;
+import com.kware.policy.task.feature.service.vo.ClusterNodeFeature;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
@@ -28,14 +38,17 @@ public class WorkloadCommandManager {
 	private final BlockingQueue<WorkloadCommand> commandQueue;
     private final Thread workerThread;
     private volatile boolean running;
+    
     private WorkloadRequestService wrService = null;
+    private CommonService comService = null;
+    private FeatureMain feaMain = null;
     
     QueueManager qm = QueueManager.getInstance();
     
     PromQueue    promQ = qm.getPromQ();
 	RequestQueue requestQ = qm.getRequestQ();
 	WorkloadContainerQueue wcQ = qm.getWorkloadContainerQ();
-    
+	APIQueue apiQ = qm.getApiQ();
     
     // Singleton private 생성자
     private WorkloadCommandManager() {
@@ -65,8 +78,21 @@ public class WorkloadCommandManager {
         commandQueue.offer(command); // BlockingQueue에 추가
     }
     
+    /*
     public void setWorkloadRequestService(WorkloadRequestService service) {
     	this.wrService = service;
+    }
+    
+    public void setCommonService(CommonService comService) {
+		this.comService = comService;
+	}
+	*/
+    
+    public void setInitSevice(WorkloadRequestService wrService, CommonService comService, FeatureMain fmain){
+    	this.wrService  = wrService;
+    	this.comService = comService;
+    	this.feaMain    = fmain;
+    	
     }
 
     // 큐를 종료하고 스레드를 중지
@@ -131,6 +157,9 @@ public class WorkloadCommandManager {
                 			PromMetricPod pod = (PromMetricPod)valObj;
                 			wcQ.setPodInfo(pod);
                 		}                		
+                	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_CHANGE) {
+                		//성능들을 추적함
+                		generatePerformance();
                 	}
                 	
                 	queueLog.debug("Wrokload worker: command {}",task.getCommand());
@@ -144,5 +173,49 @@ public class WorkloadCommandManager {
                 }
             }
         }
+    }
+    
+    private void generatePerformance() {
+    	List<PromMetricNode> lastNodes =  promQ.getLastPromMetricNodesReadOnly();
+    	if(lastNodes == null)
+    		return;
+    	
+    	GpuPerformanceEvaluator gpfe = new GpuPerformanceEvaluator();
+    	gpfe.setCommonService(comService);
+    	Map<String, Integer> gpfeRankMap = gpfe.getFormance(lastNodes);
+    	
+    	
+    	NodePerformanceEvaluator npfe = new NodePerformanceEvaluator();
+    	Map<String, Integer> npfeRankMap = npfe.getFormanceScore(lastNodes);
+    	
+    	SecurityLevelEvaluator sle = new SecurityLevelEvaluator();
+    	Map<String, Integer> sleRankMap = sle.calculateSecurityLevel(lastNodes, feaMain.getClusterFeature());
+    	
+    	
+    	ClusterNodeFeature nf = null;
+    	List<ClusterNodeFeature> nodeFeatures = new ArrayList<ClusterNodeFeature>(); 
+    	for(PromMetricNode n: lastNodes) {
+    		nf = new ClusterNodeFeature();
+    		nf.setClUid(n.getClUid());
+    		nf.setNodeName(n.getNode());
+    		nf.setGpuLevel        (gpfeRankMap.get(n.getKey()));
+    		nf.setPerformanceLevel(npfeRankMap.get(n.getKey()));
+    		nf.setSecurityLevel   (sleRankMap.get(n.getKey()));
+    		
+    		nodeFeatures.add(nf);
+    	}
+    	
+    	feaMain.setClusterNodeFeature(nodeFeatures);
+    	
+    	
+    	System.out.println(gpfeRankMap);
+    	System.out.println(npfeRankMap);
+    	System.out.println(sleRankMap);
+    	
+    	gpfeRankMap.clear();
+    	npfeRankMap.clear();
+    	sleRankMap.clear();
+    	String a = "aaa";
+    	
     }
 }

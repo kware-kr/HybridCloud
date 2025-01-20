@@ -16,9 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
+import com.kware.policy.task.collector.service.vo.PromMetricPod;
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.service.vo.CommonConfigGroup;
 import com.kware.policy.task.common.service.vo.CommonEvent;
+import com.kware.policy.task.common.vo.WorkloadCommand;
+import com.kware.policy.task.feature.FeatureMain;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CommonRestController {
 	private final CommonService service;
+	private final FeatureMain fm;
 
 	// json parser 에러
 	@ExceptionHandler(HttpMessageNotReadableException.class)
@@ -82,7 +87,7 @@ public class CommonRestController {
 		CommonConfigGroup.ConfigName cfgname= CommonConfigGroup.ConfigName.getConfigName(cfgName);
 		CommonConfigGroup ccGroup = null;
 		if(cfgname != null) {
-			ccGroup = service.selectCommonConfigGroup(cfgname);
+			ccGroup = service.getCommonConfigGroup(cfgname);
 			return ResponseEntity.ok(ccGroup);
 		}else {
 			return ResponseEntity.notFound()
@@ -100,7 +105,7 @@ public class CommonRestController {
 	 */
 	@GetMapping("/config")//@PathVariable("val")
 	public ResponseEntity<?> getConfigGroup() throws Exception {
-		List cfgGroupList = service.selectCommonConfigGroupList();
+		List cfgGroupList = service.getCommonConfigGroupList();
 		return ResponseEntity.ok(cfgGroupList);
 	}
 	
@@ -116,4 +121,22 @@ public class CommonRestController {
 		return service.getAllEvents(null);
 	}
 	
+	//프론트에서 설정이 변경되면 모든 설정을 DB에서 다시 읽어들이도록 한다.
+	@GetMapping("/setting/change")
+	public void changeSettings(HttpServletRequest request) {
+		String gubun = request.getParameter("g");
+		if("feature".equals(gubun)) {
+			fm.init_workload_feature();
+		}else if("node".equals(gubun)) {
+			fm.init_node_feature();
+		}else if("cluster".equals(gubun)) {
+			fm.init_cluster_feature();
+			fm.init_node_feature();
+			
+			WorkloadCommand<PromMetricPod> command = new WorkloadCommand<PromMetricPod>(WorkloadCommand.CMD_NODE_CHANGE,null);
+			WorkloadCommandManager.addCommand(command);
+		}
+		log.debug("==============/setting/change?g=" + request.getParameter("g"));
+		//service.getAllEvents(null);
+	}
 }

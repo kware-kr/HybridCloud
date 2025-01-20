@@ -25,4 +25,8 @@ public class CommonDao {
 	public CommonConfigGroup selectCommonConfigGroup(CommonConfigGroup.ConfigName cfgName) {
 		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonConfigGroup", cfgName.toString());
 	}
+	
+	public Double selectCommonGpuScore(String product) {
+		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonGpuScore", product);
+	}
 }
