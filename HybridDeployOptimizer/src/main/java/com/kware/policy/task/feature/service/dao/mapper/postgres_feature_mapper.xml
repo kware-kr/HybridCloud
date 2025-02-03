@@ -17,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<!-- *********************    -->
 	
-	<!-- 모든 데이터 조회 -->
+	<!-- 모든 클러스터 노등의 데이터 조회 -->
     <select id="selectClusterNodeFeatureListAll" resultType="HashMap">
         SELECT cl_uid
 			, nm
@@ -27,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE delete_at = 'N'
     </select>
     
-    <!-- 모든 데이터 조회 -->
+    <!-- 모든 클러스터의 데이터 조회 -->
     <select id="selectClusterFeatureListAll" resultType="HashMap">
 	    SELECT uid AS cl_uid
 			, feature::text
@@ -35,7 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE delete_at = 'N'
     </select>
 
-       <!-- 데이터 업데이트 -->
+       <!-- 클러스터 노드의 데이터 업데이트 -->
     <update id="updateClusterNodeAutoFeature" parameterType="HashMap">
         UPDATE mo_cluster_node
 		SET auto_feature = #{autoFeature}::jsonb,
