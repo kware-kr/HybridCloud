@@ -13,12 +13,12 @@
                   <div class="mb-4">
                     <div class="row g-3">
                       <!-- CPU 스케일 인 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="cpuInTrigger" class="form-label"><b>CPU</b> In trigger (%)</label>
                         <input type="number" v-model.number="nodePolicy.cpu.inTrigger" class="form-control" id="cpuInTrigger" placeholder="예: 85" />
                       </div>
                       <!-- CPU 스케일 아웃 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="cpuOutTrigger" class="form-label">Out trigger (%)</label>
                         <input
                           type="number"
@@ -27,9 +27,16 @@
                           id="cpuOutTrigger"
                           placeholder="예: 30" />
                       </div>
+                      <div class="col-md-2">
+                        <label :for="cpuAt" class="form-label">적용 여부</label>
+                        <select v-model="nodePolicy.cpu.scalingAt" class="form-select" id="cpuAt">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
+                        </select>
+                      </div>
 
                       <!-- 메모리 스케일 인 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="memoryInTrigger" class="form-label"><b>Memory</b> In trigger (%)</label>
                         <input
                           type="number"
@@ -39,7 +46,7 @@
                           placeholder="예: 85" />
                       </div>
                       <!-- 메모리 스케일 아웃 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="memoryOutTrigger" class="form-label">Out trigger (%)</label>
                         <input
                           type="number"
@@ -48,9 +55,16 @@
                           id="memoryOutTrigger"
                           placeholder="예: 30" />
                       </div>
+                      <div class="col-md-2">
+                        <label :for="memoryAt" class="form-label">적용 여부</label>
+                        <select v-model="nodePolicy.memory.scalingAt" class="form-select" id="memoryAt">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
+                        </select>
+                      </div>
 
                       <!-- 디스크 스케일 인 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="diskInTrigger" class="form-label"><b>Disk</b> In trigger (%)</label>
                         <input
                           type="number"
@@ -60,7 +74,7 @@
                           placeholder="예: 85" />
                       </div>
                       <!-- 디스크 스케일 아웃 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="diskOutTrigger" class="form-label">Out trigger (%)</label>
                         <input
                           type="number"
@@ -69,14 +83,21 @@
                           id="diskOutTrigger"
                           placeholder="예: 30" />
                       </div>
+                      <div class="col-md-2">
+                        <label :for="diskAt" class="form-label">적용 여부</label>
+                        <select v-model="nodePolicy.disk.scalingAt" class="form-select" id="diskAt">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
+                        </select>
+                      </div>
 
                       <!-- GPU 스케일 인 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="gpuInTrigger" class="form-label"><b>GPU</b> In trigger (%)</label>
                         <input type="number" v-model.number="nodePolicy.gpu.inTrigger" class="form-control" id="gpuInTrigger" placeholder="예: 85" />
                       </div>
                       <!-- GPU 스케일 아웃 트리거 -->
-                      <div class="col-md-6">
+                      <div class="col-md-5">
                         <label for="gpuOutTrigger" class="form-label">Out trigger (%)</label>
                         <input
                           type="number"
@@ -84,6 +105,13 @@
                           class="form-control"
                           id="gpuOutTrigger"
                           placeholder="예: 30" />
+                      </div>
+                      <div class="col-md-2">
+                        <label :for="gpuAt" class="form-label">적용 여부</label>
+                        <select v-model="nodePolicy.gpu.scalingAt" class="form-select" id="gpuAt">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
+                        </select>
                       </div>
 
                       <!-- 최소 노드 수 -->
@@ -104,6 +132,14 @@
                         <select v-model="nodePolicy.scalingLogic" class="form-select" id="scalingLogic">
                           <option value="AND">AND</option>
                           <option value="OR">OR</option>
+                        </select>
+                      </div>
+                      <!-- 스케일링 정책 선택 -->
+                      <div class="col-md-6">
+                        <label for="scalingAt" class="form-label"><b>Scaling 여부</b></label>
+                        <select v-model="nodePolicy.scalingAt" class="form-select" id="scalingAt">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
                         </select>
                       </div>
                     </div>

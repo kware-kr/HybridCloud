@@ -34,7 +34,7 @@
                           placeholder="예: 30" />
                       </div>
                       <!-- 관찰 기간 -->
-                      <div class="col-md-3">
+                      <div class="col-md-2">
                         <label :for="`${resource}ObservationPeriod`" class="form-label">지속 기간 (분)</label>
                         <input
                           type="number"
@@ -44,7 +44,7 @@
                           placeholder="예: 10" />
                       </div>
                       <!-- 조정 비율 -->
-                      <div class="col-md-3">
+                      <div class="col-md-2">
                         <label :for="`${resource}AdjustmentRate`" class="form-label">조정 비율 (%)</label>
                         <input
                           type="number"
@@ -52,6 +52,13 @@
                           class="form-control"
                           :id="`${resource}AdjustmentRate`"
                           placeholder="예: 50" />
+                      </div>
+                      <div class="col-md-2">
+                        <label :for="`${resource}At`" class="form-label">적용 여부</label>
+                        <select v-model="policy.scalingAt" class="form-select" id="`${resource}At`">
+                          <option value="Y">YES</option>
+                          <option value="N">NO</option>
+                        </select>
                       </div>
                     </div>
                   </div>
