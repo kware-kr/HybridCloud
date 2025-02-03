@@ -10,7 +10,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.kware.policy.task.scalor.ProcessMain;
+import com.kware.policy.task.scalor.ScalorMain;
 
 /**
  * @author kljang 어플리케이션이 사용 준비가 되면 최초에 실행해야할 자료나 데이터를 처리할 수 있다.
@@ -22,7 +22,7 @@ public class ApplicationReady {
 	//@Autowired
     //private ApplicationContext applicationContext;
 	
-	ProcessMain pm = null;
+	ScalorMain pm = null;
 	
 	public static boolean isApplicationReady = false;
 	
@@ -58,7 +58,7 @@ public class ApplicationReady {
 		
 		//여기서 DB를 초기화 할 수 있지만, 최기화 보다 더 빨리 수행하도록 하기 위해서 collect 스케줄러에서 진행하도록 한다.
 
-		pm = new ProcessMain();
+		pm = new ScalorMain();
 		pm.start();
 		        
 		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));

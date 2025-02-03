@@ -215,7 +215,7 @@ public class PromMetricNode extends PromMetricDefault{
 	}
 	
 	//해당 노드에서 실행중인 파드 리스트
-	Map<String, PromMetricPod> mPodList = new HashMap<String, PromMetricPod>();;
+	Map<String, PromMetricPod> mPodList = new HashMap<String, PromMetricPod>();
 	
 	//GPU 모델은 의미없지만 추후에 모델별로 순위를 고려해서
 	Map<String, PromMetricNodeGPU> mGpuList = new HashMap<String, PromMetricNodeGPU>(); //gpu model
