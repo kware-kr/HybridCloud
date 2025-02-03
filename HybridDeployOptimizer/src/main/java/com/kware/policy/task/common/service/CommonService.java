@@ -4,13 +4,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import javax.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.kware.common.util.RestTemplateUtil;
 import com.kware.policy.task.common.service.dao.CommonDao;
 import com.kware.policy.task.common.service.dao.CommonEventDao;
 import com.kware.policy.task.common.service.vo.CommonConfigGroup;
 import com.kware.policy.task.common.service.vo.CommonEvent;
+import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 
 
 //@Slf4j
@@ -31,8 +38,12 @@ public class CommonService {
 		return dao.selectCommonConfigGroupList();
 	}
 
-	public CommonConfigGroup getCommonConfigGroup(CommonConfigGroup.ConfigName cfgName) {
-		return dao.selectCommonConfigGroup(cfgName);
+	public List<CommonConfigGroup> getCommonConfigGroup(String feaName) {
+		return dao.selectCommonConfigGroup(feaName);
+	}
+	
+	public CommonConfigGroup getCommonConfigGroupSub(String feaName, String feaSubName) {
+		return dao.selectCommonConfigGroupSub(feaName, feaSubName);
 	}
 	
 	public Double getCommonGpuScore(String product) {
@@ -57,7 +68,6 @@ public class CommonService {
 	}
 	//}}db 관련 서비스
 	
-	
 	@Autowired
 	protected CommonEventDao eventDAO;
 	
@@ -77,4 +87,40 @@ public class CommonService {
     public List<CommonEvent> getAllEvents(CommonEvent event) {
         return eventDAO.getAllEvents(event);
     }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////  
+    
+    @Value("${hybrid.request.url}")
+    private String hybrid_request_url;  
+    
+    @Autowired
+	protected RestTemplate restTemplate;
+    
+    RestTemplateUtil restTemplateUtil = null;
+    
+    @PostConstruct
+    public void init() {
+    	restTemplateUtil = new RestTemplateUtil(restTemplate);
+    }
+    
+    public void requestScalingApiCall(PodScalingInfo psInfo, WorkloadRequest workloadRequest) {
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+    }
 }
+
+

@@ -27,4 +27,8 @@ public class APIConstant {
 	
 	//정책요청을 위한 인터페이스 버전
 	public final static String POLICY_INTERFACE_VERSION = "0.5";
+	
+	
+	//request uri 관련(KETI)
+	public static String REQUEST_SCALE = "/submit_resource"; //재배포 요청 URI
 }

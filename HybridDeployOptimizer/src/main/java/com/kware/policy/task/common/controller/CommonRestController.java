@@ -81,14 +81,13 @@ public class CommonRestController {
 	 * @return
 	 * @throws Exception
 	 */
-	@GetMapping("/config/{cfgName}")//@PathVariable("val")
-	public ResponseEntity<?> getConfigGroup(@PathVariable("cfgName") String cfgName) throws Exception {
+	@GetMapping("/config/{feaName}")//@PathVariable("val")
+	public ResponseEntity<?> getConfigGroup(@PathVariable("feaName") String feaName) throws Exception {
 		
-		CommonConfigGroup.ConfigName cfgname= CommonConfigGroup.ConfigName.getConfigName(cfgName);
-		CommonConfigGroup ccGroup = null;
-		if(cfgname != null) {
-			ccGroup = service.getCommonConfigGroup(cfgname);
-			return ResponseEntity.ok(ccGroup);
+		List<CommonConfigGroup> ccGroups = null;
+		if(feaName != null) {
+			ccGroups = service.getCommonConfigGroup(feaName);
+			return ResponseEntity.ok(ccGroups);
 		}else {
 			return ResponseEntity.notFound()
 					.header("X-Error-Reason", "Item not found")
@@ -96,6 +95,27 @@ public class CommonRestController {
 			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process YAML");
 		}
 		
+	}
+	
+	/**
+	 * 워크로드 특성에 특정 설정에 해당하는 config name을 통해서 상세정보를 확인함
+	 * @param cfgName config name
+	 * @return
+	 * @throws Exception
+	 */
+	@GetMapping("/config/{feaName}/{feaSubName}")//@PathVariable("val")
+	public ResponseEntity<?> getConfigGroupSub(@PathVariable("feaName") String feaName, @PathVariable("feaSubName") String feaSubName) throws Exception {
+		
+		CommonConfigGroup ccGroup = null;
+		if(feaName != null) {
+			ccGroup = service.getCommonConfigGroupSub(feaName, feaSubName);
+			return ResponseEntity.ok(ccGroup);
+		}else {
+			return ResponseEntity.notFound()
+					.header("X-Error-Reason", "Item not found")
+                    .build();
+			//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process YAML");
+		}	
 	}
 	
 	/**

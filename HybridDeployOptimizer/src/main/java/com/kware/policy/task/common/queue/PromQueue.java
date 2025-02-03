@@ -63,17 +63,17 @@ public class PromQueue extends DefaultQueue{
 	 * PromMetricNodes class를 관리하는 BlockingDeque
 	 * @return
 	 */
-//	public BlockingDeque<PromMetricNodes> getPromNodesDeque() {
-//		return (BlockingDeque<PromMetricNodes>)getPromDeque(PromDequeName.METRIC_NODEINFO);
-//	}
+	public BlockingDeque<PromMetricNodes> getPromNodesDeque() {
+		return (BlockingDeque<PromMetricNodes>)getPromDeque(PromDequeName.METRIC_NODEINFO);
+	}
 	
 		/**
 	 * PromMetricPods class를 관리하는 BlockingDeque
 	 * @return
 	 */
-//	public BlockingDeque<PromMetricPods> getPromPodsDeque() {
-//		return (BlockingDeque<PromMetricPods>)getPromDeque(PromDequeName.METRIC_PODINFO);
-//	}
+	public BlockingDeque<PromMetricPods> getPromPodsDeque() {
+		return (BlockingDeque<PromMetricPods>)getPromDeque(PromDequeName.METRIC_PODINFO);
+	}
 	
 	public int getProDequeSize(PromDequeName name) {
 		BlockingDeque<?> deque = this.promDequesMap.get(name);

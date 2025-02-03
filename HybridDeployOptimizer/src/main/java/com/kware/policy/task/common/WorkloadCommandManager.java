@@ -22,12 +22,17 @@ import com.kware.policy.task.feature.eval.GpuPerformanceEvaluator;
 import com.kware.policy.task.feature.eval.NodePerformanceEvaluator;
 import com.kware.policy.task.feature.eval.SecurityLevelEvaluator;
 import com.kware.policy.task.feature.service.vo.ClusterNodeFeature;
+import com.kware.policy.task.scalor.service.vo.NodeScalingInfo;
+import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.RequestWorkloadAttributes;
 import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @SuppressWarnings("rawtypes")
 public class WorkloadCommandManager {
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
@@ -158,9 +163,51 @@ public class WorkloadCommandManager {
                 			wcQ.setPodInfo(pod);
                 		}                		
                 	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_CHANGE) {
-                		//성능들을 추적함
+                		//성능들을 생성함
                 		generatePerformance();
-                	}
+                	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_SCALING_IN) {
+                		//노드 줄이는 요청, 스레드 처리
+                		valObj = task.getValue();
+                		
+                		List<NodeScalingInfo> nodeScalingInfos = null;
+                		if(valObj instanceof List) {
+                			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
+                		}
+                		if(log.isInfoEnabled())
+                			log.info("노드 스케일링 IN 요청[CMD_NODE_SCALING_IN]:\n{}", nodeScalingInfos);
+
+                	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_SCALING_OUT) {
+                		//노드 늘리는 요청, 스레드 처리
+                		valObj = task.getValue();
+                		
+                		List<NodeScalingInfo> nodeScalingInfos = null;
+                		if(valObj instanceof List) {
+                			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
+                		}
+                		if(log.isInfoEnabled())
+                			log.info("노드 스케일링 OUT 요청[CMD_NODE_SCALING_OUT]:\n{}", nodeScalingInfos);
+
+                	}else if(task.getCommand() == WorkloadCommand.CMD_POD_SCALING) {
+                		//파드 리소스 조정 요청, 스레드 처리
+                		valObj = task.getValue();
+                		
+                		PodScalingInfo psInfo;
+                		if(valObj instanceof PodScalingInfo) {
+                			psInfo = (PodScalingInfo)valObj;
+                			WorkloadRequest wr = requestQ.getWorkloadRequest(psInfo.promMetricPod.getMlId());
+                			
+                			new Thread(() -> {
+                				try {
+                			       comService.requestScalingApiCall(psInfo, wr);
+                				}catch(Exception e) {
+                					log.error("API call to notify the Optimizer server of configuration changes failed. Error:", e);
+                				}
+                			}).start();
+                			
+                		}
+                		if(log.isInfoEnabled())
+                			log.info("파드 스케일링 요청[CMD_POD_SCALING]:\n{}", valObj);
+                    }
                 	
                 	queueLog.debug("Wrokload worker: command {}",task.getCommand());
                 	wcQ.debuglog();

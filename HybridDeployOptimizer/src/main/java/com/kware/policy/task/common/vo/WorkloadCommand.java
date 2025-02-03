@@ -12,6 +12,10 @@ public class WorkloadCommand<V> {
     public static int CMD_WLD_EXPIRED  = 5; //실제 배포가 이루어지지 않아서 삭제 삭제처리 : mlId => RequestQueue
     public static int CMD_NODE_CHANGE  = 11;//노드 정보변경 ://노드가 변경되었거나, gpu가 변경되었을때 기본 특성정보(노드성능, 보안 등 새롭게 생성)
     
+    public static int CMD_NODE_SCALING_IN  = 21;//노드 줄이는 요청
+    public static int CMD_NODE_SCALING_OUT = 22;//노드 늘이는 요청
+    public static int CMD_POD_SCALING = 23;//파드 리소스를 줄이는 요청
+    
 	private final int command;
 	private final V value;
 	

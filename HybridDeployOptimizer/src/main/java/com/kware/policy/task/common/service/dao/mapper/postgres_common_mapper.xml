@@ -5,15 +5,36 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 <!-- 이 XML의 구조대로 구현될 클래스의 이름 -->
 <mapper namespace="ptCommonMapper">
-	<!--  mo_common_config_group -->
+    <!--  postgres_feature_mapper.xml에도 관련 테이블을 사용하고 있음. 여기는 API 용도임 -->
+	<!--  mo_common_config_group, 전체 테이블에 있는 설정 리스트 -->
 	<select id="selectCommonConfigGroupList" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
-	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_feature_base
-        WHERE delete_at = 'N'
+	    SELECT fea_name
+			, fea_content
+			, fea_desc
+		FROM k_hybrid.mo_common_feature
+		WHERE delete_at = 'N'
+		ORDER BY fea_name, fea_sub_name
 	</select>
+	<!--  동일한 이름으로 구성된 리스트 -->
 	<select id="selectCommonConfigGroup" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
-	    SELECT cfg_name, cfg_content, cfg_desc FROM k_hybrid.mo_common_feature_base
-        WHERE delete_at = 'N'
-          AND cfg_name = #{cfgName}
+	    SELECT fea_name
+			, fea_content
+			, fea_desc
+		FROM k_hybrid.mo_common_feature
+		WHERE delete_at = 'N'
+			AND fea_name = #{feaName}
+		ORDER BY fea_sub_name
+	</select>
+	
+	<select id="selectCommonConfigGroupSub" resultType="com.kware.policy.task.common.service.vo.CommonConfigGroup">
+	    SELECT fea_name
+			, fea_content
+			, fea_desc
+		FROM k_hybrid.mo_common_feature
+		WHERE delete_at = 'N'
+			AND fea_name = #{feaName}
+			AND fea_sub_name = #{feaSubName}
+		ORDER BY fea_sub_name
 	</select>
 	
 	<select id="selectCommonGpuScore" resultType="Double">

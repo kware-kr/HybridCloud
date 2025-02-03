@@ -1,6 +1,8 @@
 package com.kware.policy.task.common.service.dao;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +24,21 @@ public class CommonDao {
 		return sqlSessionTemplate.selectList("ptCommonMapper.selectCommonConfigGroupList");
 	}
 
-	public CommonConfigGroup selectCommonConfigGroup(CommonConfigGroup.ConfigName cfgName) {
-		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonConfigGroup", cfgName.toString());
+	public List<CommonConfigGroup> selectCommonConfigGroup(String feaName) {
+		return sqlSessionTemplate.selectList("ptCommonMapper.selectCommonConfigGroup", feaName);
 	}
+	
+	public CommonConfigGroup selectCommonConfigGroupSub(String feaName, String feaSubName) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("feaName"   , feaName);
+		map.put("feaSubName", feaSubName);
+		
+		CommonConfigGroup ccGroup = sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonConfigGroupSub", map);
+		
+		map.clear();
+		return ccGroup;
+	}
+	
 	
 	public Double selectCommonGpuScore(String product) {
 		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonGpuScore", product);
