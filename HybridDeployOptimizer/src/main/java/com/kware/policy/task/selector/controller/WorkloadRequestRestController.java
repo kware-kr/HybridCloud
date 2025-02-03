@@ -17,21 +17,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.common.util.JSONUtil;
 import com.kware.common.util.StringUtil;
 import com.kware.common.util.YAMLUtil;
-import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.common.QueueManager;
-import com.kware.policy.task.common.constant.StringConstant.RequestStatus;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
 import com.kware.policy.task.common.service.CommonService;
@@ -238,34 +234,50 @@ public class WorkloadRequestRestController {
 	 * @return
 	 * @throws Exception
 	 */
-	@GetMapping("/config/workloadfeature/{feature}")
-	public ResponseEntity<?> getConfigGroup(@PathVariable("feature") CommonConfigGroup.ConfigName cfgname)
+	@GetMapping("/config/features/{feature}")
+	public ResponseEntity<?> getConfigGroup(@PathVariable("feature") String feaName)
 			throws Exception {
-		CommonConfigGroup ccGroup = null;
-		ccGroup = cmService.getCommonConfigGroup(cfgname);
-
+		List<CommonConfigGroup> ccGroups = null;
+		ccGroups = cmService.getCommonConfigGroup(feaName);
+		
 		List<Map> rsList = new ArrayList<Map>();
-		JsonNode node = ccGroup.getContent();
-		if (node.isArray()) {
-			ArrayNode arrayNode = (ArrayNode) node; // JsonNode를 ArrayNode로 캐스팅
-
-			// 배열의 각 요소를 순회
-			Map map = null;
-			String sName = "name";
-			String sLevel = "level";
-			String name;
-			Integer level;
-			for (JsonNode element : arrayNode) {
-				name = (String) element.get(sName).asText();
-				level = (Integer) (element.get(sLevel).asInt());
-
-				map = new HashMap<String, Object>();
-				map.put(sName, name);
-				map.put(sLevel, level);
-				rsList.add(map);
-			}
+		
+		JsonNode node = null;
+		String constant_name = "name";
+		String constant_id = "id";
+		String name, id;
+		Map map = null;
+		for(CommonConfigGroup ccGroup : ccGroups) {
+			node = ccGroup.getContent();
+			name = node.get(constant_name).asText();
+			id   = node.get(constant_id).asText();
+			
+			map = new HashMap<String, Object>();
+			map.put(constant_id, id);
+			map.put(constant_name, name);
+			rsList.add(map);
 		}
-
+		/*		
+				if (node.isArray()) {
+					ArrayNode arrayNode = (ArrayNode) node; // JsonNode를 ArrayNode로 캐스팅
+		
+					// 배열의 각 요소를 순회
+					Map map = null;
+					String sName = "name";
+					String sLevel = "id";
+					String name;
+					Integer level;
+					for (JsonNode element : arrayNode) {
+						name = (String) element.get(sName).asText();
+						level = (Integer) (element.get(sLevel).asInt());
+		
+						map = new HashMap<String, Object>();
+						map.put(sName, name);
+						map.put(sLevel, level);
+						rsList.add(map);
+					}
+				}
+		*/
 		APIResponseCode status = APIResponseCode.SUCCESS;
 		APIResponse<List> response = new APIResponse(status.getCode(), status.getMessage(), rsList);
 
