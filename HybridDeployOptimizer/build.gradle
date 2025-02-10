@@ -94,6 +94,7 @@ dependencies {
 	//implementation 'org.jgap:jgap:3.6.3'
 	// https://mvnrepository.com/artifact/io.github.rayinfinite/jgap
 	implementation group: 'io.github.rayinfinite', name: 'jgap', version: '3.6.3'
+	implementation 'xerces:xercesImpl:2.12.1'
 	
 	
 	//VAR모델

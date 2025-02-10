@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +123,12 @@ public class WorkloadCommandManager {
                 	
                     // 작업 가져오기 (큐가 비어있으면 대기)
                 	WorkloadCommand<?> task = commandQueue.take();
+                	/*
+                	WorkloadCommand<?> task = commandQueue.poll(500, TimeUnit.MILLISECONDS);
+                	if(task == null) {
+                		continue;
+                	}
+                	*/
                 	
                 	if(task.getCommand() == WorkloadCommand.CMD_WLD_ENTER) {
                 		//from: WorkloadRequestService

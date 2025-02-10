@@ -9,7 +9,7 @@ CREATE TABLE k_hybrid.mo_cluster (
 	info jsonb NOT NULL, -- cluster 정보
 	memo text NULL, -- cluster 설명
 	prom_url varchar(256) NULL, -- 프로메테우스 url
-	feature jsonb NULL, -- 특성저장
+	feature jsonb DEFAULT '{"cloudType": "PRI"}'::jsonb NULL, -- 특성저장 PUB|PRI|ONP
 	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
 	hash_val varchar(32) NULL, -- 데이터무결성 해쉬값
 	reg_uid int8 NULL,
@@ -27,7 +27,7 @@ COMMENT ON COLUMN k_hybrid.mo_cluster.info IS 'cluster 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster.memo IS 'cluster 설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster.prom_url IS '프로메테우스 url';
 COMMENT ON COLUMN k_hybrid.mo_cluster.hash_val IS '데이터무결성 해쉬값';
-COMMENT ON COLUMN k_hybrid.mo_cluster.feature IS '특성저장';
+COMMENT ON COLUMN k_hybrid.mo_cluster.feature IS '특성저장 PUB|PRI|ONP';
 
 
 -- DROP TABLE k_hybrid.mo_cluster_history;
@@ -49,9 +49,6 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_history.contents IS '컬럼 전체 내용'
 COMMENT ON COLUMN k_hybrid.mo_cluster_history.reg_dt IS '등록일';
 
 
-
--- DROP TABLE k_hybrid.mo_cluster_node;
-
 CREATE TABLE k_hybrid.mo_cluster_node (
 	uid serial4 NOT NULL, -- uuid
 	cl_uid int4 NOT NULL, -- Cluster UID
@@ -61,6 +58,7 @@ CREATE TABLE k_hybrid.mo_cluster_node (
 	gpuinfo jsonb NULL, -- GPU정보를 별도로 추가한다.
 	memo text NULL, -- 설명
 	feature jsonb NULL, -- 특성저장
+	auto_feature jsonb NULL, -- 자동특성
 	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
 	hash_val varchar(32) NULL, -- 무결성검증 해쉬값
 	reg_uid int8 NULL,
@@ -82,54 +80,8 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_node.gpuinfo IS 'GPU정보를 별도로 �
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.hash_val IS '무결성검증 해쉬값';
 COMMENT ON COLUMN k_hybrid.mo_cluster_node.feature IS '특성저장';
+COMMENT ON COLUMN k_hybrid.mo_cluster_node.auto_feature IS '자동특성';
 
-
--- DROP TABLE k_hybrid.mo_cluster_node_feature;
-
-CREATE TABLE k_hybrid.mo_cluster_node_feature (
-	no_uid int4 NOT NULL, -- 노드 uid
-	gen_level int2 NULL, -- 일반 성능 레벨 10단계
-	gpu_level int2 NULL, -- GPU 성늘 레벨 10단계
-	sec_level int2 NULL, -- 보안 레벨 5단계
-	cloud_type varchar(3) NULL, -- 클라우드 구분,PRI PUB ONP
-	etc jsonb NULL, -- 추가 설정
-	deleted_dt timestamp NULL, -- 삭제일(NULL이면 활성상태)
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL -- 생성일
-);
-CREATE UNIQUE INDEX idx_mo_cluster_node_feature_no_uid_deleted_dt ON k_hybrid.mo_cluster_node_feature USING btree (no_uid, deleted_dt);
-
--- Column comments
-
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.no_uid IS '노드 uid';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.gen_level IS '일반 성능 레벨 10단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.gpu_level IS 'GPU 성늘 레벨 10단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.sec_level IS '보안 레벨 5단계';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.cloud_type IS '클라우드 구분,PRI PUB ONP';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.etc IS '추가 설정';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.deleted_dt IS '삭제일(NULL이면 활성상태)';
-COMMENT ON COLUMN k_hybrid.mo_cluster_node_feature.reg_dt IS '생성일';
-
--- DROP TABLE k_hybrid.mo_cluster_promql;
-
-CREATE TABLE k_hybrid.mo_cluster_promql (
-	prql_uid int4 NOT NULL, -- PromQl UID
-	cl_uid int4 NOT NULL, -- Cluster UID
-	memo text NOT NULL, -- 설명
-	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
-	reg_uid int8 NULL,
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	updt_uid int8 NULL,
-	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	PRIMARY KEY (prql_uid, cl_uid)
-);
-
--- Column comments
-
-COMMENT ON COLUMN k_hybrid.mo_cluster_promql.prql_uid IS 'PromQl UID';
-COMMENT ON COLUMN k_hybrid.mo_cluster_promql.cl_uid IS 'Cluster UID';
-COMMENT ON COLUMN k_hybrid.mo_cluster_promql.memo IS '설명';
-
--- DROP TABLE k_hybrid.mo_cluster_workload;
 
 CREATE TABLE k_hybrid.mo_cluster_workload (
 	ml_id varchar(128) NOT NULL, -- ml UID
@@ -156,6 +108,7 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_workload.memo IS '설명';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.hash_val IS '무결성검증 해쉬값';
 
 
+
 CREATE TABLE k_hybrid.mo_common_feature (
 	fea_name varchar(64) NOT NULL, -- 설정 이름
 	fea_sub_name varchar(64) DEFAULT 'none'::character varying NOT NULL, -- 서브 설정 이름
@@ -176,25 +129,24 @@ COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_sub_name IS '서브 설정 이�
 COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_content IS '설정 내용';
 COMMENT ON COLUMN k_hybrid.mo_common_feature.fea_desc IS '설정 설명';
 
--- DROP TABLE k_hybrid.mo_common_feature_base;
+-- DROP TABLE k_hybrid.mo_common_gpu_spec;
 
-CREATE TABLE k_hybrid.mo_common_feature_base (
-	cfg_name varchar(32) NOT NULL, -- 설정 이름
-	cfg_content jsonb NULL, -- 설정 내용
-	cfg_desc varchar(128) NULL, -- 설정 설명
-	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
-	reg_uid int8 NULL,
-	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	updt_uid int8 NULL,
-	updt_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	PRIMARY KEY (cfg_name)
+CREATE TABLE k_hybrid.mo_common_gpu_spec (
+	manufacture varchar(8) NULL,
+	product varchar(64) NULL,
+	chip varchar(8) NULL,
+	released varchar(16) NULL,
+	bus_type varchar(16) NULL,
+	memory int4 NULL,
+	memory_bit int4 NULL,
+	memory_detail varchar(32) NULL,
+	gpu_clock int4 NULL,
+	memory_clock int4 NULL,
+	cudas int4 NULL,
+	tmus int4 NULL,
+	rops int4 NULL,
+	score numeric NULL
 );
-
--- Column comments
-
-COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_name IS '설정 이름';
-COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_content IS '설정 내용';
-COMMENT ON COLUMN k_hybrid.mo_common_feature_base.cfg_desc IS '설정 설명';
 
 CREATE TABLE k_hybrid.mo_events (
 	id bigserial NOT NULL, -- 아이디
@@ -363,9 +315,6 @@ COMMENT ON COLUMN k_hybrid.mo_user_request.noti_dt IS '통지완료시간';
 COMMENT ON COLUMN k_hybrid.mo_user_request.complete_dt IS '완료시간';
 
 
----------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 -- DROP TABLE k_hybrid.mo_user_response;
 
 CREATE TABLE k_hybrid.mo_user_response (
@@ -387,6 +336,7 @@ COMMENT ON COLUMN k_hybrid.mo_user_response.no_uid IS 'Node UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.info IS '응답 상세 정보';
 COMMENT ON COLUMN k_hybrid.mo_user_response.reg_dt IS '등록일시';
 
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Permissions
 GRANT ALL ON SCHEMA k_hybrid TO postgres;
@@ -394,19 +344,21 @@ GRANT ALL ON SCHEMA k_hybrid TO postgres;
 
 --hyber table생성
 
+/* 적용 6개월 청크단위, 7일 이후 데이터 압축*/
+
 /* k_hybrid.mo_promql_result */
-SELECT public.create_hypertable('k_hybrid.mo_promql_result'::regclass, 'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_promql_result_hyper',  chunk_time_interval => interval '3 months');
-ALTER TABLE k_hybrid.mo_promql_result SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC'); 
-SELECT public.add_compression_policy('k_hybrid.mo_promql_result', compress_after => INTERVAL '3 days');
+SELECT public.create_hypertable('k_hybrid.mo_promql_result', 'collect_dt', migrate_data => TRUE, if_not_exists => TRUE, associated_table_prefix=>'_promql_result_hyper',  chunk_time_interval =>interval '1 week');
+ALTER TABLE k_hybrid.mo_promql_result SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC, uid', timescaledb.compress_segmentby = 'prql_uid'); -- cl_uid로 나누어 압축할려는데, pk에 포함되어야한다.
+SELECT public.add_compression_policy('k_hybrid.mo_promql_result', compress_after => INTERVAL '1 week');
+
 
 /* k_hybrid.mo_resource_usage_node */
-
-SELECT public.create_hypertable('k_hybrid.mo_resource_usage_node'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_node_hyper', chunk_time_interval => interval '3 months');
+SELECT public.create_hypertable('k_hybrid.mo_resource_usage_node','collect_dt', migrate_data => TRUE, if_not_exists => TRUE, associated_table_prefix=>'_usage_node_hyper', chunk_time_interval =>interval '1 month');
 ALTER TABLE k_hybrid.mo_resource_usage_node SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC', timescaledb.compress_segmentby = 'cl_uid'); 
-SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_node', compress_after => INTERVAL '3 days');
+SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_node', compress_after => INTERVAL '1 month');
+
 
 /* k_hybrid.mo_resource_usage_pod */
-
-SELECT public.create_hypertable('k_hybrid.mo_resource_usage_pod'::regclass,'collect_dt'::name, migrate_data => true, if_not_exists => true, associated_table_prefix => '_usage_pod_hyper', chunk_time_interval => interval '3 months');
+SELECT public.create_hypertable('k_hybrid.mo_resource_usage_pod','collect_dt', migrate_data => TRUE, if_not_exists => TRUE, associated_table_prefix=>'_usage_pod_hyper', chunk_time_interval =>interval '1 month');
 ALTER TABLE k_hybrid.mo_resource_usage_pod SET (timescaledb.compress,  timescaledb.compress_orderby = 'collect_dt DESC', timescaledb.compress_segmentby = 'cl_uid'); 
-SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_pod', compress_after => INTERVAL '3 days');
+SELECT public.add_compression_policy('k_hybrid.mo_resource_usage_pod', compress_after => INTERVAL '1 month');

@@ -74,6 +74,10 @@ public class FeatureMain {
 	}
 	
 	public List<WorkloadFeature> getFeatureBase_workloadFeature() {
+		if(this.featureMap == null) {
+			init();
+		}
+		
 		Object obj = this.featureMap.get(workload_feature);
 		if(obj != null) {
 			return (List<WorkloadFeature>)obj;
@@ -82,6 +86,10 @@ public class FeatureMain {
 	}
 	
 	public NodeScalingPolicy getFeatureBase_nodeScalingPolicies() {
+		if(this.featureMap == null) {
+			init();
+		}
+		
 		Object obj = this.featureMap.get(node_scaling_policies);
 		if(obj != null) {
 			return (NodeScalingPolicy)obj;
@@ -90,6 +98,9 @@ public class FeatureMain {
 	}
 	
 	public PodScalingPolicy getFeatureBase_podScalingPolicies() {
+		if(this.featureMap == null) {
+			init();
+		}
 		Object obj = this.featureMap.get(pod_scaling_policies);
 		if(obj != null) {
 			return (PodScalingPolicy)obj;

@@ -10,6 +10,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.scalor.ScalorMain;
 
 /**
@@ -68,7 +69,9 @@ public class ApplicationReady {
 	
 	@PreDestroy
 	public void onExit() throws InterruptedException {
-		pm.shutdown();
+		if(pm != null)
+			pm.shutdown();
+		WorkloadCommandManager.getInstance().shutdown();
 		log.info("Aplication Shutdown  ===========================================!");
 	}
 

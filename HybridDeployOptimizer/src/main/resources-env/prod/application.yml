@@ -68,6 +68,8 @@ hybrid:
   init-sql-location:
     ddl: classpath:/db/init/ddl.sql
     insert-data: classpath:/db/init/insert*.sql
+  request:
+    url: ${REQUEST_API_URL}  #쿠버네티스 yaml 설정
   collector:
     portal-api:
       url: ${PORTAL_API_URL}  #쿠버네티스 yaml 설정
