@@ -98,6 +98,19 @@
             <level>ERROR</level>
         </filter>
     </appender>
+    
+    <appender name="debugLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/debug.log</file>
+		<encoder>
+			<pattern>${LOG_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/debug-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>200MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
 	
 
 	<logger name="com.zaxxer.hikari" level="ERROR" additivity="false">
@@ -142,6 +155,10 @@
 	<logger name="parse-log" level="INFO" additivity="false">
 		<appender-ref ref="parseLog" />
 		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	
+	<logger name="debug-log" level="DEBUG" additivity="false">
+		<appender-ref ref="debugLog" />
 	</logger>
 	
 	<logger name="queue-log" level="DEBUG" additivity="false">

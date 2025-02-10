@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'kware'
-version = '0.9.20'
+version = '0.9.23'
 
 sourceCompatibility = '11'
 mainClassName = "com.kware.ApplicationMain"
@@ -89,7 +89,13 @@ dependencies {
     implementation 'com.jayway.jsonpath:json-path:2.9.0'
 //}}Application
 	
+	//유전자 알고리즘: JGAP (Java Genetic Algorithms Package)
+	implementation 'org.jgap:jgap:3.6.3'
 	
+	//VAR모델
+	implementation 'org.apache.commons:commons-math3:3.6.1'
+	
+	//LSTM 모델
 	//{{ND4(ND4J)는 딥러닝 및 머신러닝을 위한 자바 라이브러리로, 다차원 배열 연산을 지원하며 GPU 가속도를 사용
 	implementation 'org.nd4j:nd4j-native-platform:1.0.0-M2.1'
     implementation 'org.nd4j:nd4j-api:1.0.0-M2.1'

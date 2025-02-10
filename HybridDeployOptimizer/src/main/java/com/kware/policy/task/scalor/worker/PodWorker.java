@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
 import com.kware.common.util.JSONUtil;
@@ -48,14 +45,16 @@ import com.kware.policy.task.feature.service.vo.PodScalingPolicy;
 import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
 import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * collectMain > collectWorker에서 수집후 입력된 큐에서 데이터를 take하면서 파싱한다.
  */
 
-//@Slf4j
+@Slf4j
 //@SuppressWarnings("rawtypes")
 public class PodWorker extends Thread {
-	private static final Logger log = LoggerFactory.getLogger("debug-log");
+	//private static final Logger log = LoggerFactory.getLogger("debug-log");
 	
 	// QueueManager 인스턴스 가져오기
 	QueueManager            qm = QueueManager.getInstance();
