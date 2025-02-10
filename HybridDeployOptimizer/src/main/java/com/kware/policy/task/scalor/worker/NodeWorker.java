@@ -22,7 +22,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
@@ -44,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NodeWorker extends Thread {
+	//private static final Logger log = LoggerFactory.getLogger("debug-log");
+	
 	// QueueManager 인스턴스 가져오기
 	QueueManager            qm = QueueManager.getInstance();
 	WorkloadCommandManager wcm = WorkloadCommandManager.getInstance();
@@ -51,6 +56,8 @@ public class NodeWorker extends Thread {
 //	private PromQLService pqService;
 	private CommonService comService;
 	private FeatureMain   featureMain;
+	
+	private final static int NODE_SCALE_CHECK_MINUTE =10;
 	
 	boolean isRunning = false;
 /*	
@@ -84,7 +91,7 @@ public class NodeWorker extends Thread {
 		
 		//node 스케일링 정책 정보 조회
 		NodeScalingPolicy nsp = featureMain.getFeatureBase_nodeScalingPolicies();
-		if("N".equals(nsp.getScalingAt())){
+		if(!nsp.isScalingAt()){
 			return;
 		}
 				
@@ -104,8 +111,7 @@ public class NodeWorker extends Thread {
 		}else {
 			return;
 		}
-		//}}
-		
+		//}}	
 		
 		//{{스케일링을 진행하는데 클러스터가 없어지거나, 노드가 없어질경우 이 데이터를 제거해야함 
 		Map<Integer, NodePairs> clusterNodePairMap = new HashMap<Integer, NodePairs>();
@@ -173,20 +179,31 @@ public class NodeWorker extends Thread {
 					setHighLow(n.getClUid(), n.getNode(), snode, cluster_low_nodes);
 					removeHighLow(n.getClUid(), n.getNode(), cluster_high_nodes); //높은 쪽을 제거
 				}
-				
-				//{{10분 이상 지속되는지 확인
-				//10분 이상인 노드의 갯수를 확인하고 처리해야하는데 빼먹었네.
-				this.generateTimeBoundCluster(n.getClUid(), n.getNode(), snode, nsp, 10);
-				
-				//}}
+
 			}else {
 				//포함되지 않으면 모두 제거
 				removeHighLow(n.getClUid(), n.getNode());
 			}		
 		}
 		
-		//요청처리함
+		//스케일링 요청처리함
 		sendNodeScaling(clusterNodeCntMap, nsp);
+		
+		if(log.isDebugEnabled()) {
+			/*
+			try {
+				JsonIgnoreDynamicSerializer.setIgnoreDynamic(true);
+				log.debug("\n\ncluster_high_nodes:\n{}", JSONUtil.getJsonstringFromObject(cluster_high_nodes));
+				log.debug("cluster_low_nodes:\n{}\n\n", JSONUtil.getJsonstringFromObject(cluster_low_nodes));
+				JsonIgnoreDynamicSerializer.setIgnoreDynamic(false);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+			*/
+			
+			log.debug("\n\ncluster_high_nodes:\n{}", cluster_high_nodes);
+			log.debug("cluster_low_nodes:\n{}\n\n", cluster_low_nodes);
+		}
 		
 		clusterNodeCntMap.clear();
 	}
@@ -205,58 +222,93 @@ public class NodeWorker extends Thread {
 		WorkloadCommand<List<NodeScalingInfo>> command = null; //하이 노드의 노드의 이름 전송
 		List<NodeScalingInfo> nodScalingInfos = null;
 		Map<String, List<NodeScalingInfo>> cluster_nodes = null;
+		List<String> nodeNameList = new ArrayList<String>();
 
 		List<Integer> removeClUidList = new ArrayList<Integer>();
 		Iterator<Integer> iter = cluster_high_nodes.keySet().iterator();
 		while(iter.hasNext()) {
 			clUid = iter.next();
 			cluster_nodes = cluster_high_nodes.get(clUid);
-			count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수
+			if(cluster_nodes.isEmpty()) {
+				iter.remove();
+				continue;
+			}
+			
 			cur_node_cnt = clusterNodeCntMap.get(clUid);  //클러스터의 현재 노드 갯수
+			//count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수		
+			for(Map.Entry<String, List<NodeScalingInfo>> entry : cluster_nodes.entrySet()) {
+				//10분이상 지속된 자료가 있는지 확인
+				if(entry.getValue().size() > NODE_SCALE_CHECK_MINUTE) {
+					count++;
+					nodeNameList.add(entry.getKey());
+				}
+			}
+			String[] node_names = nodeNameList.toArray(new String[0]);
+			nodeNameList.clear();
 			
-			String[] node_names = cluster_nodes.keySet().toArray(new String[0]);
-			
-			if(count == cur_node_cnt && cur_node_cnt < nsp.getMaxCount()) { //현재 노드 갯수가  정책 최대값 보다 더 작으면 키우는 요청
-				nodScalingInfos = calculateAverage(cluster_nodes);
-				command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_OUT, nodScalingInfos);
-				WorkloadCommandManager.addCommand(command);
+			if(count == 0)
+				continue;
+
+			//1개를 추가 요청하면
+			if((cur_node_cnt + 1) <= nsp.getMaxCount()) { //현재 노드 갯수가  정책 최대값 보다 더 작으면 키우는 요청
+				if(nsp.isScalingAt()) {
+					nodScalingInfos = calculateAverage(cluster_nodes);
+					command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_OUT, nodScalingInfos);
+					WorkloadCommandManager.addCommand(command);
+				}
 				
 				this.comService.createEvent("노드 스케일 아웃[OUT] 판단", "NodeScale"
 						, "클러스터의 고부하 노드로 인한 스케일 요청.\n클러스터 아이디:" + clUid 
-						+ ", 고부하 노드:" + String.join(",", node_names)
-				        + ", API 요청 여부 정책:" + nsp.getScalingAt());
-				log.info("노드 스케일링 OUT 판단: cluster={},  고부하 nodes={}, API 요청 여부 정책: {}",  clUid, nodScalingInfos, nsp.getScalingAt());
+						+ ", 노드:" + String.join(",", node_names)
+				        + ", API 요청 정책:" + nsp.isScalingAt());
 				
+				if(log.isInfoEnabled())
+					log.info("노드 스케일링 OUT 판단: cluster={},  고부하 nodes={}, API 요청 정책: {}",  clUid, nodScalingInfos, nsp.isScalingAt());				
 			}
-			
-			removeClUidList.add(clUid);
-			//removeHighLow(clUid); 
+			removeClUidList.add(clUid); //요청을 보내면 삭제함
 		}
 		
+		count = 0;
 		iter = cluster_low_nodes.keySet().iterator();
 		while(iter.hasNext()) {
 			clUid = iter.next();
 			cluster_nodes = cluster_low_nodes.get(clUid);
-			count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수
+			if(cluster_nodes.isEmpty()) {
+				iter.remove();
+				continue;
+			}
+			
 			cur_node_cnt = clusterNodeCntMap.get(clUid);  //클러스터의 현재 노드 갯수
+			//count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수		
+			for(Map.Entry<String, List<NodeScalingInfo>> entry : cluster_nodes.entrySet()) {
+				//10분이상 지속된 자료가 있는지 확인
+				if(entry.getValue().size() > NODE_SCALE_CHECK_MINUTE) {
+					count++;
+					nodeNameList.add(entry.getKey());
+				}
+			}
+			String[] node_names = nodeNameList.toArray(new String[0]);
+			nodeNameList.clear();
 			
-			String[] node_names = cluster_nodes.keySet().toArray(new String[0]);
+			if(count == 0)
+				continue;
 			
-			if(cur_node_cnt > nsp.getMinCount()) { //현재 노드 갯수가 정책 최소값 보다 더 크면 줄이는 요청
-				nodScalingInfos = calculateAverage(cluster_nodes);
-				command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_IN, nodScalingInfos);
-				WorkloadCommandManager.addCommand(command);
+			//전체 노드 카운트에서 현재카운트를 뺐을때 
+			if((cur_node_cnt - count) >= nsp.getMinCount()) { //현재 노드 갯수가 정책 최소값 보다 더 크면 줄이는 요청
+				if(nsp.isScalingAt()) {
+					nodScalingInfos = calculateAverage(cluster_nodes);
+					command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_IN, nodScalingInfos);
+					WorkloadCommandManager.addCommand(command);
+				}
 				
 				this.comService.createEvent("노드 스케일 인[IN] 판단", "NodeScale"
 						, "클러스터의 여유 노드로 인한 스케일 요청.\n클러스터 아이디:" + clUid 
-						+ ", 여유 노드:" + String.join(",", node_names)
-						+ ", API 요청 여부 정책:" + nsp.getScalingAt());
-				
-				log.info("노드 스케일링 IN 판단: cluster={}, 여유 nodes={}, API 요청 여부 정책: {}",  clUid, nodScalingInfos, nsp.getScalingAt());
+						+ ", 노드:" + String.join(",", node_names)
+						+ ", API 요청 정책:" + nsp.isScalingAt());
+				if(log.isInfoEnabled())
+					log.info("노드 스케일링 IN 판단: cluster={}, nodes={}, API 요청 정책: {}",  clUid, nodScalingInfos, nsp.isScalingAt());
 			}
-			
 			removeClUidList.add(clUid);
-			//removeHighLow(clUid);
 		}
 		
 		for(Integer i : removeClUidList) {
@@ -268,114 +320,68 @@ public class NodeWorker extends Thread {
 		
 	}
 	
-	
-	// 평균을 계산하는 메서드
+    /**
+     * 각 클러스터(노드 리스트)에 대해, 속성별로 단 한 번의 반복문으로 합계와 null 여부를 체크한 후 평균을 계산합니다.
+     * 각 속성에 대해, 하나라도 null이면 해당 속성의 평균은 null로 처리합니다.
+     *
+     * @param clusterNodes 클러스터별 NodeScalingInfo 리스트를 담은 맵
+     * @return 각 클러스터별 평균값을 담은 NodeScalingInfo 객체들의 리스트
+     */
     public List<NodeScalingInfo> calculateAverage(Map<String, List<NodeScalingInfo>> clusterNodes) {
-    	
-    	return clusterNodes.values().stream()
-                .map(nodeList -> {
-                    double avgCpu  = nodeList.stream().mapToDouble(n -> n.cpu_per).average().orElse(0.0);
-                    double avgMem  = nodeList.stream().mapToDouble(n -> n.mem_per).average().orElse(0.0);
-                    double avgDisk = nodeList.stream().mapToDouble(n -> n.disk_per).average().orElse(0.0);
-                    double avgGpu  = nodeList.stream().mapToDouble(n -> n.gpu_per).average().orElse(0.0);
+        List<NodeScalingInfo> resultList = new ArrayList<>();
 
-                    NodeScalingInfo n = new NodeScalingInfo();
-                    n.cpu_per  = avgCpu;
-                    n.mem_per  = avgMem;
-                    n.gpu_per  = avgGpu;
-                    n.disk_per = avgDisk;
-                    n.cur_node = nodeList.get(0).cur_node;
-                    
-                    return n;
-                })
-                .collect(Collectors.toList());    
+        // 각 클러스터(노드 리스트)에 대해 처리
+        for (List<NodeScalingInfo> nodeList : clusterNodes.values()) {
+            int count = nodeList.size();
+            double sumCpu = 0.0, sumMem = 0.0, sumDisk = 0.0, sumGpu = 0.0;
+            boolean cpuHasNull = false, memHasNull = false, diskHasNull = false, gpuHasNull = false;
+
+            // 각 노드를 한 번씩 순회하면서 모든 속성의 합과 null 여부를 체크
+            for (NodeScalingInfo node : nodeList) {
+                // CPU 처리
+                if (node.cpu_per == null) {
+                    cpuHasNull = true;
+                } else {
+                    sumCpu += node.cpu_per;
+                }
+
+                // Memory 처리
+                if (node.mem_per == null) {
+                    memHasNull = true;
+                } else {
+                    sumMem += node.mem_per;
+                }
+
+                // Disk 처리
+                if (node.disk_per == null) {
+                    diskHasNull = true;
+                } else {
+                    sumDisk += node.disk_per;
+                }
+
+                // GPU 처리
+                if (node.gpu_per == null) {
+                    gpuHasNull = true;
+                } else {
+                    sumGpu += node.gpu_per;
+                }
+            }
+
+            // 평균 계산: 하나라도 null이면 해당 속성은 null, 그렇지 않으면 합계/노드 수
+            NodeScalingInfo avgNode = new NodeScalingInfo();
+            avgNode.cpu_per  = cpuHasNull  ? null : (sumCpu  / count);
+            avgNode.mem_per  = memHasNull  ? null : (sumMem  / count);
+            avgNode.disk_per = diskHasNull ? null : (sumDisk / count);
+            avgNode.gpu_per  = gpuHasNull  ? null : (sumGpu  / count);
+
+            // 모든 노드의 cur_node 값이 동일하다는 가정 하에 첫 번째 노드의 값을 사용
+            avgNode.cur_node = nodeList.get(0).cur_node;
+
+            resultList.add(avgNode);
+        }
+        return resultList;
     }
-	
-	
-	/**
-	 * 해당 노드가 10분간 지속되고 있는지 판단
-	 * @param clUid
-	 * @param nodeName
-	 * @param snode
-	 * @return
-	 */
-	private boolean generateTimeBoundCluster(Integer clUid, String nodeName, NodeScalingInfo snode, NodeScalingPolicy nsp, int minute) {
-		Map<Integer, Map<String, List<NodeScalingInfo>>> cluster_nodes = null;
-		if(snode.isHigh == true) {
-			cluster_nodes = cluster_high_nodes;
-		}else if(snode.isHigh == false) {
-			cluster_nodes = cluster_low_nodes;
-		}else {
-			return false;
-		}
-		
-		Map<String, List<NodeScalingInfo>> snodesMap = cluster_nodes.get(clUid);
-		List<NodeScalingInfo> snodes = null;
-		if(snodesMap != null) {		
-			snodes = snodesMap.get(nodeName);
-			if(snodes.size() > minute) { //snodes는 1분에 한번씩 수집되는 데이터이므로 10개를 10분으로 고려함 (10 분간 지속됨)
-				return true;
- 			}else {//해당되지 안으면 제거
- 				snodes.clear();
- 				snodesMap.remove(nodeName);
- 			}
-		}
-		
-		return false;
-	}
-	
-	
-	/**
-	 * 해당 노드가 10분간 지속되고 있는지 판단
-	 * @param clUid
-	 * @param nodeName
-	 * @param snode
-	 * @return
-	 */
-	/*
-	private boolean isOverCluster(Integer clUid, String nodeName, NodeScalingInfo snode, NodeScalingPolicy nsp, int nodeCnt) {
-		Map<Integer, Map<String, List<NodeScalingInfo>>> cluster_nodes = null;
-		if(snode.isHigh == true) {
-			cluster_nodes = cluster_high_nodes;
-		}else if(snode.isHigh == false) {
-			cluster_nodes = cluster_low_nodes;
-		}else {
-			return false;
-		}
-		
-		Map<String, List<NodeScalingInfo>> snodesMap = cluster_nodes.get(clUid);
-		List<NodeScalingInfo> snodes = null;
-		if(snodesMap != null) {		
-			snodes = snodesMap.get(nodeName);
-			if(snodes.size() > 10) { //10분간 지속됨,
-				//{{클러스터 노드의 최소 및 최대 갯수 확인 프로그램 추가
-				if(snode.isHigh && nodeCnt < nsp.getMaxCount()) {
-					return true;
-				}else if(!snode.isHigh && nodeCnt > nsp.getMinCount()) {
-					return true;
-				}
-				//}}
- 			}else {//해당되지 안으면 제거
- 				snodes.clear();
- 				snodesMap.remove(nodeName);
- 			}
-		}
-		
-		return false;
-	}
-	*/
-	
-	/*
-	private List<NodeScalingInfo> getHighLow(Integer clUid, String nodeName,	Map<Integer, Map<String, List<NodeScalingInfo>>> cluster_nodes) {
-		Map<String, List<NodeScalingInfo>> snodesMap = cluster_nodes.get(clUid);
-		List<NodeScalingInfo> snodes = null;
-		if(snodesMap != null) {		
-			snodes = snodesMap.get(nodeName);
-		}
-		
-		return snodes;
-	}
-	*/
+
 	
 	/**
 	 * 클러스터를 스토리지에서 모두(상,하)에서 제거
@@ -421,8 +427,8 @@ public class NodeWorker extends Thread {
 		Map<String, List<NodeScalingInfo>> nodesMap = cluster_nodes.get(clUid);
 		if(nodesMap == null) {
 			nodesMap = new HashMap<String, List<NodeScalingInfo>>();
+			cluster_nodes.put(clUid, nodesMap);
 		}
-		cluster_nodes.put(clUid, nodesMap);
 		
 		List<NodeScalingInfo> snodes = nodesMap.get(nodeName);
 		if(snodes == null) {
@@ -594,4 +600,104 @@ public class NodeWorker extends Thread {
         }
         return foundFalse ? false : null;
     }
+
+    
+    
+    
+    
+    
+    private RealMatrix coefficients; // VAR(1) 계수 행렬
+    
+    /**
+     * 다변량 시계열 데이터를 기반으로 VAR 모델을 이용하여 다음 시점의 사용량을 예측한다.
+     *
+     * @param resourceHistory 각 리소스별 과거 사용률 데이터를 담은 배열 (예: resourceHistory[0] = CPU, resourceHistory[1] = Memory, ...)
+     * @return 예측된 사용량 배열 [CPU, Memory, Disk, GPU]
+     */
+    private double[] predictNextUsageMultivariate(List<Double>[] resourceHistory) {
+       
+    	/* 샘플
+		@SuppressWarnings("unchecked")
+        List<Double>[] resourceHistory = new List[4];
+        resourceHistory[0] = cpuSeries;
+        resourceHistory[1] = memorySeries;
+        resourceHistory[2] = diskSeries;
+        resourceHistory[3] = gpuSeries;
+
+        NodeWorkerVARSample sample = new NodeWorkerVARSample();
+        double[] predicted = sample.predictNextUsageMultivariate(resourceHistory);
+
+        System.out.println("예측 결과 (최근 30개 관측값 기준):");
+        System.out.println("CPU 사용률 예측: " + predicted[0] + "%");
+        System.out.println("Memory 사용률 예측: " + predicted[1] + "%");
+        System.out.println("Disk 사용률 예측: " + predicted[2] + "%");
+        System.out.println("GPU 사용률 예측: " + predicted[3] + "%");
+    	*/
+    	
+    	
+        this.fit(resourceHistory);
+        return this.forecast(1);
+    }
+
+    /**
+     * 다변량 시계열 데이터를 이용하여 VAR(1) 모델을 학습.
+     *
+     * @param timeSeries 각 시계열 데이터 List 배열, 각 List의 길이는 30 이상이어야 함
+     */
+    private void fit(List<Double>[] timeSeries) {
+        int d = timeSeries.length;        // 시계열의 개수 (차원)
+        int T = timeSeries[0].size();       // 각 시계열의 길이
+        if (T < 2) {
+            throw new IllegalArgumentException("시계열 길이는 최소 2 이상이어야 합니다.");
+        }
+
+        // X1: d x (T-1) 행렬, X2: d x (T-1) 행렬
+        double[][] X1Data = new double[d][T - 1];
+        double[][] X2Data = new double[d][T - 1];
+
+        for (int i = 0; i < d; i++) {
+            List<Double> series = timeSeries[i];
+            for (int t = 0; t < T - 1; t++) {
+                X1Data[i][t] = series.get(t);       // t 시점
+                X2Data[i][t] = series.get(t + 1);     // t+1 시점
+            }
+        }
+
+        RealMatrix X1 = MatrixUtils.createRealMatrix(X1Data);
+        RealMatrix X2 = MatrixUtils.createRealMatrix(X2Data);
+
+        // VAR(1) 모델: X2 = A * X1 + error
+        // 추정된 A = X2 * X1^+ (여기서 X1^+는 X1의 의사역행렬)
+        SingularValueDecomposition svd = new SingularValueDecomposition(X1);
+        RealMatrix X1PseudoInverse = svd.getSolver().getInverse();
+
+        coefficients = X2.multiply(X1PseudoInverse);
+    }
+
+    /**
+     * VAR(1) 모델을 이용해 다음 시점의 사용량을 예측한다.
+     *
+     * @param steps 예측할 시점의 수 (여기서는 1만 지원)
+     * @return 예측된 다음 시점의 각 리소스 사용량 배열
+     */
+    private double[] forecast(int steps) {
+        if (steps != 1) {
+            throw new UnsupportedOperationException("현재는 steps=1 만 지원합니다.");
+        }
+        // 예제에서는 단순화를 위해, 계수 행렬 각 행의 평균을 마지막 관측값의 대용값으로 사용한다.
+        int d = coefficients.getRowDimension();
+        double[] lastObservation = new double[d];
+        for (int i = 0; i < d; i++) {
+            double[] row = coefficients.getRow(i);
+            double sum = 0;
+            for (double v : row) {
+                sum += v;
+            }
+            lastObservation[i] = sum / row.length;
+        }
+        RealMatrix lastObsMatrix = MatrixUtils.createColumnRealMatrix(lastObservation);
+        RealMatrix forecastMatrix = coefficients.multiply(lastObsMatrix);
+        return forecastMatrix.getColumn(0);
+    }
+ 
 }

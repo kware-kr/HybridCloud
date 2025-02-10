@@ -3,8 +3,9 @@ package com.kware.policy.task.feature.service.vo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class PodScalingPolicy {
     private AdjustmentTrigger cpu;
     private AdjustmentTrigger gpu;
@@ -25,10 +26,30 @@ public class PodScalingPolicy {
         this.gpu.setType(TriggerType.GPU);
         
         this.disk = disk;
-        this.gpu.setType(TriggerType.DISK);
+        this.disk.setType(TriggerType.DISK);
         
         this.memory = memory;
         this.memory.setType(TriggerType.MEMORY);
+    }
+    
+    public void setCpu(AdjustmentTrigger cpu) {
+    	this.cpu = cpu;
+    	this.cpu.setType(TriggerType.CPU);
+    }
+
+    public void setGpu(AdjustmentTrigger gpu) {
+    	this.gpu = gpu;
+    	this.gpu.setType(TriggerType.GPU);
+    }
+
+    public void setDisk(AdjustmentTrigger disk) {
+    	this.disk = disk;
+    	this.disk.setType(TriggerType.DISK);
+    }
+
+    public void setMemory(AdjustmentTrigger memory) {
+    	this.memory = memory;
+    	this.memory.setType(TriggerType.MEMORY);
     }
 
    @Data

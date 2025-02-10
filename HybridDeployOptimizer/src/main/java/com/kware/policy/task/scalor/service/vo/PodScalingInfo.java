@@ -1,5 +1,8 @@
 package com.kware.policy.task.scalor.service.vo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.feature.service.vo.PodScalingPolicy;
 
@@ -14,20 +17,20 @@ public class PodScalingInfo {
 	public PodScalingInfo() {
 	}
 	
-	public Double  cpu_per;
-	public Double  cpu_val;
+	public Double  cpu_per = 0.0;
+	public Double  cpu_val = 0.0;
 	public Boolean cpu_isHigh;
 	
-	public Double  mem_per;
-	public Double  mem_val;
+	public Double  mem_per = 0.0;
+	public Double  mem_val = 0.0;
 	public Boolean mem_isHigh;
 	
-	public Double  disk_per;
-	public Double  disk_val;
+	public Double  disk_per = 0.0;
+	public Double  disk_val = 0.0;
 	public Boolean disk_isHigh;
 	
-	public Double  gpu_per;
-	public Double  gpu_val;
+	public Double  gpu_per = 0.0;
+	public Double  gpu_val = 0.0;
 	public Boolean gpu_isHigh;
 	
 	public int pod_cpu_size  = 0;
@@ -38,6 +41,30 @@ public class PodScalingInfo {
 	public PromMetricPod promMetricPod;
 	public PodScalingPolicy ps_policy;
 
+	private Map<String, Long> new_limitsMap   = null;
+	private Map<String, Long> new_requestsMap = null;
+	
+	public Map<String, Long> getNewLimitsMap(){
+		return new_limitsMap;
+	}
+	
+	public Map<String, Long> getNewRequestsMap(){
+		return new_requestsMap;
+	}
+	
+	public void addNewLimitsValue(String key, Long val) {
+		if(new_limitsMap == null) {
+			new_limitsMap = new HashMap<String, Long>();
+		}
+		new_limitsMap.put(key, val);
+	}
+	
+	public void addNewRequestsValue(String key, Long val) {
+		if(new_requestsMap == null) {
+			new_requestsMap = new HashMap<String, Long>();
+		}
+		new_requestsMap.put(key, val);
+	}
 	
 	public void makeAverage() {
 		if(pod_cpu_size > 0) {
@@ -55,6 +82,16 @@ public class PodScalingInfo {
 		if(pod_gpu_size > 0) {
 			this.gpu_per  = this.gpu_per / pod_gpu_size;
 			this.gpu_val  = this.gpu_val / pod_gpu_size;
+		}
+	}
+	
+	public void clear() {
+		if(new_limitsMap != null) {
+			new_limitsMap.clear();
+		}
+		
+		if(new_requestsMap != null) {
+			new_requestsMap.clear();
 		}
 	}
 }

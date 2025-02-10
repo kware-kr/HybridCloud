@@ -13,7 +13,7 @@ public class NodeScalingPolicy {
     private int maxCount;
     private int minCount;
     private String scalingLogic;
-    private String scalingAt;
+    private boolean scalingAt;
 
     public NodeScalingPolicy() {}
 
@@ -26,7 +26,14 @@ public class NodeScalingPolicy {
         this.maxCount = maxCount;
         this.minCount = minCount;
         this.scalingLogic = scalingLogic;
-        this.scalingAt = scalingAt;
+        //this.scalingAt = scalingAt;
+        this.setScalingAt(scalingAt);
+    }
+    
+    @JsonProperty("scalingAt")
+    public void setScalingAt(String scalingAt) {
+        // "Yes"는 true, 그 외에는 false로 처리 (필요에 따라 조건을 추가할 수 있음)
+        this.scalingAt = "Y".equalsIgnoreCase(scalingAt);
     }
 
     @Data
