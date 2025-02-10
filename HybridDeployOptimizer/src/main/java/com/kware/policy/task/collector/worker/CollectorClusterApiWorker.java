@@ -316,6 +316,9 @@ public class CollectorClusterApiWorker extends Thread {
 		sTmp = (String)_clusterMap.get(StringConstant.STR_version);
 		cluster.setKubeVer(sTmp);
 		
+		sTmp = (String)_clusterMap.get(StringConstant.STR_provider);
+		cluster.setProvider(sTmp);
+		
 
 		try {
 			sTmp = (String)_clusterMap.get(StringConstant.STR_createAt);

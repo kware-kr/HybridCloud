@@ -21,6 +21,7 @@ public class Cluster extends ClusterDefault {
 	private String info; //수집한 json데이터
 	private String memo;
 	private String promUrl;  // 클러스터별 프로메테우스 url=> 2024.07 통합 프로메테우스로 변경
+	private String provider;
 	
 	@JsonIgnore
 	private String hashVal;
@@ -31,7 +32,7 @@ public class Cluster extends ClusterDefault {
 	private String statusString;
 	private LocalDateTime createAt;
 	
-	/**/
+	/*
 	@Getter(AccessLevel.NONE)
 	@Setter(AccessLevel.NONE)
 	private List<ClusterNode> nodes = new ArrayList<ClusterNode>();
@@ -43,8 +44,9 @@ public class Cluster extends ClusterDefault {
 	public void removeClusterNode(ClusterNode _node) {
 		this.nodes.remove(_node);
 	}
+	*/
 
-
+/*
 	public void setStatus(String _status) {
 		if (StringConstant.STR_finished.equalsIgnoreCase(_status)) {
 			this.status = true;
@@ -52,7 +54,7 @@ public class Cluster extends ClusterDefault {
 			this.status = false;
 		}
 	}
-
+*/
 	public void setStatus(Boolean _status) {
 		this.status = _status;
 	}
@@ -65,6 +67,6 @@ public class Cluster extends ClusterDefault {
 
 	@Override
 	public void clear() {
-		nodes.clear();
+//		nodes.clear();
 	}
 }
