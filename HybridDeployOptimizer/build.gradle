@@ -26,6 +26,7 @@ sourceSets {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    //maven { url 'https://jitpack.io' }
 }
 
 configurations {
@@ -90,7 +91,10 @@ dependencies {
 //}}Application
 	
 	//유전자 알고리즘: JGAP (Java Genetic Algorithms Package)
-	implementation 'org.jgap:jgap:3.6.3'
+	//implementation 'org.jgap:jgap:3.6.3'
+	// https://mvnrepository.com/artifact/io.github.rayinfinite/jgap
+	implementation group: 'io.github.rayinfinite', name: 'jgap', version: '3.6.3'
+	
 	
 	//VAR모델
 	implementation 'org.apache.commons:commons-math3:3.6.1'
