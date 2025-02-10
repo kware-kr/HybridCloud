@@ -30,8 +30,7 @@ not
 public class WorkloadContainerQueue  extends DefaultQueue{
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
     
-    private final ConcurrentHashMap<String/*cl_uid_node_name*/, 
-    			  ConcurrentHashMap<String/*mlid_container-name*/, WorkloadTaskWrapper>> nodeMap;
+    private final ConcurrentHashMap<String/*cl_uid_node_name*/,	ConcurrentHashMap<String/*mlid_container-name*/, WorkloadTaskWrapper>> nodeMap;
     private final ConcurrentHashMap<String/*mlid*/, List<WorkloadTaskWrapper>> mlIdMap;
     //}}요청관리
   
@@ -482,19 +481,19 @@ public class WorkloadContainerQueue  extends DefaultQueue{
     
 /*
     
-  	public Map<String, ConcurrentHashMap<String, WorkloadTaskContainerWrapper>> getNodeMap() {
+  	public Map<String, ConcurrentHashMap<String, WorkloadTaskWrapper>> getNodeMap() {
   		return this.nodeMap;
   	}
   	
-  	public Map<String, List<WorkloadTaskContainerWrapper>> getmlIdMap() {
+  	public Map<String, List<WorkloadTaskWrapper>> getmlIdMap() {
   		return this.mlIdMap;
   	}
-  	
-  	public List<WorkloadTaskContainerWrapper> getmlIdList(String mlId) {
+*/  	
+  	public List<WorkloadTaskWrapper> getWorkloadTaskWrapperList(String mlId) {
   		return this.mlIdMap.get(mlId);
   	}
-
-    public Map<String, Map<String,WorkloadTaskContainerWrapper>> getReadOnlyNodeMap() {
+/*
+    public Map<String, Map<String,WorkloadTaskWrapper>> getReadOnlyNodeMap() {
     	return Collections.unmodifiableMap(this.nodeMap);    	
     }	
 */  	

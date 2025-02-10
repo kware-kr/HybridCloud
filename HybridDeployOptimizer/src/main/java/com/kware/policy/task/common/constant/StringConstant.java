@@ -23,6 +23,7 @@ public class StringConstant {
 	public final static String STR_createdAt     = "createdAt";
 	public final static String STR_updatedAt     = "updatedAt";
 	public final static String STR_role          = "role";
+	public final static String STR_provider      = "provider";
 	
 	public final static String STR_pod           = "pod";
 	public final static String STR_pods          = "pods";

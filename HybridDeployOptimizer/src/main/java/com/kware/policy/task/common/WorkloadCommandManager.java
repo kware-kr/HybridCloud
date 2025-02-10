@@ -199,6 +199,7 @@ public class WorkloadCommandManager {
                 			new Thread(() -> {
                 				try {
                 			       comService.requestScalingApiCall(psInfo, wr);
+                			       psInfo.clear();
                 				}catch(Exception e) {
                 					log.error("API call to notify the Optimizer server of configuration changes failed. Error:", e);
                 				}
