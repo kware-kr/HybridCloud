@@ -135,12 +135,17 @@ public class FeatureMain {
 		return this.clusterFeatureMap.get(_clUid);
 	}
 	
+	
+	//프론트에서 변경되었을때 다시 읽어들이는 역할을 한다.
 	/////////////////////////////////////////////////////////////////////////////
 
 	public void init_workload_feature() {
-		//List<HashMap<String,Object>> cofList = null;
 		try {
+			Map<String, Object>  oldmap = this.featureMap;
 			this.featureMap = ftService.getCommonFeatuerListALL();
+			if(oldmap != null)
+				oldmap.clear();
+			oldmap = null;
 		} catch (Exception e) {
 
 			log.error("init_node_feature Error",e);
@@ -148,7 +153,11 @@ public class FeatureMain {
 	}
 	public void init_node_feature() {
 		try {
-			nodeFeatureMap    = ftService.getClusterNodeFeatureListAll();
+			Map<String, ClusterNodeFeature> oldmap = this.nodeFeatureMap;
+			this.nodeFeatureMap    = ftService.getClusterNodeFeatureListAll();
+			if(oldmap != null)
+				oldmap.clear();
+			oldmap = null;
 		} catch (Exception e) {
 			log.error("init_node_feature Error",e);
 		}
@@ -156,7 +165,11 @@ public class FeatureMain {
 	
 	public void init_cluster_feature() {
 		try {
-			clusterFeatureMap = ftService.getClusterFeatureListAll();
+			Map<Integer, ClusterFeature> oldmap = this.clusterFeatureMap;
+			this.clusterFeatureMap = ftService.getClusterFeatureListAll();
+			if(oldmap != null)
+				oldmap.clear();
+			oldmap = null;
 		} catch (Exception e) {
 			log.error("init_node_feature Error",e);
 		}

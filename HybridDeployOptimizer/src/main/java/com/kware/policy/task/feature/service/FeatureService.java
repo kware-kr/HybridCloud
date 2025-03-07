@@ -113,9 +113,9 @@ public class FeatureService {
 			}
 			
 			if(f != null) {
-				rsMap.put(clUid+nm, f);
+				rsMap.put(clUid + "_" + nm, f);
 			} else if(af != null) {
-				rsMap.put(clUid+nm, af);
+				rsMap.put(clUid + "_" + nm, af);
 			}
 			
 			m.clear();

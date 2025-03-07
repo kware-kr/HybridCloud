@@ -1,5 +1,6 @@
 package com.kware.policy.task.feature.eval;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,11 @@ public class GpuPerformanceEvaluator {
     public Map<String, Integer> getFormance(List<PromMetricNode> lastNodes) {
     	HashMap<String, Double> totalScoreMap = new HashMap<String, Double>();
     	
+    	Map minMaxMap = this.comService.getCommonGpuMinMaxScore(); 
+    	
+    	BigDecimal maxDbGpuScore = (BigDecimal)minMaxMap.get("max");
+    	BigDecimal minDbGpuScore = (BigDecimal)minMaxMap.get("min");
+    	
     	// 각 머신의 성능 계산
     	for(PromMetricNode n : lastNodes) {
     		Map<String, PromMetricNodeGPU>  gpus = n.getMGpuList();
@@ -91,6 +97,7 @@ public class GpuPerformanceEvaluator {
     		}
     		
     		Double sumScores = 0.0;
+    		//1개의 머신에는 다중 gpu가 있음
     		for(Map.Entry<String, PromMetricNodeGPU> entry : gpus.entrySet()) {
 //    			entry.getKey();
     			PromMetricNodeGPU gpu = entry.getValue();
@@ -101,17 +108,21 @@ public class GpuPerformanceEvaluator {
     	}
     	
     	//성능 정규화
-    	double minPerformance = totalScoreMap.values().stream().min(Double::compareTo).orElse(0.0);
-        double maxPerformance = totalScoreMap.values().stream().max(Double::compareTo).orElse(1.0);
+    	//double minPerformance = totalScoreMap.values().stream().min(Double::compareTo).orElse(0.0);
+        //double maxPerformance = totalScoreMap.values().stream().max(Double::compareTo).orElse(1.0);
+        
+        double minPerformance = minDbGpuScore.doubleValue();
+        double maxPerformance = maxDbGpuScore.doubleValue();
         
         Map<String, Double> normalizedPerformances = totalScoreMap.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry ->{
-                        	double maxValues = maxPerformance; 
-                        	if(maxPerformance < 10)
-                        		maxValues = 10.0;
-                        	return (entry.getValue() - minPerformance) / (maxValues - minPerformance);
+                        	//double maxValues = maxPerformance;
+                        	//double maxValues = maxDbGpuScore;
+//                        	if(maxPerformance < 10)
+//                        		maxValues = 10.0;
+                        	return (entry.getValue() - minPerformance) / (maxPerformance - minPerformance);
                         }
                 ));
     	
