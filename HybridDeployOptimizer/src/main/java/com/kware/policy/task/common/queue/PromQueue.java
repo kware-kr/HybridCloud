@@ -107,6 +107,20 @@ public class PromQueue extends DefaultQueue{
     	else return deque.peekFirst();
     }
     
+    public Object getPromDequesSecondObject(PromDequeName name) {
+    	BlockingDeque<?> deque = this.promDequesMap.get(name);
+    	if(deque == null)
+    		return null;
+    	else {
+    		// Iterator를 사용하여 두번째 요소를 조회 (제거하지 않음)
+    		Iterator<?> iter = deque.iterator();
+    		if (iter.hasNext()) {
+    		    iter.next();  // 첫번째 요소 건너뛰기
+    		}
+    		return (iter.hasNext()) ? iter.next() : null;
+    	}
+    }
+    
     public void clearePromDeques(PromDequeName name) {
     	BlockingDeque<?> q = this.promDequesMap.remove(name);
     	if(q == null) return;

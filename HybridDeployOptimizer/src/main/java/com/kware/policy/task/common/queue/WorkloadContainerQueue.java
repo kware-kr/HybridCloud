@@ -137,7 +137,7 @@ public class WorkloadContainerQueue  extends DefaultQueue{
     	return;
    }
     
-    //항상 그룹으로 등록하게 하고 개별적으로 등록하지 못하도록 한다.
+    //항상 그룹으로 등록하게 하고 개별적으로 등록하지 못하도록 private로 설정 한다.
    private WorkloadTaskWrapper setWorkloadTaskContainer(RequestWorkloadAttributes _reqattr, Container _container) {
     	String nodeKey      = _container.getNodeKey();
     	String containerKey = _container.getContainerKey();
@@ -391,13 +391,25 @@ public class WorkloadContainerQueue  extends DefaultQueue{
     		}else { //등록된 파드가 없으면 신규 등록
 	    		containerName = w.getName();
 	    		if(podName.contains(containerName)) {
+	    			if(pmPod.getScheduledTimestamp() != null) {
+						w.setPromMetricPod(pmPod); //처음이라 등록
+						this.startPod(wrappers, w);   //1개가 아니고 리스트 전체를 수정해야 한다.
+						
+						//요청당시의 컨테너 스펙의 이름을 대신할 인덱스 번호 등록(	비교속도)
+		    			pmPod.setMlContainerNameIdx(w.getNameIdx());
+					}
+	    		
+	    			/* 각 파드마다 한번 실행인데 굳이 비교할 필요 없이 등록 처리한다. 
 	    			//이때 시작이고, 상태변경처리
 	    			if(w.getStatus() == PodStatusPhase.UNSUBMITTED || w.getStatus() == PodStatusPhase.PENDING) {
 	    				if(pmPod.getScheduledTimestamp() != null) { //이상태는 PodStatusPhase.RUNNING, 상태가 변경될때만 처리하기 위함
 	    					this.startPod(wrappers, w);   //1개가 아니고 리스트 전체를 수정해야 한다.
 	    				}
-    	    		}
-	    			w.setPromMetricPod(pmPod); //처음이라 등록
+					}
+					*/
+					
+	    			
+	    			
 	    			break;
 	    		}
     		}

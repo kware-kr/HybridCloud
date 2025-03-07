@@ -2,25 +2,21 @@ package com.kware.policy.task.common.service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import com.kware.common.util.RestTemplateUtil;
 import com.kware.policy.task.common.service.dao.CommonDao;
 import com.kware.policy.task.common.service.dao.CommonEventDao;
 import com.kware.policy.task.common.service.vo.CommonConfigGroup;
 import com.kware.policy.task.common.service.vo.CommonEvent;
-import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
-import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+
+import lombok.extern.slf4j.Slf4j;
 
 
-//@Slf4j
+@Slf4j
 @Service
 public class CommonService {
 	
@@ -44,6 +40,10 @@ public class CommonService {
 	
 	public CommonConfigGroup getCommonConfigGroupSub(String feaName, String feaSubName) {
 		return dao.selectCommonConfigGroupSub(feaName, feaSubName);
+	}
+	
+	public Map getCommonGpuMinMaxScore() {
+		return dao.selectCommonGpuMinMaxScore();
 	}
 	
 	public Double getCommonGpuScore(String product) {
@@ -90,37 +90,6 @@ public class CommonService {
     
     /////////////////////////////////////////////////////////////////////////////////////////  
     
-    @Value("${hybrid.request.url}")
-    private String hybrid_request_url;  
-    
-    @Autowired
-	protected RestTemplate restTemplate;
-    
-    RestTemplateUtil restTemplateUtil = null;
-    
-    @PostConstruct
-    public void init() {
-    	restTemplateUtil = new RestTemplateUtil(restTemplate);
-    }
-    
-    public void requestScalingApiCall(PodScalingInfo psInfo, WorkloadRequest workloadRequest) {
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    }
 }
 
 

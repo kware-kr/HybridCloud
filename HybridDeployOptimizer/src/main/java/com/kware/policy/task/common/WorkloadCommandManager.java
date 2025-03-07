@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +23,7 @@ import com.kware.policy.task.feature.eval.GpuPerformanceEvaluator;
 import com.kware.policy.task.feature.eval.NodePerformanceEvaluator;
 import com.kware.policy.task.feature.eval.SecurityLevelEvaluator;
 import com.kware.policy.task.feature.service.vo.ClusterNodeFeature;
+import com.kware.policy.task.scalor.service.ScalingInfoService;
 import com.kware.policy.task.scalor.service.vo.NodeScalingInfo;
 import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
@@ -37,6 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("rawtypes")
 public class WorkloadCommandManager {
 	private static final Logger queueLog = LoggerFactory.getLogger("queue-log");
+	private static final Logger scaleLog = LoggerFactory.getLogger("scale-log");
+	
+	private final AtomicInteger threadNumber = new AtomicInteger(1); // 스레드 번호를 위한 카운터
+    private final String namePrefix = "ScalingInfoThread-"; // 프리픽스 설정
+    
     // Singleton 인스턴스
     private static final WorkloadCommandManager INSTANCE = new WorkloadCommandManager();
 
@@ -48,6 +54,7 @@ public class WorkloadCommandManager {
     private WorkloadRequestService wrService = null;
     private CommonService comService = null;
     private FeatureMain feaMain = null;
+    private ScalingInfoService scalingService = null;
     
     QueueManager qm = QueueManager.getInstance();
     
@@ -94,11 +101,11 @@ public class WorkloadCommandManager {
 	}
 	*/
     
-    public void setInitSevice(WorkloadRequestService wrService, CommonService comService, FeatureMain fmain){
-    	this.wrService  = wrService;
-    	this.comService = comService;
-    	this.feaMain    = fmain;
-    	
+    public void setInitSevice(WorkloadRequestService wrService, CommonService comService, FeatureMain fmain, ScalingInfoService scalingService){
+    	this.wrService      = wrService;
+    	this.comService     = comService;
+    	this.feaMain        = fmain;
+    	this.scalingService = scalingService;
     }
 
     // 큐를 종료하고 스레드를 중지
@@ -130,6 +137,7 @@ public class WorkloadCommandManager {
                 	}
                 	*/
                 	
+                	//워크로드 입력요청
                 	if(task.getCommand() == WorkloadCommand.CMD_WLD_ENTER) {
                 		//from: WorkloadRequestService
                 		//process: wcQ
@@ -143,8 +151,8 @@ public class WorkloadCommandManager {
                 			RequestWorkloadAttributes a = req.getAttribute();
                 			wcQ.setWorkloadTaskContainers(a, c);
                 		}
-                	}else if(task.getCommand() == WorkloadCommand.CMD_WLD_COMPLETE
-                		  || task.getCommand() == WorkloadCommand.CMD_WLD_EXPIRED) {
+                	}else if(task.getCommand() == WorkloadCommand.CMD_WLD_COMPLETE   
+                		  || task.getCommand() == WorkloadCommand.CMD_WLD_EXPIRED) {//워크로드 완료
                 		//from complete:    CollectorWorkloadApiWorker
                 		//from expired:    requestQueue
                 		//process: requestQ, wcQ제거, WorkloadRequestService DB 서비스
@@ -157,10 +165,10 @@ public class WorkloadCommandManager {
                 			requestQ.reomveWorkloadRequest(mlId);
                 			wcQ.removeWorkloadTaskContainer(mlId);
                 		}
-                	}else if(task.getCommand() == WorkloadCommand.CMD_CON_ENTER) {
+                	}else if(task.getCommand() == WorkloadCommand.CMD_CON_ENTER) { // 컨테이너 등록처리
                 		//현재는 필요없는데..
                 		
-                	}else if(task.getCommand() == WorkloadCommand.CMD_POD_ENTER) {
+                	}else if(task.getCommand() == WorkloadCommand.CMD_POD_ENTER) { ////워크로드 파드 등록 처리
                 		//from: CollectorUnifiedPromMetricWorker
                 		//process: wcQ
                 		valObj = task.getValue();
@@ -172,16 +180,17 @@ public class WorkloadCommandManager {
                 	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_CHANGE) {
                 		//성능들을 생성함
                 		generatePerformance();
-                	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_SCALING_IN) {
+                	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_SCALING_IN) { //노드스케일링
                 		//노드 줄이는 요청, 스레드 처리
                 		valObj = task.getValue();
                 		
                 		List<NodeScalingInfo> nodeScalingInfos = null;
                 		if(valObj instanceof List) {
                 			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
+                			scalingService.processNodeScaling(nodeScalingInfos);
                 		}
-                		if(log.isInfoEnabled())
-                			log.info("노드 스케일링 IN 요청[CMD_NODE_SCALING_IN]:\n{}", nodeScalingInfos);
+                		if(scaleLog.isInfoEnabled())
+                			scaleLog.info("노드 스케일링 IN 요청[CMD_NODE_SCALING_IN]:\n{}", nodeScalingInfos);
 
                 	}else if(task.getCommand() == WorkloadCommand.CMD_NODE_SCALING_OUT) {
                 		//노드 늘리는 요청, 스레드 처리
@@ -190,31 +199,36 @@ public class WorkloadCommandManager {
                 		List<NodeScalingInfo> nodeScalingInfos = null;
                 		if(valObj instanceof List) {
                 			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
+                			scalingService.processNodeScaling(nodeScalingInfos);
                 		}
-                		if(log.isInfoEnabled())
-                			log.info("노드 스케일링 OUT 요청[CMD_NODE_SCALING_OUT]:\n{}", nodeScalingInfos);
+                		if(scaleLog.isInfoEnabled())
+                			scaleLog.info("노드 스케일링 OUT 요청[CMD_NODE_SCALING_OUT]:\n{}", nodeScalingInfos);
 
                 	}else if(task.getCommand() == WorkloadCommand.CMD_POD_SCALING) {
                 		//파드 리소스 조정 요청, 스레드 처리
                 		valObj = task.getValue();
+                		
+                		if(scaleLog.isInfoEnabled())
+                			scaleLog.info("파드 스케일링 요청[CMD_POD_SCALING]:\n{}", valObj);
                 		
                 		PodScalingInfo psInfo;
                 		if(valObj instanceof PodScalingInfo) {
                 			psInfo = (PodScalingInfo)valObj;
                 			WorkloadRequest wr = requestQ.getWorkloadRequest(psInfo.promMetricPod.getMlId());
                 			
-                			new Thread(() -> {
+                			ThreadGroup scalingGroup = new ThreadGroup("ScalingServiceGroup");
+                			
+                			Thread thread = new Thread(scalingGroup, () -> {
                 				try {
-                			       comService.requestScalingApiCall(psInfo, wr);
-                			       psInfo.clear();
+                					scalingService.requestScalingApiCall(psInfo, wr);
+                			        psInfo.clear();
                 				}catch(Exception e) {
-                					log.error("API call to notify the Optimizer server of configuration changes failed. Error:", e);
+                					scaleLog.error("API call to notify the Optimizer server of configuration changes failed. Error:", e);
                 				}
-                			}).start();
+                			}, namePrefix + threadNumber.getAndIncrement());
+                			thread.start();
                 			
                 		}
-                		if(log.isInfoEnabled())
-                			log.info("파드 스케일링 요청[CMD_POD_SCALING]:\n{}", valObj);
                     }
                 	
                 	queueLog.debug("Wrokload worker: command {}",task.getCommand());
@@ -235,14 +249,17 @@ public class WorkloadCommandManager {
     	if(lastNodes == null)
     		return;
     	
+    	
+    	//GPU
     	GpuPerformanceEvaluator gpfe = new GpuPerformanceEvaluator();
     	gpfe.setCommonService(comService);
     	Map<String, Integer> gpfeRankMap = gpfe.getFormance(lastNodes);
     	
-    	
+    	//성능
     	NodePerformanceEvaluator npfe = new NodePerformanceEvaluator();
     	Map<String, Integer> npfeRankMap = npfe.getFormanceScore(lastNodes);
     	
+    	//보안
     	SecurityLevelEvaluator sle = new SecurityLevelEvaluator();
     	Map<String, Integer> sleRankMap = sle.calculateSecurityLevel(lastNodes, feaMain.getClusterFeature());
     	
@@ -262,15 +279,14 @@ public class WorkloadCommandManager {
     	
     	feaMain.setClusterNodeFeature(nodeFeatures);
     	
-    	
-    	System.out.println(gpfeRankMap);
-    	System.out.println(npfeRankMap);
-    	System.out.println(sleRankMap);
+    	//System.out.println(gpfeRankMap);
+    	//System.out.println(npfeRankMap);
+    	//System.out.println(sleRankMap);
     	
     	gpfeRankMap.clear();
     	npfeRankMap.clear();
     	sleRankMap.clear();
-    	String a = "aaa";
+//    	String a = "aaa";
     	
     }
 }

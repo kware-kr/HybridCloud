@@ -43,4 +43,9 @@ public class CommonDao {
 	public Double selectCommonGpuScore(String product) {
 		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonGpuScore", product);
 	}
+
+	public Map selectCommonGpuMinMaxScore() {
+		return sqlSessionTemplate.selectOne("ptCommonMapper.selectCommonGpuMinMaxScore");
+	}
+	
 }

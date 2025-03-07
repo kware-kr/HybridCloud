@@ -39,7 +39,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="selectCommonGpuScore" resultType="Double">
 	    SELECT max(score) AS score FROM k_hybrid.mo_common_gpu_spec
-		WHERE product like '%' || REPLACE(REPLACE(REPLACE(REPLACE(product,'NVIDIA',''),'GB',''), '-', '%'), ' ', '%')  || '%'
+		WHERE product like '%' || REPLACE(REPLACE(REPLACE(REPLACE(#{product},'NVIDIA',''),'GB',''), '-', '%'), ' ', '%')  || '%'
+	</select>
+	
+	
+	<select id="selectCommonGpuMinMaxScore" resultType="HashMap">
+	    SELECT max(score) max, min(score) min FROM k_hybrid.mo_common_gpu_spec
 	</select>
 	
 </mapper>

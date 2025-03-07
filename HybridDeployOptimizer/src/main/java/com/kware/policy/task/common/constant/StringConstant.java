@@ -52,6 +52,11 @@ public class StringConstant {
 	public final static String STR_COMMA         = ",";
 	
 	
+	
+	public final static String STR_lineFeed = System.lineSeparator();
+	public final static String STR_tab1 = "\t";
+	public final static String STR_tab2 = "\t\t";
+	
 	public static enum RequestStatus{
 		request,
 	    complete
@@ -74,6 +79,12 @@ public class StringConstant {
 		PreemptLowerPriority, Never
 	};
 	
+	
+	public final static String SCALING_TYPE_POD  = "POD";
+	public final static String SCALING_TYPE_NODE = "NODE";
+	public final static String SCALING_DOC_TYPE_REQUEST="REQUEST";
+	public final static String SCALING_DOC_TYPE_RESPONSE="RESPONSE";
+		
 	
 	/*
 	public static enum KubeKind {

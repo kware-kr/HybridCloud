@@ -31,4 +31,7 @@ public class APIConstant {
 	
 	//request uri 관련(KETI)
 	public static String REQUEST_SCALE = "/submit_resource"; //재배포 요청 URI
+	
+	
+	public static String MY_CALLBACK = "/interface/scalor/cluster/nodescale/callback"; 
 }
