@@ -142,6 +142,7 @@
 		    'nodeNm', node_nm
 		   ) AS nodeInfo
 		 , feature
+		 , auto_feature
 		FROM (
 			SELECT
 			      mcn.uid
@@ -149,6 +150,7 @@
 			    , mc.nm AS cluster_nm
 			    , ld.node_nm 
 			    , mcn.feature
+			    , mcn.auto_feature
 			--   , ld.results
 			    , fg.gpu_models
 			    , (ld.results->>'capacityCpu'):: int AS capacityCpu

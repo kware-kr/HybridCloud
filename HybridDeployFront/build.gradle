@@ -18,6 +18,8 @@ sourceSets {
 			srcDirs = ["src/main/resources","src/main/resources-env/$profile","src/main/java"]
 			//src/main/java 영역에 리스스(xml 등)파일이 있어서, 이 코드가 없으면 java 이외의 파일이 들어가지 않는다.
 			//gradlew를 활용할 경우 
+			
+			exclude '**/.vscode'
 		}
 	}
 }

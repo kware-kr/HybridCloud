@@ -35,9 +35,9 @@
                       <td>{{ node.nodeInfo.disk }}</td>
                       <td>{{ node.nodeInfo.gpu }}</td>
                       <td style="text-align: left">{{ node.nodeInfo.gpuModels }}</td>
-                      <td><input type="number" v-model.number="node.feature.performanceLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
-                      <td><input type="number" v-model.number="node.feature.gpuLevel"         min="1" max="10" class="form-control" @input="checkChanges(node)" /></td>
-                      <td><input type="number" v-model.number="node.feature.securityLevel"    min="1" max="5" class="form-control" @input="checkChanges(node)" /></td>
+                      <td><input type="number" v-model.number="node.feature.performanceLevel" min="1" max="10" class="form-control" @input="checkChanges(node)" :placeholder="node.autoFeature.performanceLevel" /></td>
+                      <td><input type="number" v-model.number="node.feature.gpuLevel"         min="1" max="10" class="form-control" @input="checkChanges(node)" :placeholder="node.autoFeature.gpuLevel" /></td>
+                      <td><input type="number" v-model.number="node.feature.securityLevel"    min="1" max="5"  class="form-control" @input="checkChanges(node)" :placeholder="node.autoFeature.securityLevel" /></td>
                       <td>
                         <i style="font-weight: bold; font-size: 20px" :class="changedNodes[node.nodeUid]?.isChanged ? 'fas fa-edit text-warning' : 'fas fa-check-circle text-success'"></i>
                       </td>
@@ -86,6 +86,7 @@
                   const parsedContentList = nodeResponse.map((item) => {
                     item.feature = item.feature ? JSON.parse(item.feature) : {};
                     item.nodeInfo = JSON.parse(item.nodeInfo);
+                    item.autoFeature = JSON.parse(item.autoFeature); //자동생성된 데이터
                     return item;
                   });
 
@@ -125,6 +126,7 @@
                   const { original, ...saveData } = node; //original를 제거한 데이터만 저장
                   saveData.feature  = JSON.stringify(saveData.feature);
                   saveData.nodeInfo = JSON.stringify(saveData.nodeInfo);
+                  saveData.autoFeature = JSON.stringify("");
                   const response = await axios.put(this.processUrlPath, saveData);
                   node.original = JSON.stringify(saveData); // 원본 업데이트
 

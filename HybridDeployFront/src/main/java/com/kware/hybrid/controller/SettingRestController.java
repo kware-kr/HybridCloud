@@ -18,6 +18,9 @@ import com.kware.hybrid.service.CommonFeatureService;
 import com.kware.hybrid.service.vo.ClusterNodeFeatureVO;
 import com.kware.hybrid.service.vo.CommonFeatureVO;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/setting")
 public class SettingRestController {
@@ -66,10 +69,14 @@ public class SettingRestController {
 		 
 		switch (method) {
 			case GET:
-				// GET 요청: 조회
-				List<ClusterNodeFeatureVO> resultList  = cfService.getAllClusterNodeFeatures();
-				if (resultList != null) {
-					return ResponseEntity.ok(resultList);
+				try {
+					// GET 요청: 조회
+					List<ClusterNodeFeatureVO> resultList  = cfService.getAllClusterNodeFeatures();
+					if (resultList != null) {
+						return ResponseEntity.ok(resultList);
+					}
+				}catch(Exception e) {
+					log.error("clusternodefeature 조회:", e);
 				}
 								
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found");
