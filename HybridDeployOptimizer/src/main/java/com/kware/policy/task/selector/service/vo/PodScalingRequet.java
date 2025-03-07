@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 public class PodScalingRequet {
-    private String name;
+    private String name; //mlId
     private String cluster;
     private List<Container> containers;
 
@@ -25,13 +25,20 @@ public class PodScalingRequet {
 
     @Data
     public static class ResourceDetail {
-        private Integer cpu;
-        private Long memory;
+        private String cpu;
+        private String memory;
         
         @JsonProperty("gpu")
-        private Integer gpu;
+        private String gpu;
 
         @JsonProperty("ephemeral-storage")
-        private Long ephemeralStorage;
+        private String ephemeralStorage;
+    }
+    
+    public void clear() {
+    	if(this.containers != null)
+    		this.containers.clear();
+    	
+    	this.containers = null;
     }
 }

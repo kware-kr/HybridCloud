@@ -1,5 +1,8 @@
 package com.kware.policy.task.selector.service.dao;
 
+import java.util.List;
+import java.util.Map;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,4 +55,10 @@ public class WorkloadRequestDao {
 	public int insertMoUserResponse(Response vo) {
 		return sqlSessionTemplate.insert("mlRequetResponseMapper.insertMoUserResponse", vo);
 	}
+	
+	
+	public List<Map> selectOldWorkloadRequest() {
+		return sqlSessionTemplate.selectList("mlRequetResponseMapper.selectOldWorkloadRequest");
+	}
+	
 }

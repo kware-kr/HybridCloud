@@ -35,6 +35,7 @@ import com.kware.policy.task.common.service.vo.CommonConfigGroup;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadResponse;
+import com.kware.policy.task.selector.service.vo.WorkloadResponseStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -146,9 +147,9 @@ public class WorkloadRequestRestController {
 		this.cmService.createEvent("Workload Request", "Request"
 				, "워크로드 요청 수신.\n" + wlRequest.getRequest().getMlId());
 
-		// {{노드 셀렉터
+		//{{배포 대상 노드 셀렉터
 		WorkloadResponse wlResponse = wlService.getResponseToSelectedNode(wlRequest);
-		// }}
+		//}}
 
 		// DB 저장
 		wlService.insertMoUserResponse(wlResponse.getResponse());
@@ -157,9 +158,11 @@ public class WorkloadRequestRestController {
 				, "워크로드 요청 노드 선택 결과 발신.\n" + wlRequest.getRequest().getMlId());
 
 		// WorkloadRequest에 Response 입력
-		wlRequest.setResponse(wlResponse.getResponse());
-		String res_yamlstring = YAMLUtil.writeString(wlRequest, false);
-		wlResponse.getResponse().setOriginRequest(StringUtil.encodebase64(requestString));
+		//wlRequest.setResponse(wlResponse.getResponse());
+		//String res_yamlstring = YAMLUtil.writeString(wlRequest, false);
+		
+		if(wlResponse.getResponse().getCode() == WorkloadResponseStatus.SUCCESS.getCode())
+			wlResponse.getResponse().setOriginRequest(StringUtil.encodebase64(requestString));
 
 		/*
 		 * WorkloadResponse.Response wlResponseRes =wlResponse.getResponse();

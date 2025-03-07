@@ -73,6 +73,9 @@ public class WorkloadResponse {
         private String info;     //db:info   json String
         
         @JsonIgnore
+        private String cause;    //노드를 선택하는 알고리즘의 스코 등 원인을 저장 
+        
+        @JsonIgnore
         private Long  reqUid;       //db: uid
         
         @JsonIgnore

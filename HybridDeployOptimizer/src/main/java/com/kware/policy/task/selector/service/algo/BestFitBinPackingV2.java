@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.common.constant.ResourceConstant;
+import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.constant.StringConstant.PodStatusPhase;
 import com.kware.policy.task.common.vo.MinimumRequiredFreeResources;
 import com.kware.policy.task.selector.service.config.ResourceWeightProperties.ResourceWeight;
@@ -31,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BestFitBinPackingV2 {
-
-	
     private List<PromMetricNode> nodes = null; // 사용 가능한 노드들의 리스트(필터링이된)
     //private int defaultBestNodeCount = 5;
     
@@ -44,6 +43,10 @@ public class BestFitBinPackingV2 {
     //노드 운영에 필요한 최소한의 여유공간
     
     MinimumRequiredFreeResources minFree = ResourceConstant.minFreeResources;
+
+    //생성과정 로그를 기록
+    StringBuffer causeBuf = new StringBuffer();
+    
     
     // 생성자: 노드 리스트와 요청 맵을 초기화
     public BestFitBinPackingV2(List<PromMetricNode> _nodes, Map<String, Map<String, WorkloadTaskWrapper>> _notRunningWrappers, ResourceWeight _weight) {
@@ -55,6 +58,8 @@ public class BestFitBinPackingV2 {
     public void setClusters(Map<String, Cluster> _clusters) {
     	this.clusters = _clusters;
     }
+    
+    
     
     //이 데이터를 결과로 보낼까
     //List<AllocationResult>는 내부에서만 사용하고, 리턴은 List<WorkloadTaskContainerWrapper>
@@ -70,6 +75,11 @@ public class BestFitBinPackingV2 {
 			return "AllocationResult [starttime=" + starttime + ", endtime=" + endtime + ", order=" + wrapper.getOrder()
 					+ ", nodeScore=" + nodeScore + "]";
 		}
+		
+		public String toStringCause() {
+			return "order=" + wrapper.getOrder() + ", nodeScore=" + nodeScore;
+		}
+		
     }
     
     /**
@@ -77,21 +87,26 @@ public class BestFitBinPackingV2 {
      * @param _wrapperList
      * @return
      */    
-    public void setClusterNodes(List<WorkloadTaskWrapper>  _wrapperList){
+    public void findOptimizerClusterNodes(List<WorkloadTaskWrapper>  _wrapperList){
     	
     	//getEstimatedStartTime으로 정렬된 전체 PodStatusPhase.UNSUBMITTED, PENDING, RUNNING
     	List<WorkloadTaskWrapper> unWrappers = this.getWrappersMapToList(notRunningWrappers);
     	HashMap<Integer, List<AllocationResult>> cluterRsMap = new HashMap<Integer, List<AllocationResult>>();
     	
     	log.debug("Request Wrapper{}", _wrapperList);
-    	
+    	this.causeBuf.append("**Scoring Process by Cluster**");
+    	this.causeBuf.append(StringConstant.STR_lineFeed);
     	for (Map.Entry<String, Cluster> entry : this.clusters.entrySet()) {
     	    String  id = entry.getKey();
     	    Cluster c = entry.getValue();
     	    
     	    List<AllocationResult> rsList = new ArrayList<>();
     	    LocalDateTime prevStart   = null;
+    	    
     	    log.debug("==================== <<<   Cluster {}", id);
+    	    this.causeBuf.append(StringConstant.STR_tab1);
+    	    this.causeBuf.append("clusterId: " + id);
+    	    this.causeBuf.append(StringConstant.STR_lineFeed);
     	    
     	    LocalDateTime start = null;
 			LocalDateTime end   = null;
@@ -142,11 +157,15 @@ public class BestFitBinPackingV2 {
     					
     					log.debug("노드선택 {}", rs.toString());
     					
+    					
+    					this.causeBuf.append(StringConstant.STR_tab2);
+    					this.causeBuf.append(rs.toStringCause());
+    					this.causeBuf.append(StringConstant.STR_lineFeed);
+    					
     					tmpUnWrappers.clear();
     					tmpOverlabWrappers.clear();
     					break;
     				}
-    				
     				start = this.getNextAvailableTime(tmpUnWrappers, start);
     				if(start == null) { //이런사항이 발생하나?
     					log.debug("getNextAvailableTime return is null\n=> {}", w);
@@ -225,12 +244,20 @@ public class BestFitBinPackingV2 {
     	//{{리턴 결과 생성
     	List<AllocationResult> arList = cluterRsMap.get(curClUid);
     	if(arList != null) {
+    		this.causeBuf.append(StringConstant.STR_lineFeed);
+    		this.causeBuf.append("**Final Selected Node**");
+    		this.causeBuf.append(StringConstant.STR_lineFeed);
+    		
 	    	for(AllocationResult ar: arList) {
 	    		NodeScore ns = ar.nodeScore.peek();
 	    		WorkloadTaskWrapper w = ar.wrapper;    		
 	    		w.setEstimatedStartTime(ar.starttime);
 	    		w.setClUid(curClUid);
 	    		w.setNodeName(ns.node.getNode());
+	    		
+	    		this.causeBuf.append(StringConstant.STR_tab1);
+	    		this.causeBuf.append("order=" + w.getOrder() + ", " + ns);
+	    		this.causeBuf.append(StringConstant.STR_lineFeed);
 	    	}
     	}
     	//}}
@@ -258,6 +285,10 @@ public class BestFitBinPackingV2 {
                 return wrapper.getEstimatedStartTime();
             }
         }
+        
+        if(size == 0)
+        	return null;
+        
         // 조건을 만족하는 값이 없는 경우 맨 마직막 end값 반환
         return _sortedWrappers.get(size -1).getEstimatedEndTime();
 //        return null;
@@ -541,6 +572,10 @@ public class BestFitBinPackingV2 {
 					+ wDisk + ", wGpu=" + wGpu + "]";
 		}    	
     }
+
+	public StringBuffer getCauseBuf() {
+		return causeBuf;
+	}
     
     /*
     public static void main(String[] args) {

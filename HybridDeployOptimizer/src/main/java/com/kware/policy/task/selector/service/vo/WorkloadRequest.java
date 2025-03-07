@@ -116,9 +116,9 @@ public class WorkloadRequest extends CommonQueueDefault{
     @Getter
     @Setter
     public static class Container extends CommonQueueDefault{
-        private String name;
+        private String name;  //요청컨테이너 이름
         @JsonIgnore
-        private Integer nameIdx;
+        private Integer nameIdx; //컨테이너리스트에서 번호 즉 한개의 워크로드에 컨테이너가 3개 있으면 번호 내부적으로 생성
         
         private RequestContainerAttributes attribute;
         private Resources resources;
@@ -261,14 +261,17 @@ public class WorkloadRequest extends CommonQueueDefault{
         private String       gpuDriverVersion;
         private String       workloadFeature;
         private String       userId;
+        private Boolean      checkpoint = Boolean.FALSE;
         private String       yaml;
+        
         
 		@Override
 		public String toString() {
 			return "RequestWorkloadAttributes [workloadType="  + workloadType         + ", isCronJob=" + isCronJob
 					+ ", devOpsType="       + devOpsType       + ", cudaVersion="     + cudaVersion 
 					+ ", gpuDriverVersion="	+ gpuDriverVersion + ", workloadFeature=" + workloadFeature 
-					+ ", userId="           + userId           + ", yaml="            + yaml + "]";
+					+ ", userId="           + userId           + ", yaml="            + yaml + "]"
+					+ ", checkpoint="       + checkpoint       + "]";
 		}
     }
     

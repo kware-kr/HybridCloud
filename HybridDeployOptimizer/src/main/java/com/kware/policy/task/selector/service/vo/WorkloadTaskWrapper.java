@@ -1,5 +1,6 @@
 package com.kware.policy.task.selector.service.vo;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -105,9 +106,19 @@ public class WorkloadTaskWrapper {
 		this.podUid = _pod.getPodUid();
 		this.status = _pod.getStatusPhase();
 		
-		this.completedTimestamp = _pod.getCompletedTimestamp().toLocalDateTime();
-		this.createdTimestamp   = _pod.getCreatedTimestamp().toLocalDateTime();
-		this.scheduledTimestamp = _pod.getScheduledTimestamp().toLocalDateTime();
+		Timestamp temp_t = null;
+		
+		temp_t = _pod.getCompletedTimestamp();
+		if(temp_t != null)
+			this.completedTimestamp = temp_t.toLocalDateTime();
+		
+		temp_t = _pod.getCreatedTimestamp();
+		if(temp_t != null)
+			this.createdTimestamp   = temp_t.toLocalDateTime();
+		
+		temp_t = _pod.getScheduledTimestamp();
+		if(temp_t != null)
+			this.scheduledTimestamp = temp_t.toLocalDateTime();
 		
 		/* 다른 곳에서 
 				if (completedTimestamp == null) {

@@ -67,12 +67,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	        , cl_uid 
 	        <!-- , no_uid -->
 	        , info 
+	        , cause
 	    ) VALUES (
 	          #{reqUid} 
 	        , #{mlId} 
 	        , #{clUid}::int4 
 <!-- 	        , #{result.noUid} --> 
-	        , #{info}::jsonb 
+	        , #{info}::jsonb
+	        , #{cause} 
 	    )
 	</insert>
 	
@@ -83,11 +85,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	        , cl_uid 
 	        , no_uid 
 	        , info 
+	        , cause
 	        , reg_dt
 	    FROM k_hybrid.mo_user_response
 	    WHERE 1 = 1
 	      AND uid   = #{reqUid} 
 	      AND ml_id = #{mlId}
+	</select>
+	
+	<!-- 프로그램을 재시작할때 기존에 등록된 요청중에서 현재 실행중인 요청을 다시 로딩하기 위함 -->
+	<select id="selectOldWorkloadRequest" resultType="HashMap">
+		SELECT a.request_json::TEXT AS req
+			, info::TEXT AS res
+			, cl_uid as cluid
+		FROM k_hybrid.mo_user_request a
+		INNER JOIN k_hybrid.mo_user_response b ON b.req_uid = a.uid
+		WHERE a.noti_dt IS NOT NULL
+			AND a.complete_dt IS NULL
 	</select>
 </mapper>
 
