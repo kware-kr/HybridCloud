@@ -322,20 +322,40 @@ CREATE TABLE k_hybrid.mo_user_response (
 	ml_id varchar(128) NOT NULL, -- ml UID
 	cl_uid int4 NULL, -- Cluster UID
 	no_uid varchar(128) NULL, -- Node UID
-	info jsonb NULL, -- 응답 상세 정보
+	info jsonb NULL, -- 응답
+	cause text NULL, -- 응답 원인 로그
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL, -- 등록일시
 	PRIMARY KEY (req_uid, ml_id)
 );
 
 -- Column comments
-
 COMMENT ON COLUMN k_hybrid.mo_user_response.req_uid IS '일련번호';
 COMMENT ON COLUMN k_hybrid.mo_user_response.ml_id IS 'ml UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.cl_uid IS 'Cluster UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.no_uid IS 'Node UID';
-COMMENT ON COLUMN k_hybrid.mo_user_response.info IS '응답 상세 정보';
+COMMENT ON COLUMN k_hybrid.mo_user_response.info IS '응답';
+COMMENT ON COLUMN k_hybrid.mo_user_response.text IS '응답 원인 로그';
 COMMENT ON COLUMN k_hybrid.mo_user_response.reg_dt IS '등록일시';
 
+-- DROP TABLE k_hybrid.mo_scaling_info;
+
+CREATE TABLE k_hybrid.mo_scaling_info (
+    uid bigserial NOT NULL,                        -- 각 스케일링 기록의 고유 식별자
+    scaling_type varchar(10) NOT NULL,             -- 스케일링 유형 (POD, NODE)
+    doc_type varchar(10) NOT NULL,                 -- 문서 유형 (REQUEST, RESPONSE)
+    doc_body jsonb,                                -- 요청 또는 응답 본문의 JSON 데이터
+    doc_desc jsonb,                                -- 설명(JSON 형식)
+    reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL, -- 등록 시각
+    PRIMARY KEY (uid)
+);
+
+COMMENT ON TABLE k_hybrid.mo_scaling_info IS '스케일링 정보';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.uid IS '고유 아이디';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.scaling_type IS '스케일링 유형 (POD|NODE)';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_type IS '문서 유형 (REQUEST|RESPONSE)';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_body IS '문서 본문';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_desc IS '문서 설명(원인 등)';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.reg_dt IS '등록 시각';
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Permissions

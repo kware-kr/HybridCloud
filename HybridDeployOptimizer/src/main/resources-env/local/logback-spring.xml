@@ -71,7 +71,7 @@
 		</rollingPolicy>
 	</appender>
 	
-	<appender name="mqLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	<!-- <appender name="mqLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${APP_LOG_ROOT}/messagequeue.log</file>
 		<encoder>
 			<pattern>${METRIC_PATTERN}</pattern>
@@ -81,7 +81,7 @@
 			<maxFileSize>1GB</maxFileSize>
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
-	</appender>
+	</appender> -->
 	
 	<!-- File appender for error logs -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -99,6 +99,18 @@
         </filter>
     </appender>
     
+    <appender name="scaleLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${APP_LOG_ROOT}/scale.log</file>
+		<encoder>
+			<pattern>${METRIC_PATTERN}</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${APP_LOG_ROOT}/backup/scale-%d{yyyy-MM-dd}-%i.log.gz</fileNamePattern>
+			<maxFileSize>1GB</maxFileSize>
+			<totalSizeCap>1GB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+    
     <appender name="debugLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${APP_LOG_ROOT}/debug.log</file>
 		<encoder>
@@ -111,6 +123,7 @@
 			<totalSizeCap>1GB</totalSizeCap>
 		</rollingPolicy>
 	</appender>
+	
 	
 
 	<logger name="com.zaxxer.hikari" level="ERROR" additivity="false">
@@ -157,6 +170,11 @@
 		<!-- <appender-ref ref="console" /> -->
 	</logger>
 	
+	<logger name="scale-log" level="DEBUG" additivity="false">
+		<appender-ref ref="scaleLog" />
+		<!-- <appender-ref ref="console" /> -->
+	</logger>
+	
 	<logger name="debug-log" level="DEBUG" additivity="false">
 		<appender-ref ref="debugLog" />
 	</logger>
@@ -165,9 +183,9 @@
 		<appender-ref ref="queueLog" />
 		<!-- <appender-ref ref="console" /> -->
 	</logger>
-	<logger name="com.kware.rabbitmq" level="DEBUG" additivity="false">
+	<!-- <logger name="com.kware.rabbitmq" level="DEBUG" additivity="false">
 		<appender-ref ref="mqLog" />
-	</logger>
+	</logger> -->
 
 	<root level="WARN">
 		<appender-ref ref="applicationLog" />
