@@ -50,6 +50,9 @@ public class JSONUtil {
     
     private static final ObjectMapper notNullMapper = new ObjectMapper();
     static {
+    	
+    	notNullMapper.registerModule(new JavaTimeModule());
+    	
     	//null 값인 필드들이 JSON 출력에서 제외됩니다.
     	notNullMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     	//빈 객체(필드가 없는 객체 또는 모든 필드가 null인 객체)를 직렬화할 때 오류가 발생하지 않고, {}로 표현됩니다
