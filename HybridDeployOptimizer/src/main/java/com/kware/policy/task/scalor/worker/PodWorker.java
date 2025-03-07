@@ -17,14 +17,19 @@
  */
 package com.kware.policy.task.scalor.worker;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.kware.common.config.serializer.JsonIgnoreDynamicSerializer;
@@ -33,6 +38,7 @@ import com.kware.policy.task.collector.service.vo.PromMetricPod;
 import com.kware.policy.task.collector.service.vo.PromMetricPods;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.WorkloadCommandManager;
+import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
@@ -45,16 +51,14 @@ import com.kware.policy.task.feature.service.vo.PodScalingPolicy;
 import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
 import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * collectMain > collectWorker에서 수집후 입력된 큐에서 데이터를 take하면서 파싱한다.
  */
 
-@Slf4j
+//@Slf4j
 //@SuppressWarnings("rawtypes")
 public class PodWorker extends Thread {
-	//private static final Logger log = LoggerFactory.getLogger("debug-log");
+	private static final Logger log = LoggerFactory.getLogger("scale-log");
 	
 	// QueueManager 인스턴스 가져오기
 	QueueManager            qm = QueueManager.getInstance();
@@ -190,7 +194,7 @@ public class PodWorker extends Thread {
 		if(log.isDebugEnabled()) {
 			try {
 				JsonIgnoreDynamicSerializer.setIgnoreDynamic(true);
-				log.debug("\n\nPod Scaling Target Map:\n{}", JSONUtil.getJsonstringFromObject(podSIResultMap));
+				log.debug("\n\nPod Scaling 여부 확인 대상 Map:\n{}", JSONUtil.getJsonstringFromObject(podSIResultMap));
 				JsonIgnoreDynamicSerializer.setIgnoreDynamic(false);
 			} catch (JsonProcessingException e) {}
 		}
@@ -276,6 +280,7 @@ public class PodWorker extends Thread {
 
 			//조정요청을 보낸다.
 			//한번 보내면 다시 일정 시간이 지난 이후에 보낼까?
+//			this.sendPodScaling(tPSInfo);
 			if(!sendedMap.containsKey(tKey)) {
 				this.sendPodScaling(tPSInfo);
 				sendedMap.put(tKey, System.currentTimeMillis());
@@ -287,16 +292,22 @@ public class PodWorker extends Thread {
 		
 	}
 	
+	/**
+	 * 파드 스케일링 요청 함수
+	 * @param psInfo
+	 */
 	private void sendPodScaling(PodScalingInfo psInfo) {
 		WorkloadCommand<PodScalingInfo> command = null;
 		command = new WorkloadCommand<PodScalingInfo>(WorkloadCommand.CMD_POD_SCALING, psInfo);
 		
 		PromMetricPod ppod = psInfo.promMetricPod;
-		this.comService.createEvent("파드 스케일링 요청", "PodScale"
-				, "파드의 리소스를 조정을 위한 재배포 요청.\n" 
+		this.comService.createEvent("파드 스케일링 대상", "PodScaleT"
+				, "파드의 리소스를 조정을 위한 재배포 대상.\n"
+				+ "  워크로드:" + ppod.getMlId() 
 				+ "  클러스터:" + ppod.getClUid() 
 				+ ", 노드:"    + ppod.getNode() 
 				+ ", 파드:"    + ppod.getPod()
+				+ ", 평균 사용량:"    + psInfo.getAvearageString()
 				+ ", old request:" + ppod.getMRequestsList().toString()
 				+ ", new request:" + psInfo.getNewRequestsMap().toString()
 				+ ", old limit:"   + ppod.getMLimitsList().toString()
@@ -321,10 +332,18 @@ public class PodWorker extends Thread {
 	 "limitsList"  : {"cpu": 9000, "memory": 734003200, "nvidia_com_gpu": 1 ,"ephemeral-storage": xxxxx}
 	 "requestsList": {"cpu": 7000, "memory": 524288000, "nvidia_com_gpu": 1 ,"ephemeral-storage": xxxxx}
 	*/
-	static String POD_CPU    = "cpu";
-	static String POD_MEMORY = "memory";
-	static String POD_GPU    = "nvidia_com_gpu";
-	static String POD_DISK   = "ephemeral-storage";
+	public static String POD_CPU    = "cpu";
+	public static String POD_MEMORY = "memory";
+	public static String POD_GPU    = "nvidia_com_gpu";
+	public static String POD_DISK   = "ephemeral-storage";
+	/**
+	 * 각 값들의 합 및 %값의 합을 제공함
+	 * 한개라도 서로 값의 isHigh값이 달라지면 대상에서 제거하기 위해 null로 설정함.
+	 * @param podList
+	 * @param tr
+	 * @param psInfo
+	 * @return
+	 */
 	private boolean checkPodUsageList(List<PromMetricPod> podList, PodScalingPolicy.AdjustmentTrigger tr, PodScalingInfo psInfo) {
 		Map<String, Long> limMap = null, reqMap = null;
 		ScalingValue sval = null;
@@ -492,6 +511,9 @@ public class PodWorker extends Thread {
         String mlId;
         String podUid;
         List<WorkloadTaskWrapper> taskWrappers;
+        
+        if(log.isDebugEnabled())
+        	log.debug("Q size:{}================================================", blockingQ.size() );
 //        WorkloadTaskWrapper taskWrapper;
 
         //최신 데이터부터 확인 (뒤쪽부터 순회)
@@ -501,6 +523,15 @@ public class PodWorker extends Thread {
         while (iterator.hasNext()) {
             PromMetricPods podList = iterator.next();
             long timestamp = podList.getTimemillisecond(); // PromMetricPods가 가진 수집 시간
+            
+            if(log.isDebugEnabled()){
+            	String timestampString = null;
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss");
+                timestampString = sdf.format(new Date(timestamp));
+                log.debug("");
+            	log.debug("PromMetricPods size:{}, time:{}", podList.getPodsMap().size(), timestampString );
+            }
+            
 
             // 시간분이 넘은 데이터는 탐색 종료
             if (currentTime - timestamp > periodSeconds) {
@@ -512,17 +543,21 @@ public class PodWorker extends Thread {
                 String key = entry.getKey(); //cluid_podUid
                 PromMetricPod podData = entry.getValue();
                 
-                if(!"RUNNING".equals(podData.getStatusPhase().toString())){  //모든 상태가 running 상태일때만 처리
+                mlId   = podData.getMlId();
+                if(mlId == null || this.requestQ.getWorkloadRequest(mlId) == null) {
+                	continue;
+                }
+                
+                //if(!"RUNNING".equals(podData.getStatusPhase().toString())){  //모든 상태가 running 상태일때만 처리
+                if(StringConstant.PodStatusPhase.RUNNING != podData.getStatusPhase()) {
                 	List<PromMetricPod> rmData = podHistory.remove(key);
                 	if(rmData != null)
                 		rmData.clear();
-                	break;
+                	continue;
                 }
-                
-                //{{재배포여부 결정: checkpoint 여부에 따른 시간처리 70%, 30%
-                mlId   = podData.getMlId();
+              
+              //{{재배포여부 결정: checkpoint 여부에 따른 시간처리 70%, 30%
                 podUid = podData.getPodUid();
-                
                 boolean isRedeploy = false;
                 taskWrappers = this.wcQ.getWorkloadTaskWrapperList(mlId);
                 if(taskWrappers != null) {
@@ -535,6 +570,11 @@ public class PodWorker extends Thread {
                 }
                 //}}
                 
+              
+                if(log.isDebugEnabled()) {
+                	log.debug("mlId중 {}:{}:{}",isRedeploy, mlId, podData.getPod());
+                }
+                
                 if(isRedeploy) {
 	                // 해당 파드의 데이터 리스트 생성 또는 추가
 	                podHistory.computeIfAbsent(key, k -> new ArrayList<>()).add(podData);
@@ -542,11 +582,14 @@ public class PodWorker extends Thread {
                 	List<PromMetricPod> rmData = podHistory.remove(key);
                 	if(rmData != null)
                 		rmData.clear();
-                	break;
+                	continue;
                 }
                 
             }
         }
+        
+        if(log.isDebugEnabled())
+        	log.debug("Q End================================================\n");
         return podHistory;
     }
 	 

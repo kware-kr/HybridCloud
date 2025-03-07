@@ -16,6 +16,7 @@ import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.feature.FeatureMain;
+import com.kware.policy.task.scalor.service.ScalingInfoService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/interface/scalor")
 @RequiredArgsConstructor
 public class ScalorRestController {
-	private final CommonService service;
+	private final CommonService comService;
 	private final FeatureMain fm;
+	private final ScalingInfoService scalingService;
 
 	// json parser 에러
 	@ExceptionHandler(HttpMessageNotReadableException.class)
@@ -70,17 +72,16 @@ public class ScalorRestController {
 
 	/**
 	 * 노드 스케일링 요청에  callback함수 => 현재 미결
-	 * @param jsonString
+	 * @param msg
 	 * @return
 	 * @throws Exception
 	 */
-	@GetMapping("/node/complete_callback")
-	public ResponseEntity<?> getCompleteCallback(@RequestBody String jsonString) throws Exception {
-		// 요청으로 전달된 데이터를 처리하는 로직 구현
-        log.debug("Received data: {}", jsonString);
-        
-        // 별도의 결과 없이 204 No Content 응답
-        return ResponseEntity.noContent().build();	
+	@GetMapping("/cluster/nodescale/callback")
+	public ResponseEntity<?> nodeScalingCallback(@RequestBody(required = false) String msg) {
+		log.debug("==============/interface/scalor/cluster/nodescale/callback" + msg);
+		scalingService.processNodeScalingCallback(msg);
+		//service.getAllEvents(null);
+		
+		return ResponseEntity.ok().build();
 	}
-
 }

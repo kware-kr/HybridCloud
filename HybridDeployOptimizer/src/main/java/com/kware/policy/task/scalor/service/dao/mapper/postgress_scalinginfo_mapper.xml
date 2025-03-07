@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="moScalingInfoMapper">
+
+    <!-- INSERT -->
+    <insert id="insertScalingInfo" useGeneratedKeys="true"  keyProperty="uid" 
+            parameterType="com.kware.policy.task.scalor.service.vo.ScalingInfo" >
+        INSERT INTO k_hybrid.mo_scaling_info (
+            scaling_type,
+            doc_type,
+            doc_body,
+            doc_desc,
+            reg_dt
+        )
+        VALUES (
+            #{scalingType},
+            #{docType},
+            #{docBody},
+            #{docDesc},
+            #{regDt}
+        )
+    </insert>
+    
+        <!-- Select all -->
+    <select id="selectAllScalingInfo" resultType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
+        SELECT uid,
+            scaling_type,
+            doc_type,
+            doc_body,
+            doc_desc,
+            reg_dt
+        FROM k_hybrid.mo_scaling_info 
+        WHERE 1 =1 
+          AND reg_dt >= CURRENT_TIMESTAMP - INTERVAL '1 day'
+        <if test="id != null">
+	        AND uid > #{uid}
+	    </if>
+        ORDER BY reg_dt DESC
+        <if test="pageNumber != null and pageSize != null">
+          LIMIT #{pageSize} OFFSET (#{pageNumber} - 1) * #{pageSize}
+        </if>
+    </select>
+
+    <!-- SELECT by uid -->
+    <select id="selectScalingInfoByUid" parameterType="long"  resultType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
+        SELECT
+            uid,
+            scaling_type,
+            doc_type,
+            doc_body,
+            doc_desc,
+            reg_dt
+        FROM
+            k_hybrid.mo_scaling_info
+        WHERE
+            uid = #{uid}
+    </select>
+
+    <!-- UPDATE -->
+    <update id="updateScalingInfo" parameterType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
+        UPDATE k_hybrid.mo_scaling_info
+        SET
+            scaling_type = #{scalingType},
+            doc_type     = #{docType},
+            doc_body     = #{docBody},
+            doc_desc     = #{docDesc},
+            reg_dt       = #{regDt}
+        WHERE
+            uid = #{uid}
+    </update>
+
+    <!-- DELETE -->
+    <delete id="deleteScalingInfo" parameterType="long">
+        DELETE FROM k_hybrid.mo_scaling_info
+        WHERE uid = #{uid}
+    </delete>
+
+</mapper>

@@ -26,6 +26,8 @@ import java.util.Map;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.collector.service.vo.PromMetricNodes;
@@ -39,15 +41,13 @@ import com.kware.policy.task.feature.FeatureMain;
 import com.kware.policy.task.feature.service.vo.NodeScalingPolicy;
 import com.kware.policy.task.scalor.service.vo.NodeScalingInfo;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * collectMain > collectWorker에서 수집후 입력된 큐에서 데이터를 take하면서 파싱한다.
  */
 
-@Slf4j
+//@Slf4j
 public class NodeWorker extends Thread {
-	//private static final Logger log = LoggerFactory.getLogger("debug-log");
+	private static final Logger log = LoggerFactory.getLogger("scale-log");
 	
 	// QueueManager 인스턴스 가져오기
 	QueueManager            qm = QueueManager.getInstance();
@@ -252,7 +252,10 @@ public class NodeWorker extends Thread {
 			//1개를 추가 요청하면
 			if((cur_node_cnt + 1) <= nsp.getMaxCount()) { //현재 노드 갯수가  정책 최대값 보다 더 작으면 키우는 요청
 				if(nsp.isScalingAt()) {
-					nodScalingInfos = calculateAverage(cluster_nodes);
+					nodScalingInfos = calculateAverage(cluster_nodes, nodeNameList, cur_node_cnt);
+					if(nodScalingInfos.isEmpty())
+						continue;
+					
 					command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_OUT, nodScalingInfos);
 					WorkloadCommandManager.addCommand(command);
 				}
@@ -279,7 +282,8 @@ public class NodeWorker extends Thread {
 			}
 			
 			cur_node_cnt = clusterNodeCntMap.get(clUid);  //클러스터의 현재 노드 갯수
-			//count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수		
+			//count = cluster_nodes.size(); //클러스터내의 지속되는 고부하 노드의 갯수	
+			//각 노드별로 10분간데이터가 있음
 			for(Map.Entry<String, List<NodeScalingInfo>> entry : cluster_nodes.entrySet()) {
 				//10분이상 지속된 자료가 있는지 확인
 				if(entry.getValue().size() > NODE_SCALE_CHECK_MINUTE) {
@@ -287,8 +291,6 @@ public class NodeWorker extends Thread {
 					nodeNameList.add(entry.getKey());
 				}
 			}
-			String[] node_names = nodeNameList.toArray(new String[0]);
-			nodeNameList.clear();
 			
 			if(count == 0)
 				continue;
@@ -296,18 +298,23 @@ public class NodeWorker extends Thread {
 			//전체 노드 카운트에서 현재카운트를 뺐을때 
 			if((cur_node_cnt - count) >= nsp.getMinCount()) { //현재 노드 갯수가 정책 최소값 보다 더 크면 줄이는 요청
 				if(nsp.isScalingAt()) {
-					nodScalingInfos = calculateAverage(cluster_nodes);
+					nodScalingInfos = calculateAverage(cluster_nodes, nodeNameList, cur_node_cnt);
+					if(nodScalingInfos.isEmpty())
+						continue;
+					
 					command = new WorkloadCommand<List<NodeScalingInfo>>(WorkloadCommand.CMD_NODE_SCALING_IN, nodScalingInfos);
 					WorkloadCommandManager.addCommand(command);
 				}
 				
-				this.comService.createEvent("노드 스케일 인[IN] 판단", "NodeScale"
+				this.comService.createEvent("노드 스케일 인[IN] 판단", "NodeScaleT"
 						, "클러스터의 여유 노드로 인한 스케일 요청.\n클러스터 아이디:" + clUid 
-						+ ", 노드:" + String.join(",", node_names)
+						+ ", 노드:" + String.join(",", String.join(", ", nodeNameList))
 						+ ", API 요청 정책:" + nsp.isScalingAt());
 				if(log.isInfoEnabled())
 					log.info("노드 스케일링 IN 판단: cluster={}, nodes={}, API 요청 정책: {}",  clUid, nodScalingInfos, nsp.isScalingAt());
 			}
+			
+			nodeNameList.clear();
 			removeClUidList.add(clUid);
 		}
 		
@@ -327,11 +334,18 @@ public class NodeWorker extends Thread {
      * @param clusterNodes 클러스터별 NodeScalingInfo 리스트를 담은 맵
      * @return 각 클러스터별 평균값을 담은 NodeScalingInfo 객체들의 리스트
      */
-    public List<NodeScalingInfo> calculateAverage(Map<String, List<NodeScalingInfo>> clusterNodes) {
+    public List<NodeScalingInfo> calculateAverage(Map<String, List<NodeScalingInfo>> clusterNodes, List<String> targetNodeNames, int totalCnt) {
         List<NodeScalingInfo> resultList = new ArrayList<>();
 
         // 각 클러스터(노드 리스트)에 대해 처리
         for (List<NodeScalingInfo> nodeList : clusterNodes.values()) {
+        	
+        	//대상노드가 있는 것만 처리하기 위함
+        	String nodename = nodeList.get(0).getCur_node().getNode();
+        	if(!targetNodeNames.contains(nodename)) {
+        		continue;
+        	}
+        	
             int count = nodeList.size();
             double sumCpu = 0.0, sumMem = 0.0, sumDisk = 0.0, sumGpu = 0.0;
             boolean cpuHasNull = false, memHasNull = false, diskHasNull = false, gpuHasNull = false;
@@ -374,9 +388,10 @@ public class NodeWorker extends Thread {
             avgNode.disk_per = diskHasNull ? null : (sumDisk / count);
             avgNode.gpu_per  = gpuHasNull  ? null : (sumGpu  / count);
 
-            // 모든 노드의 cur_node 값이 동일하다는 가정 하에 첫 번째 노드의 값을 사용
+            // 모든 노드의 cluster정보가 동일하므로 첫 번째 노드의 값을 사용
             avgNode.cur_node = nodeList.get(0).cur_node;
 
+            avgNode.total_node_count = totalCnt;
             resultList.add(avgNode);
         }
         return resultList;
@@ -469,7 +484,8 @@ public class NodeWorker extends Thread {
 			}else if(usage_cpu_per < outTrigger_cpu) {
 				cpu_isHigh = true;
 			}
-			snode.cpu_per = usage_cpu_per;
+			snode.cpu_per    = usage_cpu_per;
+			snode.cpu_isHigh = cpu_isHigh;
 			
 			rstList.add(cpu_isHigh); //true, false, null
 		}
@@ -489,7 +505,8 @@ public class NodeWorker extends Thread {
 			}else if(usage_mem_per < outTrigger_mem) {
 				mem_isHigh = true;
 			}
-			snode.mem_per = usage_mem_per;
+			snode.mem_per    = usage_mem_per;
+			snode.mem_isHigh = mem_isHigh;
 			
 			rstList.add(mem_isHigh); //true, false, null
 		}
@@ -508,7 +525,8 @@ public class NodeWorker extends Thread {
 			}else if(usage_disk_per < outTrigger_disk) {
 				disk_isHigh = true;
 			}
-			snode.disk_per = usage_disk_per;
+			snode.disk_per    = usage_disk_per;
+			snode.disk_isHigh = disk_isHigh;
 			
 			rstList.add(disk_isHigh); //true, false, null
 		}
@@ -528,8 +546,9 @@ public class NodeWorker extends Thread {
 				}else if(usage_gpu_per < outTrigger_gpu) {
 					gpu_isHigh = true;
 				}
-				
 				snode.gpu_per = usage_gpu_per;
+				snode.gpu_isHigh = gpu_isHigh;
+				
 				rstList.add(gpu_isHigh); //true, false, null
 			}
 		}

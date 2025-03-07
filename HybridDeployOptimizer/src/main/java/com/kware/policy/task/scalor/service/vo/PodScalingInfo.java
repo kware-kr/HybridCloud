@@ -85,6 +85,37 @@ public class PodScalingInfo {
 		}
 	}
 	
+	public String getAvearageString() {
+		StringBuffer sb = new StringBuffer();
+
+		if (this.cpu_val != 0) {
+		    sb.append("CPU:").append(this.cpu_val);
+		}
+
+		if (this.mem_val != 0) {
+		    if (sb.length() > 0) {
+		        sb.append(" ");
+		    }
+		    sb.append("MEMORY:").append(this.mem_val);
+		}
+
+		if (this.disk_val != 0) {
+		    if (sb.length() > 0) {
+		        sb.append(" ");
+		    }
+		    sb.append("DISK:").append(this.disk_val);
+		}
+
+		if (this.gpu_val != 0) {
+		    if (sb.length() > 0) {
+		        sb.append(" ");
+		    }
+		    sb.append("GPU:").append(this.gpu_val);
+		}
+		
+		return sb.toString();
+	}
+	
 	public void clear() {
 		if(new_limitsMap != null) {
 			new_limitsMap.clear();
@@ -93,5 +124,40 @@ public class PodScalingInfo {
 		if(new_requestsMap != null) {
 			new_requestsMap.clear();
 		}
+	}
+	
+	public String toStringJson() {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("{");
+	    
+	    if (promMetricPod != null) {
+	        sb.append("\"mlId\":")   .append("\"").append(promMetricPod.getMlId()).append("\",");
+	        sb.append("\"clulter\":").append("\"").append(promMetricPod.getClUid()).append("\",");
+	        sb.append("\"node\":")   .append("\"").append(promMetricPod.getNode()).append("\",");
+	        sb.append("\"pod\":")    .append("\"").append(promMetricPod.getPod()).append("\",");
+	    }
+	    
+	    sb.append("\"cpu_per\":")   .append(cpu_per).append(",");
+	    sb.append("\"cpu_val\":")   .append(cpu_val).append(",");
+	    sb.append("\"cpu_isHigh\":").append(cpu_isHigh).append(",");
+	    
+	    sb.append("\"mem_per\":")   .append(mem_per).append(",");
+	    sb.append("\"mem_val\":")   .append(mem_val).append(",");
+	    sb.append("\"mem_isHigh\":").append(mem_isHigh).append(",");
+	    
+	    sb.append("\"disk_per\":")   .append(disk_per).append(",");
+	    sb.append("\"disk_val\":")   .append(disk_val).append(",");
+	    sb.append("\"disk_isHigh\":").append(disk_isHigh).append(",");
+	    
+	    sb.append("\"gpu_per\":")   .append(gpu_per).append(",");
+	    sb.append("\"gpu_val\":")   .append(gpu_val).append(",");
+	    sb.append("\"gpu_isHigh\":").append(gpu_isHigh).append(",");
+	    
+	    sb.append("\"pod_cpu_size\":") .append(pod_cpu_size).append(",");
+	    sb.append("\"pod_mem_size\":") .append(pod_mem_size).append(",");
+	    sb.append("\"pod_disk_size\":").append(pod_disk_size).append(",");
+	    sb.append("\"pod_gpu_size\":") .append(pod_gpu_size);
+	    sb.append("}");
+	    return sb.toString();
 	}
 }
