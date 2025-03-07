@@ -216,8 +216,11 @@ public class CollectorWorkloadApiWorker extends Thread {
 			for(Map<String,Object> mTmp: workloadList) {
 				String mlId = (String)mTmp.get(StringConstant.STR_mlId);
 				
+				if(mlId == null)
+					continue;
+				
 				url = this.api_base_url + APIConstant.API_ML;
-				url = url.replaceAll(REG_mlId, mlId);
+				url = url.replaceAll(REG_mlId, mlId); //mlId가 null이면 오류
 				
 				//{{ 이부분을 스레드로 변경이 가능함
 				//워크로드 상세 정보 조회
@@ -332,7 +335,8 @@ public class CollectorWorkloadApiWorker extends Thread {
 				//}} 스레드 변경 가능함
 			}
 			
-			list_ctx.delete(JPATH_ALL);
+			if(list_ctx != null)
+				list_ctx.delete(JPATH_ALL);
 			
 			workloadList.clear();
 			workloadList = null;

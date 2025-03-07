@@ -20,9 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 public class PromMetricPod extends PromMetricDefault{
-	private String mlId; //API에서 가져온 정보와 매핑
+	private String mlId;   //API에서 가져온 정보와 매핑
 	private Integer clUid;
-	//private String noUid;
+	private Integer mlContainerNameIdx; //API에서 가져온 정보와 매핑
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	@Schema(type = "string", pattern = "yyyy-MM-dd HH:mm:ss", example = "2024-10-29 15:30:00")
@@ -36,7 +36,7 @@ public class PromMetricPod extends PromMetricDefault{
 	
 	private Map<String, String> labels = new HashMap<String, String>();; //pod labels
 
-	private String node; //가독성  나중에 지울수 있음
+	private String node;
 	private String instance; //가독성 나중에 지울수 있음
 	private String pod; //pod명
 	private String podUid;

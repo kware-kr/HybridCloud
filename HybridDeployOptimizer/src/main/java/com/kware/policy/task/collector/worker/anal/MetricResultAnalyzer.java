@@ -46,6 +46,7 @@ import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.constant.StringConstant;
 import com.kware.policy.task.common.queue.APIQueue;
 import com.kware.policy.task.common.queue.PromQueue;
+import com.kware.policy.task.common.queue.RequestQueue;
 
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
@@ -82,14 +83,15 @@ public class MetricResultAnalyzer {
 
 	// {{ json path에서 key값과 연동해서 key와 함수(Method)를 연결하기 위해 final static 으로 생성한
 	// Mapping Map
-	final Map<String, Method> m_nodeMethdMap = PromMetricNode.m_nodeMethodMap;
-	final Map<String, Method> m_podMethdMap = PromMetricPod.m_podMethodMap;
+	final Map<String, Method> m_nodeMethdMap      = PromMetricNode.m_nodeMethodMap;
+	final Map<String, Method> m_podMethdMap       = PromMetricPod.m_podMethodMap;
 	final Map<String, Method> m_containerMethdMap = PromMetricContainer.m_containerMethodMap;
 	// }}
 
-	QueueManager qm = QueueManager.getInstance();
-	APIQueue apiQ = qm.getApiQ();
-	PromQueue promQ = qm.getPromQ();
+	QueueManager   qm = QueueManager.getInstance();
+	APIQueue     apiQ = qm.getApiQ();
+	PromQueue   promQ = qm.getPromQ();
+	//RequestQueue reqQ = qm.getRequestQ();
 
 	final Long current_millitime;
 	final Timestamp timestamp;
@@ -178,7 +180,7 @@ public class MetricResultAnalyzer {
 					//
 					String mlId = null;
 					ClusterWorkloadPod wpod = apiWorkloadPodMap.get(sExtPath_puid);
-					if (wpod == null) {
+					if (wpod == null /*|| reqQ.getWorkloadRequest(mlId) == null */) {  //요청에 없으면 처리하지 않는ㄷ
 						extractMap.clear();
 						extractMap = null;
 						

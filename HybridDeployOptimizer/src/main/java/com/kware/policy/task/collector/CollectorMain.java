@@ -29,6 +29,7 @@ import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.feature.FeatureMain;
+import com.kware.policy.task.scalor.service.ScalingInfoService;
 import com.kware.policy.task.selector.service.WorkloadRequestService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,9 @@ public class CollectorMain {
 	
 	@Autowired
 	private CommonService comService;
+	
+	@Autowired
+	private ScalingInfoService scalingService;
 	
 	@Autowired
 	private ClusterManagerService cmService;
@@ -147,7 +151,7 @@ public class CollectorMain {
 			//requestService 등록
 			//wcm.setWorkloadRequestService(wrService);
 			//wcm.setCommonService(comService);
-			wcm.setInitSevice(wrService, comService, feaMain);
+			wcm.setInitSevice(wrService, comService, feaMain, scalingService);
 			
 		}catch(Exception e) {
 			e.printStackTrace();
