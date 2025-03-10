@@ -233,6 +233,8 @@ public class CollectorWorkloadApiWorker extends Thread {
 				
 				DocumentContext detail_ctx = JsonPath.parse(apiResult);
 				Map<String, Object> workloadDetailMap = this.annlyApiResultFromWorkloadDetail(detail_ctx);
+				if(workloadDetailMap == null)
+					continue;
 				
 				//{{DB입력
 				ClusterWorkload workload = this.makeClusterWorkload(mlId, workloadDetailMap, apiWorkloadMap);
