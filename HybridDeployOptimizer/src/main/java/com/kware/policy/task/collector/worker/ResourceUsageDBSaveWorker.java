@@ -83,6 +83,9 @@ public class ResourceUsageDBSaveWorker extends Thread {
 	{
 		Collections.addAll(labelFilterSet, "labels");
 	}
+	
+	private static long last_node_time = 0;
+	private static long last_pod_time = 0;
 
 	@Override
 	public void run() {
@@ -90,76 +93,85 @@ public class ResourceUsageDBSaveWorker extends Thread {
 		try {
 			//스레드 풀을 쓰는 방법도 고민해볼까?
 			PromMetricNodes pmns = (PromMetricNodes)promQ.getPromDequesFirstObject(PromDequeName.METRIC_NODEINFO);
-			Map<String, PromMetricNode>  pmnMap = pmns.getNodesMap();
-			if(pmnMap != null) {
-				for (PromMetricNode node : pmnMap.values()) {
-		            Runnable task = new Runnable() {
-		            	ResourceUsageNode usNode = null;
-		                @Override
-		                public void run() {
-		                    // 데이터베이스에 저장
-		                	usNode = new ResourceUsageNode(); 
-		                	usNode.setClUid(node.getClUid());
-		                	usNode.setCollectDt(node.getCollectDt());
-		                	usNode.setNodeNm(node.getNode());
-		                	
-		                	String temp = null;
-							try {
-								temp = JSONUtil.getJsonstringFromObject(node, labelFilterSet);
-							} catch (JsonProcessingException e) {}
-		                	usNode.setResults(temp);
-		                    service.insertResourceUsageNode(usNode);
-		                }
-		            };
-		            // 작업 제출
-		            executor.submit(task);
-		        }
+			
+			if(pmns.getTimemillisecond() != last_node_time) {
+				Map<String, PromMetricNode>  pmnMap = pmns.getNodesMap();
+				if(pmnMap != null) {
+					for (PromMetricNode node : pmnMap.values()) {
+			            Runnable task = new Runnable() {
+			            	ResourceUsageNode usNode = null;
+			                @Override
+			                public void run() {
+			                    // 데이터베이스에 저장
+			                	usNode = new ResourceUsageNode(); 
+			                	usNode.setClUid(node.getClUid());
+			                	usNode.setCollectDt(node.getCollectDt());
+			                	usNode.setNodeNm(node.getNode());
+			                	
+			                	String temp = null;
+								try {
+									temp = JSONUtil.getJsonstringFromObject(node, labelFilterSet);
+								} catch (JsonProcessingException e) {}
+			                	usNode.setResults(temp);
+			                    service.insertResourceUsageNode(usNode);
+			                }
+			            };
+			            // 작업 제출
+			            executor.submit(task);
+			        }
+				}			
+			}else {
+				last_node_time = pmns.getTimemillisecond();
 			}
 			
 			PromMetricPods pmps = (PromMetricPods)promQ.getPromDequesFirstObject(PromDequeName.METRIC_PODINFO);
-			Map<String, PromMetricPod> pmpMap = pmps.getPodsMap();
 			
-			//{{이전 데이터를 가져와서 파드가 이전에 종료되었으면 데이터를 DB에 저장하지 않기 위해서 데이터를 가져옴
-			PromMetricPods secondPmps = (PromMetricPods)promQ.getPromDequesSecondObject(PromDequeName.METRIC_PODINFO);
-			//Map<String, PromMetricPod> secondPmpMap = secondPmps.getPodsMap();
-			//}}
-			
-			if(pmpMap != null) {
-				for (PromMetricPod pod : pmpMap.values()) {
-					
-					//{{완료된 파드는 DB에 한번만 저장하기위함
-					if(pod.isCompleted()) {
-						PromMetricPod secondPod = secondPmps.getMetricPod(pod.getClUid(), pod.getPodUid());
-						if(secondPod != null) {
-							if(secondPod.isCompleted())
-								continue;
+			if(pmps.getTimemillisecond() != last_pod_time) {
+				Map<String, PromMetricPod> pmpMap = pmps.getPodsMap();
+				//{{이전 데이터를 가져와서 파드가 이전에 종료되었으면 데이터를 DB에 저장하지 않기 위해서 데이터를 가져옴
+				PromMetricPods secondPmps = (PromMetricPods)promQ.getPromDequesSecondObject(PromDequeName.METRIC_PODINFO);
+				//Map<String, PromMetricPod> secondPmpMap = secondPmps.getPodsMap();
+				//}}
+				
+				if(pmpMap != null) {
+					for (PromMetricPod pod : pmpMap.values()) {
+						
+						//{{완료된 파드는 DB에 한번만 저장하기위함
+						if(pod.isCompleted()) {
+							PromMetricPod secondPod = secondPmps.getMetricPod(pod.getClUid(), pod.getPodUid());
+							if(secondPod != null) {
+								if(secondPod.isCompleted())
+									continue;
+							}
 						}
-					}
-					//}}//완료된 파드는 DB에 한번만 저장하기위함
-					
-		            Runnable task = new Runnable() {
-		            	ResourceUsagePod usPod = null;
-		                @Override
-		                public void run() {
-		                    // 데이터베이스에 저장
-		                	usPod = new ResourceUsagePod();
-		                	usPod.setClUid(pod.getClUid());
-		                	usPod.setMlId(pod.getMlId());
-		                	usPod.setPodUid(pod.getPodUid());
-		                	usPod.setCollectDt(pod.getCollectDt());
-		                	
-		                	String temp = null;
-							try {
-								temp = JSONUtil.getJsonstringFromObject(pod, labelFilterSet);
-							} catch (JsonProcessingException e) {}
-		                	usPod.setResults(temp);
-		                	
-		                    service.insertResourceUsagePod(usPod);
-		                }
-		            };
-		            // 작업 제출
-		            executor.submit(task);
-		        }
+						//}}//완료된 파드는 DB에 한번만 저장하기위함
+						
+			            Runnable task = new Runnable() {
+			            	ResourceUsagePod usPod = null;
+			                @Override
+			                public void run() {
+			                    // 데이터베이스에 저장
+			                	usPod = new ResourceUsagePod();
+			                	usPod.setClUid(pod.getClUid());
+			                	usPod.setMlId(pod.getMlId());
+			                	usPod.setPodUid(pod.getPodUid());
+			                	usPod.setCollectDt(pod.getCollectDt());
+			                	
+			                	String temp = null;
+								try {
+									temp = JSONUtil.getJsonstringFromObject(pod, labelFilterSet);
+								} catch (JsonProcessingException e) {}
+			                	usPod.setResults(temp);
+			                	
+			                    service.insertResourceUsagePod(usPod);
+			                }
+			            };
+			            // 작업 제출
+			            executor.submit(task);
+			        }
+				}
+			}else {
+				last_pod_time = pmps.getTimemillisecond();
 			}
 		}catch(Exception e) {
 			log.error("ResourceUsageWorker Thread Error:" , e);

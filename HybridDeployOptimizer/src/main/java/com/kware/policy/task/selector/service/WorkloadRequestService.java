@@ -145,8 +145,10 @@ public class WorkloadRequestService {
 		StringBuffer strBuf = new StringBuffer();
 		WorkloadFeature wlFeature = this.getWorkloadFeatureFromWorkloadRequest(wlRequest);
 		
+		boolean isUnmodifiable = false;
 		if(wlFeature == null) {
 			targetNodes = nodes;
+			isUnmodifiable = true;
 			//선점 비선점 정책 넣어볼까? checkpoint도 점검하고, 일단
 		}else {
 			targetNodes = getNodeWithWorkloadFeatuerFilter(wlRequest, wlFeature, nodes);
@@ -236,8 +238,10 @@ public class WorkloadRequestService {
 			log.error("결과 변환에러:{}", e, wlResponse);
 		}
     	
-    	if(targetNodes != null)
-    		targetNodes.clear();
+    	if(targetNodes != null) {
+    		if(!isUnmodifiable)
+    			targetNodes.clear();
+    	}
 
     	return wlResponse;
 	}
