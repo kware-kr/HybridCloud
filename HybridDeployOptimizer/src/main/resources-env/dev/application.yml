@@ -6,12 +6,6 @@ spring:
     restart.enabled: false
     livereload.enabled: false
   mvc.pathmatch.matching-strategy: ant-path-matcher
-  thymeleaf:
-    prefix: classpath:templates/
-    check-template-location: true
-    suffix: .html
-    mode: HTML
-    cache: false
   #shutdown  
   pid:
     file: .\.app.dev.pid
@@ -19,23 +13,6 @@ spring:
     time-zone: Asia/Seoul
     #serialization.WRITE_DATES_AS_TIMESTAMPS: false
     date-format: yyyy-MM-dd HH:mm:ss
-
-
-  rabbitmq:
-    enable: false  #custom 속성: mq를 사용할지 단순하게 api를 사용할지
-    host: 172.30.1.35
-    port: 5672
-    username: admin
-    password: admin123!
-    exchange:
-      policy.name: po_exchane
-    queue:
-      policy_req.name: po_req_queue
-      policy_res.name: po_res_queue
-    routing:
-      policy_req.key: po_req_key
-      policy_res.key: po_res_key
-
   security:
     user:
       name: admin
@@ -129,12 +106,6 @@ hybrid:
         disk: 3
         memory: 3
     exclude-namespaces: "string|monitoring|kube-system|calico-.+|tigera-.+|ingress-.+|gpu-operator"
-    server:
-      h2:
-        enable: false
-        dbname: policydb
-        path:   #mem or null이면 메모리 DB 생성
-        port: 
     datasource:
       hikari: 
         jdbcUrl: jdbc:log4jdbc:h2:tcp://localhost:9093/mem:policydb

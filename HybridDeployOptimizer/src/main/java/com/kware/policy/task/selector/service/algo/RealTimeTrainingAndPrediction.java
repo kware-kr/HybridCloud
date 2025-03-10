@@ -2,6 +2,7 @@ package com.kware.policy.task.selector.service.algo;
 
 import java.io.IOException;
 
+/*
 import org.deeplearning4j.datasets.iterator.impl.MnistDataSetIterator;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
@@ -16,9 +17,10 @@ import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+*/
 
 public class RealTimeTrainingAndPrediction {
-
+/*
     public static void main(String[] args) throws IOException {
         int rngSeed = 123;
         int batchSize = 64;
@@ -69,4 +71,5 @@ public class RealTimeTrainingAndPrediction {
             // Perform evaluation or other tasks with output
         }
     }
+    */
 }

@@ -96,8 +96,6 @@ public class PodWorker extends Thread {
 	
 	//{{ 계속되는 데이터를 확인하기 위함
 	//                 클러스터       노드명, 
-//	private static Map<Integer, Map<String, List<NodeScalingInfo>>> cluster_high_nodes = new HashMap<Integer, Map<String, List<NodeScalingInfo>>>();
-//	private static Map<Integer, Map<String, List<NodeScalingInfo>>> cluster_low_nodes  = new HashMap<Integer, Map<String, List<NodeScalingInfo>>>();
 	private static long collect_miliseconds = 0;  //이전의 처리했던 시간 데이터 즉 테이터가 변경되지 않으면 처리하지 않기위한 판단.
 	//}}
 

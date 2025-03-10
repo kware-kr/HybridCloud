@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'kware'
-version = '0.9.24'
+version = '1.0.0'
 
 sourceCompatibility = '11'
 mainClassName = "com.kware.ApplicationMain"
@@ -24,9 +24,7 @@ sourceSets {
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
-    //maven { url 'https://jitpack.io' }
 }
 
 configurations {
@@ -54,14 +52,10 @@ dependencies {
     
     implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5' //DB연결시 암호화 처리(url,user,password)-운영만
     
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' //thymeleaf
-    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'       //thymeleaf layout이 필요한 경우
+
+    //implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
     
-    
-    implementation 'org.springframework.boot:spring-boot-starter-amqp' //rabbitmq
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
-    
-    implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuaor
+    //implementation 'org.springframework.boot:spring-boot-starter-actuator' //actuaor
     implementation 'org.springframework.boot:spring-boot-starter-security'    
     
     testImplementation 'org.springframework.boot:spring-boot-starter-test'  //junit 등 테스터
@@ -82,7 +76,6 @@ dependencies {
     
 //{{Application     
     implementation 'org.postgresql:postgresql:42.2.5'
-    implementation 'com.h2database:h2:2.2.224'
     //implementation 'io.netty:netty-all:4.1.45.Final' 
     implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'  
     //implementation 'org.quartz-scheduler:quartz:2.3.2'
@@ -90,27 +83,9 @@ dependencies {
     implementation 'com.jayway.jsonpath:json-path:2.9.0'
 //}}Application
 	
-	//유전자 알고리즘: JGAP (Java Genetic Algorithms Package)
-	//implementation 'org.jgap:jgap:3.6.3'
-	// https://mvnrepository.com/artifact/io.github.rayinfinite/jgap
-	implementation group: 'io.github.rayinfinite', name: 'jgap', version: '3.6.3'
-	implementation 'xerces:xercesImpl:2.12.1'
-	
-	
 	//VAR모델
 	implementation 'org.apache.commons:commons-math3:3.6.1'
-	
-	//LSTM 모델
-	//{{ND4(ND4J)는 딥러닝 및 머신러닝을 위한 자바 라이브러리로, 다차원 배열 연산을 지원하며 GPU 가속도를 사용
-	implementation 'org.nd4j:nd4j-native-platform:1.0.0-M2.1'
-    implementation 'org.nd4j:nd4j-api:1.0.0-M2.1'
-    implementation 'org.datavec:datavec-api:1.0.0-M2.1'
-    implementation 'org.deeplearning4j:deeplearning4j-core:1.0.0-M2.1'
-    implementation 'org.deeplearning4j:deeplearning4j-modelimport:1.0.0-M2.1'
-    implementation 'org.deeplearning4j:deeplearning4j-nn:1.0.0-M2.1'
-    implementation 'org.deeplearning4j:deeplearning4j-ui:1.0.0-M2.1'
-    //}}
-	
+		
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 

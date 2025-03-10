@@ -163,7 +163,8 @@ public class APIQueue extends DefaultQueue{
     }
     
     //API 입력중에서 현재세션에서 제공한 데이터가 아닌 데이터를 즉 이전 세션에서 생성된 데이터를 제거함
-    public HashMap removeNotIfSessionId(APIMapsName name, String sessionId) {
+    @SuppressWarnings("rawtypes")
+	public HashMap removeNotIfSessionId(APIMapsName name, String sessionId) {
     	ConcurrentHashMap<String, ?> map = apiMap.get(name);
     	
     	String key = null;

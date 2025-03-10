@@ -1,11 +1,8 @@
 package com.kware;
 
-import java.util.TimeZone;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
@@ -17,8 +14,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-
-import com.kware.common.server.h2.H2NSServer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,45 +43,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ApplicationMain {
 	//static Logger log = LoggerFactory.getLogger(ApplicationMain.class);
 	
-	@Value("${hybrid.policy.server.h2.port:9093}")
-	String h2server_port;
-	  
-	@Value("${hybrid.policy.server.h2.dbname:public}")
-	String h2server_dbname;
-	
-	@Value("${hybrid.policy.server.h2.path:mem}")
-	String h2server_path;
-	
-	@Value("${hybrid.policy.server.h2.enable}")
-	Boolean h2server_enable;
-	  
-	
-	
-	H2NSServer h2server = null;
 	
 	@PostConstruct
 	public void init(){
-		if(h2server_enable) {
-			TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-			if(log.isInfoEnabled())
-				log.info("Embeded H2 Database starting!!");
-			
-			h2server = new H2NSServer();
-			h2server.start(h2server_path, h2server_dbname, h2server_port);
-			
-			if(log.isInfoEnabled())
-				log.info("Embeded Database started!!");
-		}
 	}
 
 		
 	@PreDestroy
 	public void onExit() {
-		if(h2server != null) {
-			h2server.shutdown();
-			if(log.isInfoEnabled())
-				log.info("###WebAplication Shutdown###");
-		}
 	}
 	
 	

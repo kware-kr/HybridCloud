@@ -1,22 +1,12 @@
 package com.kware.policy.task.selector.service.algo;
 
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-
-import com.kware.policy.task.collector.service.vo.PromMetricNode;
-
 /**
  * 아직확인하지 않은 모델
  * ND4J라이브러리를 활용해서 LSTM 모델로 자원 사용량을 예측한다.
  */
 
 public class RealTimeNodeResourcePredictor {
-
+/*
     private static final int FEATURES_COUNT = 1; // 사용할 특성 수 (시간)
     private static final int NUM_OUTPUTS = 1;   // 출력 수 (가용 용량)
 
@@ -84,7 +74,7 @@ public class RealTimeNodeResourcePredictor {
         System.out.println("10분 후 예상 CPU 가용 용량: " + prediction.getDouble(0));
         // 다른 리소스에 대한 예측도 추가 가능
     }
-
+*/
     /*
     public static void main(String[] args) {
         // 예제 데이터 생성 (실제 데이터는 데이터베이스나 외부에서 가져올 수 있음)

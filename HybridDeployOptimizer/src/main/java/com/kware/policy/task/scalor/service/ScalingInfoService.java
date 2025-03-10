@@ -263,10 +263,10 @@ public class ScalingInfoService {
 			}
 			
 			String responseString = "";
-			/*
-			ResponseEntity<String> response = restTemplateUtil.post( url, jsonString, this.reDeployHeaders, String.class, this.log);
+			
+			ResponseEntity<String> response = restTemplateUtil.post( url, jsonString, this.reDeployHeaders, String.class, ScalingInfoService.log);
 			responseString = response.getBody();
-			*/
+			
 			if(log.isInfoEnabled()) {
 				log.info("Pod Scaling Request:{}, response:{}", jsonString, responseString);
 			}
