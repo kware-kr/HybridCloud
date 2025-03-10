@@ -334,7 +334,7 @@ COMMENT ON COLUMN k_hybrid.mo_user_response.ml_id IS 'ml UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.cl_uid IS 'Cluster UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.no_uid IS 'Node UID';
 COMMENT ON COLUMN k_hybrid.mo_user_response.info IS '응답';
-COMMENT ON COLUMN k_hybrid.mo_user_response.text IS '응답 원인 로그';
+COMMENT ON COLUMN k_hybrid.mo_user_response.cause IS '응답 원인 로그';
 COMMENT ON COLUMN k_hybrid.mo_user_response.reg_dt IS '등록일시';
 
 -- DROP TABLE k_hybrid.mo_scaling_info;

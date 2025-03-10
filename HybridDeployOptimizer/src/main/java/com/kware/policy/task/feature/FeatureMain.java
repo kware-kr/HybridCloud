@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import com.kware.policy.task.feature.service.FeatureService;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@DependsOn("initDatabase")
 public class FeatureMain {
 
 	// @Autowired

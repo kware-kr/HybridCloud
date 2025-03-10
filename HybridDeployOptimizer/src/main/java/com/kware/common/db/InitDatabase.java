@@ -2,11 +2,9 @@ package com.kware.common.db;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +33,16 @@ public class InitDatabase {
     
     @Value("${hybrid.init-sql-location.insert-data}")
     private String insertSql;
+    
+    @PostConstruct
+    public void init() {
+        // 데이터베이스 초기화 작업 수행
+    	try {
+			initializeDatabase();
+		} catch (Exception e) {
+			log.error("Schema 생성 오류:", e);
+		}
+    }
 
     
     @Transactional // 트랜잭션 관리

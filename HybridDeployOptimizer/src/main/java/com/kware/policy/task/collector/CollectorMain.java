@@ -6,10 +6,10 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import com.kware.common.db.InitDatabase;
@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EnableScheduling // 스케줄링 활성화
 @Component
+@DependsOn("initDatabase")  //중요함
 public class CollectorMain {
 	
 	private final TaskScheduler taskScheduler;
@@ -98,40 +99,9 @@ public class CollectorMain {
 	
 	boolean isFirst = false;
 	
-	@Autowired
-	InitDatabase initDatabase;
-	
 	@PostConstruct  // 애플리케이션 시작 시 한 번 실행할 로직
 	@SuppressWarnings("unchecked")
     public void runOnceOnStartup() {
-		/*
-        //cluster, clusterNode를 DB에서 가져와서 등록한다.	
-		Map<String, Cluster> clusterApiMap = apiQ.getApiClusterMap();
-		List<Cluster> clusterList = cmService.selectClusterList(null);
-		for(Cluster cl: clusterList) {
-			clusterApiMap.put(Integer.toString(cl.getUid()), cl);
-		}
-		
-		Map<String, ClusterNode> nodeApiMap = apiQ.getApiClusterNodeMap();
-		List<ClusterNode> nodeList = cmService.selectClusterNodeList(null);
-		for(ClusterNode n: nodeList) {
-			nodeApiMap.put(n.getUniqueKey(), n);
-		}
-		*/
-		
-		//{{Database 초기 테이블 생성하고, 초기 데이터를 등록 
-		// applicationready event는 WAS가 준비되었다는 거고, Web과 일반 application이 혼재하게 구성되어 있으며, web은 sub구성임. 
-		try {
-			initDatabase.initializeDatabase();
-		} catch (Exception e) {
-			ThreadPoolTaskScheduler a = (ThreadPoolTaskScheduler)this.taskScheduler;
-			a.shutdown();
-			log.error("Database 초기화 오류", e);
-			return;
-		}
-		//}}
-		
-		
 		
 		qm.setScheduler(taskScheduler);
 		
