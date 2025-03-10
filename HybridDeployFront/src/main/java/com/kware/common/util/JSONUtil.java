@@ -55,7 +55,7 @@ public class JSONUtil {
         System.out.println("ObjectMapper Settings:");
         System.out.println("FAIL_ON_EMPTY_BEANS:        " + objectMapper.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS));
         System.out.println("FAIL_ON_UNKNOWN_PROPERTIES: " + objectMapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
-        System.out.println("INCLUDE_NON_NULL:           " + objectMapper.getSerializationConfig().getSerializationInclusion());
+        System.out.println("INCLUDE_NON_NULL:           " + objectMapper.getSerializationConfig().getDefaultPropertyInclusion().getValueInclusion());
         // 필요한 다른 설정도 추가할 수 있습니다.
     }
     
