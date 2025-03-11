@@ -119,6 +119,7 @@ public class ResourceUsageDBSaveWorker extends Thread {
 			            // 작업 제출
 			            executor.submit(task);
 			        }
+					last_node_time = pmns.getTimemillisecond();
 				}			
 			}else {
 				last_node_time = pmns.getTimemillisecond();
@@ -169,6 +170,7 @@ public class ResourceUsageDBSaveWorker extends Thread {
 			            // 작업 제출
 			            executor.submit(task);
 			        }
+					last_pod_time = pmps.getTimemillisecond();
 				}
 			}else {
 				last_pod_time = pmps.getTimemillisecond();
