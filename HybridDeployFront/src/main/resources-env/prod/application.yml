@@ -11,7 +11,7 @@ spring:
     cache: false
   #shutdown  
   pid:
-    file: /app/bin/.app.pid
+    file: /app/.app.pid
   jackson:
     time-zone: Asia/Seoul
     #serialization.WRITE_DATES_AS_TIMESTAMPS: false
@@ -31,9 +31,6 @@ jasypt:
 hybrid:
   proxy:
      url: ${OPTIMIZER_API_URL}
-  init-sql-location:
-    ddl: classpath:/db/init/ddl.sql
-    insert-data: classpath:/db/init/insert*.sql
   datasource:
     url: jdbc:log4jdbc:postgresql://${POSTGRES_IP_PORT}/postgres?currentSchema=k_hybrid      #쿠버네티스 yaml 설정
     hikari: 
