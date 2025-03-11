@@ -5,7 +5,7 @@ spring:
   mvc.pathmatch.matching-strategy: ant-path-matcher
   #shutdown  
   pid:
-    file: /app/bin/.app.pid
+    file: /app/.app.pid
   jackson:
     time-zone: Asia/Seoul
       
