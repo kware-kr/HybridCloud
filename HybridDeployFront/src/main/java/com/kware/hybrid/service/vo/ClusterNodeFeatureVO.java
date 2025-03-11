@@ -12,11 +12,14 @@ public class ClusterNodeFeatureVO {
     private String autoFeature;
     
     public void setNodeInfo(String nodeInfo) {
-    	nodeInfo = nodeInfo.replaceAll(":\\s*\"\"", ": null");
+    	if(nodeInfo != null)
+    		nodeInfo = nodeInfo.replaceAll(":\\s*\"\"", ": null");//공백을 null로 변경
 		this.nodeInfo = nodeInfo;
 	}
+    
 	public void setFeature(String feature) {
-		feature = feature.replaceAll(":\\s*\"\"", ": null");
+		if(feature != null)
+			feature = feature.replaceAll(":\\s*\"\"", ": null"); //공백을 null로 변경
 		this.feature = feature;
 	}    
 }
