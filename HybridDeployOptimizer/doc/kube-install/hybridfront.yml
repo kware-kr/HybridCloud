@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: hybridfront
-          image: rnd.kware.co.kr/hybridfront:0.1.1
+          image: rnd.kware.co.kr/hybridfront:0.9.5
           imagePullPolicy: Always
           ports:
             - containerPort: 80
