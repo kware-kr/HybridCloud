@@ -90,6 +90,7 @@ CREATE TABLE k_hybrid.mo_cluster_workload (
 	info jsonb NULL, -- ML 상세 정보
 	memo text NULL, -- 설명
 	delete_at bpchar(1) DEFAULT 'N'::bpchar NULL,
+	usage_info jsonb NULL,
 	hash_val varchar(32) NULL, -- 무결성검증 해쉬값
 	reg_uid int8 NULL,
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NULL,
@@ -105,6 +106,7 @@ COMMENT ON COLUMN k_hybrid.mo_cluster_workload.cl_uid IS 'Cluster UID';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.nm IS 'workload 이름';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.info IS 'ML 상세 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.memo IS '설명';
+COMMENT ON COLUMN k_hybrid.mo_cluster_workload.usage_info IS '사용량 정보';
 COMMENT ON COLUMN k_hybrid.mo_cluster_workload.hash_val IS '무결성검증 해쉬값';
 
 
@@ -347,7 +349,7 @@ CREATE TABLE k_hybrid.mo_scaling_info (
 	doc_desc jsonb NULL, -- 문서 설명(원인 등)
 	doc_response jsonb NULL, -- 문서 설명(원인 등)
 	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL, -- 등록 시각
-	 PRIMARY KEY (uid)
+	PRIMARY KEY (uid)
 );
 COMMENT ON TABLE k_hybrid.mo_scaling_info IS '스케일링 정보';
 
