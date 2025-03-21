@@ -41,10 +41,16 @@ repositories {
 
 dependencies {
 	implementation('org.springframework.boot:spring-boot-starter-web') {
-		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+		//exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
 	}
-	implementation('org.springframework.boot:spring-boot-starter-jetty')
+	//implementation('org.springframework.boot:spring-boot-starter-jetty')
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.apache.tomcat.embed:tomcat-embed-websocket'
+	//implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.53.v20231009'
+	
+	
+	
 	
 	//implementation 'io.github.wimdeblauwe:htmx-spring-boot'
 	
