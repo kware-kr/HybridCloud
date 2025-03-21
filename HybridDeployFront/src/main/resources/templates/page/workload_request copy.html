@@ -138,7 +138,7 @@
             </div>
           </div>
         
-          <div v-for="(request, index) in requestData" :key="request.mlId">
+          <div v-for="(request, index) in requestData" :key="index">
             <request-card :request="request"></request-card>
           </div>
 
@@ -452,7 +452,7 @@
                       clearInterval(timer.value); // 완료시간이 갱신되면 타이머 중지
                   }
 
-                  //console.log("FetchUpdate:",data);
+                  console.log("FetchUpdate:",data);
 
                   //showNotification("데이터 갱신 했습니다.!", "success"); // 성공 알림 main.js
                 } catch (error) {
@@ -476,8 +476,8 @@
               // Mount 시 타이머 시작
               onMounted(() => {
                 
-                if (data.apiJson.status != 'Finished' && data.apiJson.status != 'FAILED') {
-                  console.log("Finished onMounted Timer:",data.apiJson.mlId);
+                if (data.apiJson.status != 'Finished') {
+                  console.log("Finished onMounted Timer:",data);
                   timer.value = setInterval(fetchUpdatedData, 10000); // 1초마다 fetchUpdatedData 호출
                 }
               });
@@ -636,9 +636,6 @@
                 itemsPerPage: 5, // 페이지 당 항목 수
                 totalCount: 0, // 전체 항목 수 (초기에는 0)
                 processUrlPath: "/workload/request",
-
-                stompClient: null,
-                manualClose: false,
               };
             },
             computed: {
@@ -657,6 +654,9 @@
                     pageSize: this.itemsPerPage,
                     totalElements: -1,
                     searchKeyword: "", // 검색어를 추가하려면 여기에 입력
+
+                    socket: null,
+                    manualClose: false,
                 });
 
                 this.requestData = response.result;
@@ -679,13 +679,6 @@
               this.totalCount = response.totalElements;
 
               console.log(this.requestData);
-
-              // 웹소켓 연결
-              this.connectWebsocket();
-            },
-            beforeUnmount() {
-              // 컴포넌트 종료 시 웹소켓 연결을 정상적으로 종료
-              this.disconnectWebsocket();
             },
             methods: {
               /*
@@ -734,82 +727,6 @@
                 Object.assign(this.requestData,  response.result);
                 this.totalCount = response.totalElements;
               },
-              connectWebsocket() {
-                // manualClose 플래그 초기화 (연결 재시도를 허용)
-                this.manualClose = false;
-                // SockJS 객체 생성 (엔드포인트 주소에 맞게 수정)
-                const socket = new SockJS('/ws-proxy');
-                // STOMP 클라이언트를 SockJS 위에 생성
-                this.stompClient = Stomp.over(socket);
-                // 디버그 로그 비활성화
-                this.stompClient.debug = () => {};
-
-                // STOMP 연결
-                this.stompClient.connect(
-                  {},
-                  (frame) => {
-                    console.log("Connected: " + frame);
-                    // '/topic-proxy/nodeSelectRequests' 토픽 구독
-                    this.stompClient.subscribe('/topic-proxy/newClusterWorkload', async (message) => {
-                      console.log("websocket.subscribe: " + message.body);
-                      // 수신한 메시지를 화면에 표시
-                      this.currentRequest = message.body;
-                      // 신규 키(newKey)를 받아 API 호출
-                      const newKey = message.body;
-                      if(newKey) {
-                        await this.fetchNewData(newKey);
-                      }
-                    });
-                  },
-                  (error) => {
-                    console.error("Connection lost or failed: ", error);
-                    // 연결 오류 발생 시 5초 후 재연결 시도
-                    setTimeout(this.connectWebsocket, 5000);
-                  }
-                );
-              },
-
-              // 신규 키(newKey)를 이용하여 API로부터 데이터를 가져오는 함수
-              async fetchNewData(newKey) {
-                const response = await fetchData( this.processUrlPath, {
-                    pageNumber: this.currentPage,
-                    pageSize: this.itemsPerPage,
-                    totalElements: this.totalCount,
-                    searchKeyword: "", // 검색어를 추가하려면 여기에 입력
-                    mlId: newKey,
-                });
-
-                if (response.result) {
-                  showNotification("신규 워크로드가 시작되었습니다.", "success"); // 성공 알림 main.js
-                  this.requestData.unshift(response.result[0]);
-                  this.totalCount += response.totalElements;
-                }
-/*
-
-                try {
-                  // '/workload/request' 엔드포인트에 POST 방식으로 요청
-                  const response = await axios.post('/workload/request', { key: newKey });
-                  // 응답 데이터의 구조에 따라 수정 (예: response.data.result)
-                  if (response.data && response.data.result) {
-                    // 최신 데이터가 상단에 추가되도록 unshift 사용
-                    this.requestData.unshift(response.data.result);
-                  }
-                } catch (error) {
-                  console.error("신규 데이터 로드 중 오류:", error);
-                }
-                  */
-              },
-
-              // 수동 종료 시 호출되는 함수
-              disconnectWebsocket() {
-                if (this.stompClient && this.stompClient.connected) {
-                  this.manualClose = true; // 재연결하지 않도록 플래그 설정
-                  this.stompClient.disconnect(() => {
-                    console.log("웹소켓 연결이 정상적으로 종료되었습니다.");
-                  });
-                }
-              },
-        
             },
           }).mount("#search-data-list");
 
@@ -868,10 +785,8 @@
                 if(Object.entries(item.promPodsJson).length != 0)
                   podFailedStatus =  item.promPodsJson.some(pod => pod.statusPhase === "FAILED");  //파드의 일부가 실패한게 있으면
 
-                if (podFailedStatus){   
-                  item.icon = "bi-x-square-fill";  //"bi-exclamation-circle-fill" !
-                  item.apiJson.status = "FAILED";  
-                }else if (item.apiJson.status == 'Finished') item.icon="bi-stop-btn-fill";
+                if (podFailedStatus)   item.icon = "bi-x-square-fill";  //"bi-exclamation-circle-fill" !
+                else if (item.apiJson.status == 'Finished') item.icon="bi-stop-btn-fill";
                 else if (item.apiJson.status == 'Started') item.icon="bi-skip-end-btn-fill";
                 else item.icon = "bi-slash-square-fill";
 

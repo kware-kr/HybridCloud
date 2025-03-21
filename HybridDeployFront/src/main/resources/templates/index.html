@@ -27,9 +27,21 @@
     <link href="/assets/css/style.css" rel="stylesheet" />
 
     <!-- Vue 및 EventBus를 위한 emit -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47"></script> --> <!-- development build of vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js"></script> <!-- production build of vue -->
+
     <!-- <script src="https://cdn.jsdelivr.net/npm/mitt@3.0.0/dist/mitt.umd.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+    <!-- 라이브러리 로드: jQuery, jQuery UI, Chart.js -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+
     <style>
       .main {
         font-size: 13px;
