@@ -3,6 +3,11 @@
   <body>
     <main id="main" class="main">
       <link href="/assets/css/dash_workload.css" rel="stylesheet" />
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <link rel="stylesheet" type="text/css" href="/assets/css/pudusagechart.css" />
+      <script src="/assets/js/podusagechart.js"></script>
+
       <section id="dynimic_app" class="section dashboard">
         <div class="row">
           <!-- Left side columns -->
@@ -63,9 +68,9 @@
                       </div>
                       <div class="ps-3">
                         <h6></h6>
-                        <span class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">current request</span><br />
-                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling pods</span><br />
-                        <span class="text-danger small pt-1 fw-bold">2</span> <span class="text-muted small pt-2 ps-1">scaling nodes</span>
+                        <span id="currentRequest" class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">current request</span><br />
+                        <span id="podScalingId"   class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">scaling pods</span><br />
+                        <span id="nodeScalingId"  class="text-danger small pt-1 fw-bold">0</span> <span class="text-muted small pt-2 ps-1">scaling nodes</span>
                       </div>
                     </div>
                   </div>
@@ -113,11 +118,19 @@
 
           </div>
           <!-- End Right side columns -->
+
+          <!-- pod usage 팝업들이 생성될 컨테이너 -->
+          <!-- <div id="popupContainer"></div> -->
+
+          <teleport to="body">
+            <div id="popupContainer"></div>
+          </teleport>
         </div>
       </section>
 
       <script>
         {
+          //let socket = null;
           window.page_clear = function () {
             //메인에서 동적 html호출하기 전에 기존 함수 클리어하기 위함, 다른 클리어 함수 있으면 여기에 기록
             const ele = document.getElementById("dynimic_app");
@@ -128,6 +141,8 @@
                 ele.innerHTML = ""; // 기존 DOM 클리어
               }
             }
+
+            disconnect_websocket();
           };
 
           // 클러스터 노드와 헤더를 통합한 컴포넌트
@@ -161,8 +176,9 @@
                           Failed: 하나 이상의 컨테이너가 비정상적으로 종료된 상태.
                           Unknown: 상태를 알 수 없음 (주로 통신 문제로 발생).
                     -->
-                      <span class="status-icon">
-                        {{ pod.statusPhase === 'RUNNING' ? '✔️' : 
+                      <span class="status-icon popupBtn" :data-mlid="pod.mlId" :data-poduid="pod.podUid" 
+                               :data-podname="pod.name" data-page="dash">
+                        {{ pod.statusPhase === 'RUNNING' ? '▶️' : 
                           pod.statusPhase === 'PENDING' ? '⏳' : 
                           pod.statusPhase === 'SUCCEEDED' ? '🏆' : 
                           pod.statusPhase === 'FAILED' ? '❌' : 
@@ -199,16 +215,27 @@
                 this.hideTooltip();
                 const tooltip = document.getElementById("dashboard-tooltip");
 
+                if (!tooltip) {
+                  console.warn("Tooltip element not found");
+                  return;
+                }
+
                 tooltip.innerHTML = `
                 <strong>워크로드 : </strong> ${pod.mlId}<br>
                 <strong>파드 : </strong> ${pod.pod}<br>
+                <strong>요청 : </strong> ${pod.name}<br>
                 <strong>상태 : </strong> ${pod.statusPhase}<br>
                 <strong>시작 시간 : </strong> ${new Date(pod.createdTimestamp).toLocaleString()}<br>
                 <!-- <strong>예상 시작 시간 : </strong> ${new Date(pod.expected_start_time).toLocaleString()}<br>
                 <strong>예상 종료 시간 : </strong> ${new Date(pod.expected_end_time).toLocaleString()}<br> -->
-                <strong>종료 시간 : </strong> ${pod.completedTimestamp ? new Date(pod.completedTimestamp).toLocaleString() : "N/A"}
+                <strong>종료 시간 : </strong> ${pod.completedTimestamp ? new Date(pod.completedTimestamp).toLocaleString() : ""}
               `;
-                document.body.appendChild(tooltip);
+
+               // 이미 body에 추가되어 있지 않으면 추가
+                if (!tooltip.parentElement || tooltip.parentElement !== document.body) {
+                  document.body.appendChild(tooltip);
+                }
+                //document.body.appendChild(tooltip);
 
                 tooltip.style.left = event.pageX - window.scrollX + 20 + "px"; // 마우스 위치에 툴팁 위치 지정
                 tooltip.style.top = event.pageY - window.scrollY + 20 + "px";
@@ -216,7 +243,10 @@
               },
               hideTooltip() {
                 const tooltip = document.getElementById("dashboard-tooltip");
-                tooltip.style.display = "none"; // 툴팁 숨기기
+                if (tooltip) {
+                  tooltip.style.display = "none";
+                }
+                //tooltip.style.display = "none"; // 툴팁 숨기기
               },
             },
           };
@@ -332,11 +362,17 @@
                     containerHeight: '400px',  // 컨테이너 높이 (기본값)
                     intervalId: null,   // setInterval 생성 객체, 제거하기 위함
                     processUrlPath: "/proxy/interface/common/events",
+                    currentTime: Date.now() // 현재 시각 (반응형 데이터)
                 };
             },
             mounted() {
                 this.fetchActivities();  // 컴포넌트가 마운트될 때 활동 데이터 가져오기
-                this.intervalId = setInterval(this.fetchActivities, 10000);  // 1초마다 최신 활동 데이터 받아오기
+                this.intervalId = setInterval(this.fetchActivities, 10000);  // 10초마다 최신 활동 데이터 받아오기
+
+                // currentTime을 1분마다 업데이트 (또는 원하는 간격)
+                setInterval(() => {
+                  this.currentTime = Date.now();
+                }, 60000);
 
                 this.updateContainerHeight();  // 화면 크기에 맞게 컨테이너 높이 설정
                 window.addEventListener('resize', this.updateContainerHeight);  // 화면 크기 변경 시 컨테이너 높이 업데이트
@@ -363,11 +399,24 @@
                       .then((response) => {
                         const newActivities = response.data;
 
-                        console.log('newActivities', newActivities);
                         if (newActivities.length) {
-                             this.activities = [...newActivities, ...this.activities].slice(0, 100);
-                             this.lastActivityId = newActivities[0]?.id || this.lastActivityId;  // 가장 최신 메시지 ID 업데이트
-                         }
+                            console.log('newActivities', newActivities);
+
+                            if(this.lastActivityId != null){
+                                for(let i = 0 ; i < newActivities.length; i++){
+                                  let nactivity = newActivities[i];
+                                  if(nactivity.eventType == 'PodScaleR'){
+                                    incrementThenDecrementIssued('podScalingId');
+                                  }else if(nactivity.eventType == 'NodeScaleR'){
+                                    incrementThenDecrementIssued('nodeScalingId');
+                                  }
+                                }
+
+                                this.currentTime = Date.now();
+                            }
+                            this.activities = [...newActivities, ...this.activities].slice(0, 100);
+                            this.lastActivityId = newActivities[0]?.id || this.lastActivityId;  // 가장 최신 메시지 ID 업데이트
+                          }
                         
 
                       })
@@ -377,7 +426,7 @@
                       });
                 },
                 formatTime(timestamp) {
-                    const now = new Date();
+                  const now = new Date(this.currentTime);
                     const activityTime = new Date(timestamp);
                     const diff = now - activityTime;
 
@@ -552,7 +601,64 @@
             },
           });
           app.mount("#dynimic_app");
+
+
+          //window.global ||= window;
+
+          let stompClient; // 전역 변수로 선언
+
+          function connect_websocket() {
+            const socket = new SockJS('/ws-proxy');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = () => {};
+
+            stompClient.connect({}, function(frame) {
+              //console.log('Connected: ' + frame);
+              stompClient.subscribe('/topic-proxy/nodeSelectRequests', function(message) {
+                console.log('websocket.subscribe: ' + message.body);
+                document.getElementById("currentRequest").innerText = message.body;
+              });
+            }, function(error) {
+              //console.error("Connection lost or failed: ", error);
+              setTimeout(connect_websocket, 5000);
+            });
+          }
+
+          function disconnect_websocket() {
+            if (stompClient && stompClient.connected) {
+              stompClient.disconnect(() => {
+                //console.log('연결이 정상적으로 끊어졌습니다.');
+                ;
+              });
+            }
+          }
+
+          connect_websocket();
+
+          function incrementThenDecrementIssued(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+              console.error(`Element with id "${elementId}" not found.`);
+              return;
+            }
+            
+            // 현재 값을 숫자로 변환 (없으면 0으로 처리)
+            let currentValue = parseInt(element.textContent, 10) || 0;
+            
+            // 즉시 1 증가
+            element.textContent = currentValue + 1;
+            
+            // 20초 후 1 감소
+            setTimeout(() => {
+              // 최신 값을 다시 읽어서 숫자로 변환
+              let updatedValue = parseInt(element.textContent, 10) || 0;
+              element.textContent = updatedValue - 1;
+            }, 10000);
+          }
+
         }
+
+        
         //# sourceURL=dashboardJS
       </script>
     </main>

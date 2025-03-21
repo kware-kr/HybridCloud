@@ -61,36 +61,34 @@
 			(
 			SELECT a.req_uid
 				, req_ml_id
-			--	, res_cl_uid
-			--	, req_container
-			--	, res_container->>'node' AS req_node
+			/*	, res_cl_uid
+				, req_container
+				, res_container->>'node' AS req_node
+			*/
 				, COALESCE(mrup.results->>'node', res_container->>'node') node
-			--	, res_container
-			-- 	, mcw.cl_uid
+			/*	, res_container */
+			/* 	, mcw.cl_uid */
 				, COALESCE(mcw.cl_uid, res_cl_uid) AS cl_uid
 				, mcw.info ->> 'status' AS api_status
-			--	, mcw.info
-				, (mrup.results-'mlimitsList'-'mcontainerList'-'mrequestsList' - 'musgeGpuMap') prom_pod
-			--	, (mrup.results->>'node') AS pod_node
+			/*	, mcw.info */
+				, (mrup.results-'mlimitsList'-'mcontainerList'-'mrequestsList' - 'musgeGpuMap') || (req_container - 'attribute' - 'resources') prom_pod
+			/*	, (mrup.results->>'node') AS pod_node */
 			FROM (
 				SELECT murq.uid AS req_uid
 					, murq.ml_id AS req_ml_id
 					, murq.nm AS req_nm
-				--	, murq.request_json
-				--	, (container->>'name') req_container_name
-				--	, (container->'attribute'->>'order') req_container_order
 					, jsonb_array_elements(murq.request_json->'request'->'containers') req_container
 				FROM k_hybrid.mo_user_request murq
-				WHERE noti_dt IS NOT NULL) a
+				WHERE noti_dt IS NOT NULL
+				 and murq.complete_dt is null
+				) a
 				INNER JOIN (
 					SELECT req_uid
 						, ml_id AS res_ml_id
 						, cl_uid AS res_cl_uid
 						, jsonb_array_elements(murp.info->'response'->'containers') res_container
-					--	, (container ->> 'name') res_container_name
-					--	, (container ->> 'node') AS res_container_node
 				FROM k_hybrid.mo_user_response murp ) b ON a.req_uid = b.req_uid AND a.req_container->>'name' = b.res_container->>'name'
-				JOIN k_hybrid.mo_cluster_workload mcw ON mcw.ml_id LIKE  a.req_ml_id || '%'
+				JOIN k_hybrid.mo_cluster_workload mcw ON mcw.ml_id LIKE  a.req_ml_id || '%' and mcw.delete_at = 'N'
 				JOIN k_hybrid.mo_resource_usage_pod mrup ON mrup.ml_id = a.req_ml_id AND mrup.last_at = 'Y' AND mrup.results->>'pod' like ('%' || (a.req_container->>'name') || '%')
 			) aa
 			WHERE api_status != 'Finished'
