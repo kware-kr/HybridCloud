@@ -74,7 +74,7 @@ hybrid:
         #unified_url: http://10.10.30.60:30138/
         unified_url: http://hybrid.strato.co.kr:30138/
       finish-enalbe: true
-      delete-enalbe: true
+      delete-enalbe: true #true
     threads: 5
   scheduler:
     threads: 2

@@ -147,7 +147,7 @@
 		<appender-ref ref="applicationLog" />
 		<appender-ref ref="ERROR_FILE" />
 	</logger>
-	<logger name="jdbc.sqltiming" level="ERROR" additivity="false">
+	<logger name="jdbc.sqltiming" level="DEBUG" additivity="false">
 		<appender-ref ref="applicationLog" />
 	</logger>
 	<logger name="org.springframework" level="ERROR" additivity="false">
