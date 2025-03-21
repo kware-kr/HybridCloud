@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import com.kware.hybrid.service.vo.ResourcePodUsageVO;
 import com.kware.hybrid.service.vo.WorkloadRequestVO;
 
 @Repository
@@ -31,4 +32,8 @@ public class WorkloadRequestDao {
         return sqlSession.selectOne("workloadRequestMapper.selectRunningWrokloadCount", vo);
     }
     
+    public List<ResourcePodUsageVO> selectPodUsage(ResourcePodUsageVO vo) {
+        return sqlSession.selectList("workloadRequestMapper.selectPodUsage", vo);
+    }
+
 }

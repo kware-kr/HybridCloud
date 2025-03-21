@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kware.common.openapi.vo.APIPagedResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.hybrid.service.WorkloadRequestService;
+import com.kware.hybrid.service.vo.ResourcePodUsageVO;
 import com.kware.hybrid.service.vo.WorkloadRequestVO;
 
 @RestController
@@ -43,21 +44,20 @@ public class WorkloadRestController {
 			
 			if (resultList != null) {
 				APIResponseCode arCode = APIResponseCode.SUCCESS; 
-				APIPagedResponse apResponse = new APIPagedResponse<WorkloadRequestVO>(arCode.getCode(), arCode.getMessage()
+				APIPagedResponse<WorkloadRequestVO> apResponse = new APIPagedResponse<WorkloadRequestVO>(arCode.getCode(), arCode.getMessage()
 						, resultList, apReq.getPageNumber(), apReq.getPageSize(), totalElements);
 				
 				return ResponseEntity.ok(apResponse);
 			}
-		}
-		else {
+		}else {
 			WorkloadRequestVO obj = (WorkloadRequestVO)wrService.getRunningWrokloadByMlid(mlId);
 			if (obj != null) {
 				resultList = new ArrayList<WorkloadRequestVO>();
 				resultList.add(obj);
 				
 				APIResponseCode arCode = APIResponseCode.SUCCESS; 
-				APIPagedResponse apResponse = new APIPagedResponse<WorkloadRequestVO>(arCode.getCode(), arCode.getMessage()
-						, resultList);
+				APIPagedResponse<WorkloadRequestVO> apResponse = new APIPagedResponse<WorkloadRequestVO>(arCode.getCode(), arCode.getMessage()
+						, resultList , apReq.getPageNumber(), apReq.getPageSize(), 1);
 				
 				return ResponseEntity.ok(apResponse);
 			}
@@ -65,6 +65,30 @@ public class WorkloadRestController {
 		
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found");
 	}
+	
+	@RequestMapping("/podusage")
+	public ResponseEntity<Object> getWorkloadPodUsage(@RequestBody ResourcePodUsageVO apReq) {
+		List<ResourcePodUsageVO> resultList = null;
+			
+		String mlId = apReq.getMlId();
+		String podUid = apReq.getPodUid();
+		if(mlId != null && podUid != null ) {
+			resultList = wrService.getPodUsage(apReq);
+			
+			if (resultList != null) {
+				APIResponseCode arCode = APIResponseCode.SUCCESS; 
+				APIPagedResponse<ResourcePodUsageVO> apResponse = new APIPagedResponse<ResourcePodUsageVO>(arCode.getCode(), arCode.getMessage()
+						, resultList);
+				
+				return ResponseEntity.ok(apResponse);
+			}
+		}else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                .body("Invalid request: mlId and podUid cannot be null or empty");
+		}			
+		
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Data not found");
+	}	
 }
 
 

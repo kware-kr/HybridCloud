@@ -20,4 +20,7 @@ public class WorkloadRequestVO extends APIPagedRequest{
     private String requestDt; // murq.request_dt
     private String notiDt;    // murq.noti_dt
     private String responseJson; // murp.info->'response'
+    private String responseCause; // murp.info->'response'
+    private String usageInfo; // mcw.usage_info->'response'
+    private String completeDt; // murq.request_dt
 }
