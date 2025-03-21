@@ -15,6 +15,7 @@ import org.springframework.scheduling.TaskScheduler;
 
 import com.kware.policy.task.common.WorkloadCommandManager;
 import com.kware.policy.task.common.vo.WorkloadCommand;
+import com.kware.policy.task.selector.service.WorkloadRequestService;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest;
 import com.kware.policy.task.selector.service.vo.WorkloadRequest.Container;
 
@@ -33,6 +34,9 @@ public class RequestQueue  extends DefaultQueue{
     //요청한 request 관리: key: WorkloadRequest.request.id ==> mlUid
     private final ConcurrentHashMap<String/*mlid*/, WorkloadRequest> requestMap;
     //}}요청관리
+    
+    WorkloadRequestService wrWervice = null;
+    
   
     public RequestQueue() {
     	queueLog.info("Queue Log Start ====================================================="); //로그 파일 생성하는 목적
@@ -69,7 +73,9 @@ public class RequestQueue  extends DefaultQueue{
     	WorkloadRequest req = requestMap.get(_mlId);
     	if(req == null) {
     		//DB에서 데이터 다시 가져오기
-    		return 0;
+    		if(this.wrWervice != null)
+    			return this.wrWervice.getWorkloadRequestContainerCount(_mlId);
+    		else return 0;
     	}else {
     		return req.getRequest().getContainers().size();
     	}
@@ -166,7 +172,7 @@ public class RequestQueue  extends DefaultQueue{
     	return false;
     }
     
-    long expired_time = 10 * 60 * 1000;//10분 
+    long expired_time = 2 * 60 * 60 * 1000;//2시간 
     //내부 스케줄링을 통해 제거작업등을 수행하도록 함
     //1.시간지난 promDeques 정리작업 진행
 	private void createCleanSchedulerForRequestQueue() {
@@ -193,5 +199,9 @@ public class RequestQueue  extends DefaultQueue{
 		// 초기 지연 시간 없이 5분마다 작업을 실행
 		scheduler.scheduleAtFixedRate(periodicTask, Instant.now(), Duration.ofMinutes(5)); // 처음 실행 시간을 약간 지연시킬 수 있음
 	             // 5분 간격 (밀리초));
+	}
+
+	public void setWrWervice(WorkloadRequestService wrWervice) {
+		this.wrWervice = wrWervice;
 	}
 }

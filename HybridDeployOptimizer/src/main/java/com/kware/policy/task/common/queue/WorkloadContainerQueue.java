@@ -379,7 +379,8 @@ public class WorkloadContainerQueue  extends DefaultQueue{
     	for(WorkloadTaskWrapper w: wrappers) {
     		String oldPodUid = w.getPodUid();
     		if(oldPodUid != null) { //등록된 파드가 있으면 podUid만 비교하고 신규로 교체
-    			if(oldPodUid.equals(podUid)) { 
+    			if(oldPodUid.equals(podUid)) {
+    				pmPod.setMlContainerNameIdx(w.getNameIdx());
     	    		if(w.getStatus() == PodStatusPhase.RUNNING && pmPod.getStatusPhase() == PodStatusPhase.SUCCEEDED) {
     	    			if(pmPod.getCompletedTimestamp() != null) {
     	    				this.endPod(wrappers, w); //1개가 아니고 리스트 전체를 수정해야 한다.

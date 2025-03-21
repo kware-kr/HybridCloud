@@ -187,7 +187,7 @@ public class WorkloadCommandManager {
                 		List<NodeScalingInfo> nodeScalingInfos = null;
                 		if(valObj instanceof List) {
                 			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
-                			scalingService.processNodeScaling(nodeScalingInfos);
+                			scalingService.requestNodeScalingApiCall(nodeScalingInfos);
                 		}
                 		if(scaleLog.isInfoEnabled())
                 			scaleLog.info("노드 스케일링 IN 요청[CMD_NODE_SCALING_IN]:\n{}", nodeScalingInfos);
@@ -199,7 +199,7 @@ public class WorkloadCommandManager {
                 		List<NodeScalingInfo> nodeScalingInfos = null;
                 		if(valObj instanceof List) {
                 			nodeScalingInfos = (List<NodeScalingInfo>)valObj;
-                			scalingService.processNodeScaling(nodeScalingInfos);
+                			scalingService.requestNodeScalingApiCall(nodeScalingInfos);
                 		}
                 		if(scaleLog.isInfoEnabled())
                 			scaleLog.info("노드 스케일링 OUT 요청[CMD_NODE_SCALING_OUT]:\n{}", nodeScalingInfos);
@@ -220,7 +220,7 @@ public class WorkloadCommandManager {
                 			
                 			Thread thread = new Thread(scalingGroup, () -> {
                 				try {
-                					scalingService.requestScalingApiCall(psInfo, wr);
+                					scalingService.requestPodScalingApiCall(psInfo, wr);
                 			        psInfo.clear();
                 				}catch(Exception e) {
                 					scaleLog.error("API call to notify the Optimizer server of configuration changes failed. Error:", e);
