@@ -22,6 +22,18 @@ public class StringUtil {
 
 	final static SimpleDateFormat defaultformatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	final static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+	final static DateTimeFormatter datetimeformatter0 = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	final static DateTimeFormatter datetimeformatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	
+	public static String getDateStringFromLocalDateTime(LocalDateTime datetime, int formant_number) {
+		String formattedDate = null;
+		if(formant_number == 0) {
+			formattedDate = datetime.format(datetimeformatter0);
+		}else {
+			formattedDate = datetime.format(datetimeformatter1);
+		}
+		return formattedDate;
+	}
 
 	public static String getToday() {
 		String timestamp;
