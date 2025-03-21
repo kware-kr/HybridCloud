@@ -304,15 +304,18 @@ public class CollectorUnifiedPromMetricWorker extends Thread {
 
 		String json_string = dataPage.body();
 		
+		//metricLog.debug("##promqlId={}\t\turl={}",promqlId, url);
+		
+		
 		Instant now = Instant.now();
         // 10분(600초) 경과 여부 확인
         if (now.minusSeconds(600).isAfter(lastLogTime)) {
         	if (metricLog.isDebugEnabled())
-    			metricLog.debug("\n##Request[id={}]:{}?{}\n##Response:{}",promqlId, url, logQuery, json_string);
+    			metricLog.debug("##Request[id={}]\nquery={}\n##Response:{}",promqlId, url, logQuery, json_string);
             lastLogTime = now;
         }else {
         	if (metricLog.isDebugEnabled())
-    			metricLog.debug("\n##Request[id={}]\n##Response:{}",promqlId, json_string);
+    			metricLog.debug("##Request[id={}]",promqlId);
         }
         
 		return json_string;

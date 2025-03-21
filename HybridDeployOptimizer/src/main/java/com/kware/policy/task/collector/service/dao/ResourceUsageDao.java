@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ResourceUsageNode;
 import com.kware.policy.task.collector.service.vo.ResourceUsagePod;
 
@@ -49,5 +50,14 @@ public class ResourceUsageDao {
 		return sqlSessionTemplate.selectList("resourceUsageMapper.selectResourceUsagePodList", vo);
 	}
 	
+	
+	/**
+	 * 실제 리소스의 사용량 평균를 실행중인 파드에서만 가져와서 제공한다. 평균, min, max
+	 * @param workload
+	 * @return
+	 */
+	public int updateClusterWorkloadToUsage_info(String mlId) {
+		return sqlSessionTemplate.update("resourceUsageMapper.updateClusterWorkloadToUsage_info", mlId);
+	}
 
 }

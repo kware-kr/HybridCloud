@@ -137,12 +137,16 @@ public class ResourceUsageDBSaveWorker extends Thread {
 				if(pmpMap != null) {
 					for (PromMetricPod pod : pmpMap.values()) {
 						
-						//{{완료된 파드는 DB에 한번만 저장하기위함
+						//{{완료된 파드는 DB에 한번만 저장하기위함: 이전 파드를 찾아서 이전 파드도 완료되었으면 저장하지 않기 위함
 						if(pod.isCompleted()) {
 							PromMetricPod secondPod = secondPmps.getMetricPod(pod.getClUid(), pod.getPodUid());
 							if(secondPod != null) {
-								if(secondPod.isCompleted())
+								if(secondPod.isCompleted()) {
 									continue;
+								}else {
+									//clusterworkload 테이블에 usage_info를 등록하자.
+									service.updateClusterWorkloadToUsage_info(pod.getMlId());
+								}
 							}
 						}
 						//}}//완료된 파드는 DB에 한번만 저장하기위함

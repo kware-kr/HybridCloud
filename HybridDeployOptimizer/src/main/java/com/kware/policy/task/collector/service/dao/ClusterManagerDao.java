@@ -138,6 +138,7 @@ public class ClusterManagerDao {
 			return sqlSessionTemplate.selectOne("clusterManagerMapper.selectClusterWorkloadCount", workload);
 		}
 	*/	
+	
 	/************************ mo_cluster_history ***********************************/
 
 	public int insertHistoryFromCluster(Cluster cluster) {

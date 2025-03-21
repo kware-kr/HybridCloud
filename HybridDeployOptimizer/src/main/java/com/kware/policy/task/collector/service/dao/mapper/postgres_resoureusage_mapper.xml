@@ -159,5 +159,93 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND collect_dt BETWEEN #{startDt} AND #{endDt}
     </select>
     -->
+    
+    <update id="updateClusterWorkloadToUsage_info" parameterType="java.lang.String">
+   	<![CDATA[
+		   WITH main_agg AS (
+			  SELECT
+			    results->>'mlId' AS mlid,
+			    results->>'pod' AS pod,
+			    MIN(results->>'createdTimestamp') AS createdTimestamp,
+			    AVG(CASE WHEN (results->>'usageCpu1m')::numeric <> 0 THEN (results->>'usageCpu1m')::numeric END) AS avg_usage_cpu1m,
+			    MIN(CASE WHEN (results->>'usageCpu1m')::numeric <> 0 THEN (results->>'usageCpu1m')::numeric END) AS min_usage_cpu1m,
+			    MAX(CASE WHEN (results->>'usageCpu1m')::numeric <> 0 THEN (results->>'usageCpu1m')::numeric END) AS max_usage_cpu1m,    
+			    AVG(CASE WHEN (results->>'usageMemory')::numeric <> 0 THEN (results->>'usageMemory')::numeric END) AS avg_usage_memory,
+			    MIN(CASE WHEN (results->>'usageMemory')::numeric <> 0 THEN (results->>'usageMemory')::numeric END) AS min_usage_memory,
+			    MAX(CASE WHEN (results->>'usageMemory')::numeric <> 0 THEN (results->>'usageMemory')::numeric END) AS max_usage_memory,
+			    AVG(CASE WHEN (results->>'usageNetworkIo1m')::numeric <> 0 THEN (results->>'usageNetworkIo1m')::numeric END) AS avg_usage_network_io1m,
+			    MIN(CASE WHEN (results->>'usageNetworkIo1m')::numeric <> 0 THEN (results->>'usageNetworkIo1m')::numeric END) AS min_usage_network_io1m,
+			    MAX(CASE WHEN (results->>'usageNetworkIo1m')::numeric <> 0 THEN (results->>'usageNetworkIo1m')::numeric END) AS max_usage_network_io1m
+			  FROM k_hybrid.mo_resource_usage_pod a
+			  JOIN k_hybrid.mo_cluster_workload b ON b.ml_id LIKE a.ml_id || '%'
+			  WHERE a.results ->> 'statusPhase' = 'RUNNING'
+			   AND  a.ml_id = #{value}
+			   AND (a.results ->> 'createdTimestamp')::timestamp >= (b.info ->> 'createdAt')::timestamp
+			  GROUP BY results->>'mlId', results->>'pod'
+			),
+			gpu_agg AS (
+			  SELECT
+			    results->>'mlId' AS mlid,
+			    results->>'pod' AS pod,
+			    AVG((j.value)::numeric) AS avg_gpu,
+			    MIN((j.value)::numeric) AS min_gpu,
+			    MAX((j.value)::numeric) AS max_gpu
+			  FROM k_hybrid.mo_resource_usage_pod,
+			       LATERAL jsonb_each_text(results->'musgeGpuMap') j
+			  WHERE (j.value)::numeric <> 0
+			  GROUP BY results->>'mlId', results->>'pod'
+			),
+			combined AS (
+			  SELECT
+			    m.mlid,
+			    m.pod,
+			    m.createdTimestamp,
+			    m.avg_usage_cpu1m,
+			    m.min_usage_cpu1m,
+			    m.max_usage_cpu1m,
+			    m.avg_usage_memory,
+			    m.min_usage_memory,
+			    m.max_usage_memory,
+			    m.avg_usage_network_io1m,
+			    m.min_usage_network_io1m,
+			    m.max_usage_network_io1m,
+			    g.avg_gpu,
+			    g.min_gpu,
+			    g.max_gpu
+			  FROM main_agg m
+			  LEFT JOIN gpu_agg g
+			    ON m.mlid = g.mlid AND m.pod = g.pod
+			  ORDER BY m.createdTimestamp
+			),
+			aggregated AS (
+			  SELECT
+			    mlid,
+			    jsonb_agg(
+			      jsonb_build_object(
+			        'pod', pod,
+			        'avg_usage_cpu1m', avg_usage_cpu1m,
+			        'min_usage_cpu1m', min_usage_cpu1m,
+			        'max_usage_cpu1m', max_usage_cpu1m,
+			        'avg_usage_memory', avg_usage_memory,
+			        'min_usage_memory', min_usage_memory,
+			        'max_usage_memory', max_usage_memory,
+			        'avg_usage_network_io1m', avg_usage_network_io1m,
+			        'min_usage_network_io1m', min_usage_network_io1m,
+			        'max_usage_network_io1m', max_usage_network_io1m,
+			        'avg_gpu', avg_gpu,
+			        'min_gpu', min_gpu,
+			        'max_gpu', max_gpu
+			      ) ORDER BY createdTimestamp
+			    ) AS pods
+			  FROM combined
+			  GROUP BY mlid
+			)
+			UPDATE k_hybrid.mo_cluster_workload t
+			SET usage_info = a.pods
+			FROM aggregated a
+			WHERE t.ml_id like a.mlid || '%'
+		]]>
+   </update>
+  
 </mapper>
 

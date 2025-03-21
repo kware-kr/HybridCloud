@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kware.policy.task.collector.service.dao.ResourceUsageDao;
+import com.kware.policy.task.collector.service.vo.ClusterWorkload;
 import com.kware.policy.task.collector.service.vo.ResourceUsageNode;
 import com.kware.policy.task.collector.service.vo.ResourceUsagePod;
 
@@ -51,4 +52,8 @@ public class ResourceUsageService {
 		return defaultDao.selectResourceUsagePodList(vo);
 	}
 	
+	
+	public int updateClusterWorkloadToUsage_info(String mlId) {
+		return defaultDao.updateClusterWorkloadToUsage_info(mlId);
+	}
 }

@@ -234,10 +234,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   <!-- Delete -->
   <delete id="deleteClusterWorkload" parameterType="com.kware.policy.task.collector.service.vo.ClusterWorkload">
     UPDATE mo_cluster_workload
-    SET ml_id     =  ml_id || '_' || TO_CHAR(NOW(),'YYMMDDHH24MISS') 
-      , delete_at = 'Y'
+    SET  
+        delete_at = 'Y'
       , updt_uid  = #{updtUid}
       , updt_dt   = CURRENT_TIMESTAMP
+      /* , ml_id     =  ml_id  || '_' || TO_CHAR(NOW(),'YYMMDDHH24MISS') */
     WHERE ml_id     = #{mlId} 
   </delete>
 
@@ -283,7 +284,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     FROM mo_cluster_workload
     WHERE ml_id    = #{mlId} 
   </select>
-
   
   <!--     ************************ mo_cluster_history *********************************** -->
   

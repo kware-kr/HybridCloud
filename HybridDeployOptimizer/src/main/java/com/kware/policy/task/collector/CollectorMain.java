@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
@@ -12,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.kware.common.db.InitDatabase;
 import com.kware.policy.task.collector.service.ClusterManagerService;
 import com.kware.policy.task.collector.service.PromQLService;
 import com.kware.policy.task.collector.service.ResourceUsageService;
@@ -45,7 +45,7 @@ public class CollectorMain {
 	private final TaskScheduler taskScheduler;
 
  //   @Autowired
-    public CollectorMain(TaskScheduler taskScheduler) {
+    public CollectorMain(@Qualifier("threadpoolTaskScheduler") TaskScheduler taskScheduler) {
         this.taskScheduler = taskScheduler;
     }
     

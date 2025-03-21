@@ -48,8 +48,11 @@ import com.kware.policy.task.common.queue.APIQueue.APIMapsName;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.PromQueue.PromDequeName;
 import com.kware.policy.task.common.queue.RequestQueue;
+import com.kware.policy.task.common.queue.WorkloadContainerQueue;
 import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.vo.WorkloadCommand;
+import com.kware.policy.task.selector.service.vo.WorkloadRequest;
+import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -147,6 +150,9 @@ public class CollectorWorkloadApiWorker extends Thread {
 		this.isFirst = isFirst;
 	}
 	
+	Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
+	Map apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
@@ -210,8 +216,8 @@ public class CollectorWorkloadApiWorker extends Thread {
 			}
 			
 			
-			Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
-			Map apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
+			//Map apiWorkloadPodMap = this.apiQ.getApiWorkloadPodMap();
+			//Map apiWorkloadMap    = this.apiQ.getApiWorkloadMap();
 			
 			for(Map<String,Object> mTmp: workloadList) {
 				String mlId = (String)mTmp.get(StringConstant.STR_mlId);
@@ -237,9 +243,19 @@ public class CollectorWorkloadApiWorker extends Thread {
 					continue;
 				
 				//{{DB입력
-				ClusterWorkload workload = this.makeClusterWorkload(mlId, workloadDetailMap, apiWorkloadMap);
-				ClusterWorkload oldWorkload = (ClusterWorkload)apiWorkloadMap.get(workload.getUniqueKey());
+				ClusterWorkload workload = this.makeClusterWorkload(mlId, workloadDetailMap, this.apiWorkloadMap);
+				ClusterWorkload oldWorkload = (ClusterWorkload)this.apiWorkloadMap.get(workload.getUniqueKey());
 				
+				//{{RequestMap에 생성일자 등록
+				if(workload.getCreatedAt() != null) {
+					WorkloadRequest  workloadRequest = requestQ.getWorkloadRequest(mlId);
+					if(workloadRequest != null) {
+						if(workloadRequest.getRequest().getDeployedAt() == null) {
+							workloadRequest.getRequest().setDeployedAt(workload.getCreatedAt().toLocalDateTime());		
+						}
+					}
+				}
+				//}} RequestMap에 생성일자 등록
 				
 				//{{전역 큐에 등록
 				workload.setSessionId(SESSIONID);
@@ -282,9 +298,16 @@ public class CollectorWorkloadApiWorker extends Thread {
 								
 								//워크로드 api갯수와 requesqQ의 container 갯수가 틀리면 처리하지 않는다.
 								int request_container_cnt = this.requestQ.getWorkloadContainerSize(mlId);
-								int api_pod_cnt = podMap.size();
-								if(api_pod_cnt < request_container_cnt) //최소한 같거나 더 많으면..
+								if(request_container_cnt <= 0) { // 워크로드 정보가 없는 상태
+									isCompleteWorkload = false;
 									continue;
+								}
+								
+								int api_pod_cnt = podMap.size();
+								if(api_pod_cnt < request_container_cnt) { //최소한 같거나 더 많으면..
+									isCompleteWorkload = false;
+									continue;
+								}
 								
 								for (Map.Entry<String, ClusterWorkloadPod> entry : podMap.entrySet()) {
 									String wPodUid = null;
@@ -312,7 +335,10 @@ public class CollectorWorkloadApiWorker extends Thread {
 						
 						//프로메테우스에서는 완료되었다고 나온다.
 						if(isCompleteWorkload) {
-							this.finishApiForWorklaod(mlId); // 완료처리
+							if(this.finishApiForWorklaod(mlId)) { // 완료처리
+								WorkloadCommand<String> command = new WorkloadCommand<String>(WorkloadCommand.CMD_WLD_COMPLETE,mlId);
+								WorkloadCommandManager.addCommand(command);
+							}
 						}
 					}else if(isDeleteEnable && workload.getDeleteAt().equals(StringConstant.STR_Y)) { //완료되었으면 삭제처리
 						this.deleteApiForWorklaod(mlId);
@@ -328,14 +354,14 @@ public class CollectorWorkloadApiWorker extends Thread {
 					apiWorkloadPodMap.putAll(podMap);
 				}
 				//}}파드리스트
-				apiWorkloadMap.put(mlId, workload);
+				this.apiWorkloadMap.put(mlId, workload);
 				//}} 전역큐 등록
 				
 				detail_ctx.delete(JPATH_ALL);
 				workloadDetailMap.clear();
 				workloadDetailMap = null;
 				//}} 스레드 변경 가능함
-			}
+			}//for
 			
 			if(list_ctx != null)
 				list_ctx.delete(JPATH_ALL);
@@ -455,25 +481,29 @@ public class CollectorWorkloadApiWorker extends Thread {
 	}
 	
 	//DB입력
-	private void insertWorklod(ClusterWorkload oldWorkload, ClusterWorkload cruWorkload) {
+	private void insertWorklod(ClusterWorkload oldWorkload, ClusterWorkload curWorkload) {
 		try {
 			//기존에 이미 등록되어 있으면. 
 			//ClusterWorkload oldObj = (ClusterWorkload)_apiWorkloadMap.get(workload.getUniqueKey());
 			if(oldWorkload != null) {
-				cruWorkload.setClUid(oldWorkload.getClUid());
+				curWorkload.setClUid(oldWorkload.getClUid());
 				//if(!oldWorkload.getHashVal().equals(cruWorkload.getHashVal()) || oldWorkload.getClUid() != cruWorkload.getClUid())
-					this.service.updateClusterWorkloadAndInsertHistory(cruWorkload);
+				this.service.updateClusterWorkloadAndInsertHistory(curWorkload);
 			}else {
 				oldWorkload = null;
 				if(this.isFirst) {
-					oldWorkload = this.service.selectClusterWorkload(cruWorkload);
+					oldWorkload = this.service.selectClusterWorkload(curWorkload);
 				}
-				if(oldWorkload == null)				
-					this.service.insertClusterWorkload(cruWorkload);
-				else this.service.updateClusterWorkload(cruWorkload);
+				if(oldWorkload == null) {				
+					this.service.insertClusterWorkload(curWorkload);
+					//websocket
+					this.service.sendNewClousterWorkload(curWorkload.getMlId());
+				}else {
+					this.service.updateClusterWorkload(curWorkload);
+				}
 			}
 		} catch (Exception e) {
-			log.error("데이터 Insert 에러 Wrokload:\n{}", cruWorkload, e);
+			log.error("데이터 Insert 에러 Wrokload:\n{}", curWorkload, e);
 		}
 		
 	}

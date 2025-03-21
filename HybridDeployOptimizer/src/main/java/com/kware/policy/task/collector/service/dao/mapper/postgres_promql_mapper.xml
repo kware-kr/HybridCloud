@@ -64,8 +64,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			SELECT
 				m.uid prql_uid
 			FROM mo_promql_total m
-				, mo_cluster c
 			WHERE m.delete_at = 'N'
+			order by m.uid
 		
 	</select>
 	
