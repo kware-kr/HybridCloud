@@ -19,18 +19,22 @@ public class PodScalingInfo {
 	
 	public Double  cpu_per = 0.0;
 	public Double  cpu_val = 0.0;
+	public Double  cpu_max_val = 0.0;
 	public Boolean cpu_isHigh;
 	
 	public Double  mem_per = 0.0;
 	public Double  mem_val = 0.0;
+	public Double  mem_max_val = 0.0;
 	public Boolean mem_isHigh;
 	
 	public Double  disk_per = 0.0;
 	public Double  disk_val = 0.0;
+	public Double  disk_max_val = 0.0;
 	public Boolean disk_isHigh;
 	
 	public Double  gpu_per = 0.0;
 	public Double  gpu_val = 0.0;
+	public Double  gpu_max_val = 0.0;
 	public Boolean gpu_isHigh;
 	
 	public int pod_cpu_size  = 0;
@@ -40,6 +44,7 @@ public class PodScalingInfo {
 	
 	public PromMetricPod promMetricPod;
 	public PodScalingPolicy ps_policy;
+	public String pod_name = null;
 
 	private Map<String, Long> new_limitsMap   = null;
 	private Map<String, Long> new_requestsMap = null;
@@ -135,22 +140,27 @@ public class PodScalingInfo {
 	        sb.append("\"clulter\":").append("\"").append(promMetricPod.getClUid()).append("\",");
 	        sb.append("\"node\":")   .append("\"").append(promMetricPod.getNode()).append("\",");
 	        sb.append("\"pod\":")    .append("\"").append(promMetricPod.getPod()).append("\",");
+	        sb.append("\"name\":")   .append("\"").append(this.pod_name).append("\",");
 	    }
 	    
 	    sb.append("\"cpu_per\":")   .append(cpu_per).append(",");
 	    sb.append("\"cpu_val\":")   .append(cpu_val).append(",");
+	    sb.append("\"cpu_max_val\":").append(cpu_max_val).append(",");
 	    sb.append("\"cpu_isHigh\":").append(cpu_isHigh).append(",");
 	    
 	    sb.append("\"mem_per\":")   .append(mem_per).append(",");
 	    sb.append("\"mem_val\":")   .append(mem_val).append(",");
+	    sb.append("\"mem_max_val\":").append(mem_max_val).append(",");
 	    sb.append("\"mem_isHigh\":").append(mem_isHigh).append(",");
 	    
 	    sb.append("\"disk_per\":")   .append(disk_per).append(",");
 	    sb.append("\"disk_val\":")   .append(disk_val).append(",");
+	    sb.append("\"disk_max_val\":").append(disk_max_val).append(",");
 	    sb.append("\"disk_isHigh\":").append(disk_isHigh).append(",");
 	    
 	    sb.append("\"gpu_per\":")   .append(gpu_per).append(",");
 	    sb.append("\"gpu_val\":")   .append(gpu_val).append(",");
+	    sb.append("\"gpu_max_val\":").append(gpu_max_val).append(",");
 	    sb.append("\"gpu_isHigh\":").append(gpu_isHigh).append(",");
 	    
 	    sb.append("\"pod_cpu_size\":") .append(pod_cpu_size).append(",");

@@ -14,5 +14,6 @@ public class ScalingInfo extends APIPagedRequest{
     private String docType;       // 문서 유형 (REQUEST, RESPONSE)
     private String docBody;       // 요청 또는 응답 본문의 JSON 데이터 (jsonb -> String)
     private String docDesc;       // 설명 (jsonb -> String)
+    private String docResponse;   // 응답 (jsonb -> String)
     private LocalDateTime regDt;  // 등록 시각
 }

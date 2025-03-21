@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import com.kware.policy.task.common.service.CommonService;
 import com.kware.policy.task.common.vo.WorkloadCommand;
 import com.kware.policy.task.feature.FeatureMain;
 import com.kware.policy.task.feature.service.vo.PodScalingPolicy;
+import com.kware.policy.task.feature.service.vo.PodScalingPolicy.TriggerType;
 import com.kware.policy.task.scalor.service.vo.PodScalingInfo;
 import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 
@@ -59,6 +61,8 @@ import com.kware.policy.task.selector.service.vo.WorkloadTaskWrapper;
 //@SuppressWarnings("rawtypes")
 public class PodWorker extends Thread {
 	private static final Logger log = LoggerFactory.getLogger("scale-log");
+	
+	boolean isTest = false;
 	
 	// QueueManager 인스턴스 가져오기
 	QueueManager            qm = QueueManager.getInstance();
@@ -137,7 +141,7 @@ public class PodWorker extends Thread {
 		
 		for(PodScalingPolicy.AdjustmentTrigger tr: trList) {
 			//1. 각 파드별로 지속시간(예:10) 동안의 데이터를 메모리에서 가져온다.
-			Map<String, List<PromMetricPod>> historyMap = this.collectRecentPodMetrics(blockingQ, tr.getObservationPeriod());		
+			Map<String, List<PromMetricPod>> historyMap = this.collectRecentPodMetrics(blockingQ, tr.getObservationPeriod(), tr.getType());		
 			String key = null;
 			PodScalingInfo psInfo = null;
 			List<PromMetricPod> podList = null;
@@ -178,15 +182,15 @@ public class PodWorker extends Thread {
 					psInfo.pod_gpu_size = size;
 				}
 				
+				//시간대상에서 실제 스케일링 대상이 되는지 확인
 				if(checkPodUsageList(podList, tr, psInfo)) {
 					podSIResultMap.put(key, psInfo);
 					//podSIResultMap.remove(key);
 				}
 				if(podList != null)
 					podList.clear();
-				iterator.remove();
+				iterator.remove();  //historyMap clear
 			}
-			//historyMap.clear();
 		}	
 		
 		if(log.isDebugEnabled()) {
@@ -203,6 +207,24 @@ public class PodWorker extends Thread {
 			String tKey = entry.getKey();
 			PodScalingInfo tPSInfo = entry.getValue();
 			
+			//2가지 이상일대만 하도록 해볼까
+			int count = 0;
+			if(tPSInfo.cpu_isHigh != null) count++;
+			if(tPSInfo.mem_isHigh != null) count++;
+			if(tPSInfo.gpu_isHigh != null) count++;
+			if(tPSInfo.disk_isHigh != null) count++;
+			
+			if(count < 2)
+				continue;
+			
+			//}}2가지 이상일대만 하도록 해볼까
+			
+			if(!this.isTest) {
+				if(sendedMap.containsKey(tKey)) {
+					continue;
+				}
+			}
+			
 			//기존 값의 평균값을 처리한다.
 			tPSInfo.makeAverage();
 			
@@ -215,59 +237,76 @@ public class PodWorker extends Thread {
 			Long limVal = null;
 			Long re_reqVal = null;
 			Long re_limVal = null;
+			int limt_add_per = 20;
 			for(PodScalingPolicy.AdjustmentTrigger tr: trList) {
 				if(tr.getType() == PodScalingPolicy.TriggerType.CPU){
 					isHigh = tPSInfo.cpu_isHigh;
-					reqVal = reqMap.get(POD_CPU);
-					limVal = limMap.get(POD_CPU);
 					if(isHigh != null) {
-						re_reqVal = (long)(tPSInfo.cpu_val + (tPSInfo.cpu_val / tr.getAdjustmentRate()));
+						reqVal = reqMap.get(POD_CPU);
+						limVal = limMap.get(POD_CPU);
 						
+						re_reqVal = (long)(tPSInfo.cpu_val + (tPSInfo.cpu_val * (tr.getAdjustmentRate()/100.0)));
+						re_limVal = (long)(tPSInfo.cpu_max_val + (tPSInfo.cpu_max_val * ((tr.getAdjustmentRate() + limt_add_per)/100.0)));
+						
+						/*
 						if(limVal < re_reqVal) {
 							re_limVal = (long)(re_reqVal + (re_reqVal / tr.getAdjustmentRate()));
 						}else {
 							re_limVal = limVal;
 						}
+						*/
 						
 						tPSInfo.addNewRequestsValue(POD_CPU, re_reqVal);
 						tPSInfo.addNewLimitsValue  (POD_CPU, re_limVal);
 					}
 				}else if(tr.getType() == PodScalingPolicy.TriggerType.MEMORY) {
 					isHigh = tPSInfo.mem_isHigh;
-					reqVal = reqMap.get(POD_MEMORY);
-					limVal = limMap.get(POD_MEMORY);
 					if(isHigh != null) {
-						re_reqVal = (long)(tPSInfo.mem_val + (tPSInfo.mem_val / tr.getAdjustmentRate()));
+						reqVal = reqMap.get(POD_MEMORY);
+						limVal = limMap.get(POD_MEMORY);
+						
+						re_reqVal = (long)(tPSInfo.mem_val + (tPSInfo.mem_val * (tr.getAdjustmentRate()/100.0)));
+						re_limVal = (long)(tPSInfo.mem_max_val + (tPSInfo.mem_max_val * ((tr.getAdjustmentRate() + limt_add_per)/100.0)));
+						
+						/*
 						if(limVal < re_reqVal) {
 							re_limVal = (long)(re_reqVal + (re_reqVal / tr.getAdjustmentRate()));
 						}else {
 							re_limVal = limVal;
 						}
+						*/
 						
 						tPSInfo.addNewRequestsValue(POD_MEMORY, re_reqVal);
 						tPSInfo.addNewLimitsValue  (POD_MEMORY, re_limVal);
 					}
 				}else if(tr.getType() == PodScalingPolicy.TriggerType.DISK) {
 					isHigh = tPSInfo.disk_isHigh;
-					reqVal = reqMap.get(POD_DISK);
-					limVal = limMap.get(POD_DISK);
 					if(isHigh != null) {
-						re_reqVal = (long)(tPSInfo.disk_val + (tPSInfo.disk_val / tr.getAdjustmentRate()));
+						reqVal = reqMap.get(POD_DISK);
+						limVal = limMap.get(POD_DISK);
+						
+						re_reqVal = (long)(tPSInfo.disk_val + (tPSInfo.disk_val * (tr.getAdjustmentRate()/100.0)));
+						re_limVal = (long)(tPSInfo.disk_max_val + (tPSInfo.disk_max_val * ((tr.getAdjustmentRate() + limt_add_per)/100.0)));
+						
+						/*
 						if(limVal < re_reqVal) {
 							re_limVal = (long)(re_reqVal + (re_reqVal / tr.getAdjustmentRate()));
 						}else {
 							re_limVal = limVal;
 						}
+						*/
 						
 						tPSInfo.addNewRequestsValue(POD_DISK, re_reqVal);
 						tPSInfo.addNewLimitsValue  (POD_DISK, re_limVal);
 					}
 				}else if(tr.getType() == PodScalingPolicy.TriggerType.GPU) {
 					isHigh = tPSInfo.gpu_isHigh;
-					reqVal = reqMap.get(POD_GPU);
-					limVal = limMap.get(POD_GPU);
-					if(isHigh != null) { 
-						re_reqVal = (long)Math.ceil(tPSInfo.gpu_val + (tPSInfo.gpu_val / tr.getAdjustmentRate()));
+					if(isHigh != null) {
+						reqVal = reqMap.get(POD_GPU);
+						limVal = limMap.get(POD_GPU);
+						
+						re_reqVal = (long)Math.ceil(tPSInfo.gpu_val + (tPSInfo.gpu_val * (tr.getAdjustmentRate()/100.0)));
+						//re_limVal = (long)(tPSInfo.gpu_max_val + (tPSInfo.gpu_max_val * ((tr.getAdjustmentRate() + limt_add_per)/100.0)));
 						re_limVal = re_reqVal; //GPU는 동일하게 설정
 						
 						tPSInfo.addNewRequestsValue(POD_GPU, re_reqVal);
@@ -279,10 +318,12 @@ public class PodWorker extends Thread {
 			//조정요청을 보낸다.
 			//한번 보내면 다시 일정 시간이 지난 이후에 보낼까?
 //			this.sendPodScaling(tPSInfo);
-			if(!sendedMap.containsKey(tKey)) {
+			//if(!sendedMap.containsKey(tKey)) {
+			if(tPSInfo.getNewRequestsMap() != null) {
 				this.sendPodScaling(tPSInfo);
 				sendedMap.put(tKey, System.currentTimeMillis());
 			}
+			//}
 		}
 		//여기까지 하면 조정대상이되는 type과 전체 합한 값이 있음
 		trList.clear();
@@ -300,16 +341,16 @@ public class PodWorker extends Thread {
 		
 		PromMetricPod ppod = psInfo.promMetricPod;
 		this.comService.createEvent("파드 스케일링 대상", "PodScaleT"
-				, "파드의 리소스를 조정을 위한 재배포 대상.\n"
-				+ "  워크로드:" + ppod.getMlId() 
-				+ "  클러스터:" + ppod.getClUid() 
-				+ ", 노드:"    + ppod.getNode() 
-				+ ", 파드:"    + ppod.getPod()
-				+ ", 평균 사용량:"    + psInfo.getAvearageString()
-				+ ", old request:" + ppod.getMRequestsList().toString()
-				+ ", new request:" + psInfo.getNewRequestsMap().toString()
-				+ ", old limit:"   + ppod.getMLimitsList().toString()
-				+ ", new limit:"   + psInfo.getNewLimitsMap().toString()
+				, "파드의 리소스를 조정을 위한 재배포 대상."
+				+ StringConstant.STR_lineFeed + "  워크로드: " + ppod.getMlId() 
+				+ StringConstant.STR_lineFeed + ", 클러스터: " + ppod.getClUid() 
+				+ StringConstant.STR_lineFeed + ", 노드: "    + ppod.getNode() 
+				+ StringConstant.STR_lineFeed + ", 파드: "    + ppod.getPod()
+				+ StringConstant.STR_lineFeed + ", 평균 사용량:"    + psInfo.getAvearageString()
+				+ StringConstant.STR_lineFeed + ", old request: " + ppod.getMRequestsList().toString()
+				+ StringConstant.STR_lineFeed + ", new request: " + psInfo.getNewRequestsMap().toString()
+				+ StringConstant.STR_lineFeed + ", old limit: "   + ppod.getMLimitsList().toString()
+				+ StringConstant.STR_lineFeed + ", new limit: "   + psInfo.getNewLimitsMap().toString()
 		);
 		
 		if(log.isDebugEnabled()) {
@@ -376,6 +417,7 @@ public class PodWorker extends Thread {
 						psInfo.cpu_isHigh = sval.isHigh;
 						psInfo.cpu_per   += sval.valuePer;
 						psInfo.cpu_val   += sval.value;
+						psInfo.cpu_max_val = psInfo.cpu_max_val < sval.value ? sval.value: psInfo.cpu_max_val; 
 					}
 				}
 			}else if(tr.getType() == PodScalingPolicy.TriggerType.MEMORY) {
@@ -392,6 +434,7 @@ public class PodWorker extends Thread {
 						psInfo.mem_isHigh = sval.isHigh;
 						psInfo.mem_per   += sval.valuePer;
 						psInfo.mem_val   += sval.value;
+						psInfo.mem_max_val = psInfo.mem_max_val < sval.value ? sval.value: psInfo.mem_max_val;
 					}
 				}
 			}else if(tr.getType() == PodScalingPolicy.TriggerType.DISK) {
@@ -422,11 +465,12 @@ public class PodWorker extends Thread {
 				    sum += a.get(key);
 				}
 				
-				cValue = sum * 100;
+				//cValue = sum *100;
+				cValue = sum;
 				lValue = limMap==null ? null: limMap.get(POD_GPU);
-				lValue = lValue==null ? null: lValue * 100;
+				//lValue = lValue==null ? null: lValue * 100;
 				rValue = reqMap==null ? null: reqMap.get(POD_GPU);
-				rValue = rValue==null ? null: rValue * 100;
+				//rValue = rValue==null ? null: rValue * 100;
 				sval = checkPodUsage(cValue, tr, lValue, rValue);
 				
 				if(sval != null) {
@@ -436,6 +480,7 @@ public class PodWorker extends Thread {
 						psInfo.gpu_isHigh = sval.isHigh;
 						psInfo.gpu_per   += sval.valuePer;
 						psInfo.gpu_val   += sval.value;
+						psInfo.gpu_max_val = psInfo.gpu_max_val < sval.value ? sval.value: psInfo.gpu_max_val; //큰 의미 없음 gpu는 동일하게
 					}
 				}
 			}
@@ -480,9 +525,14 @@ public class PodWorker extends Thread {
 				sval.isHigh = false;
 			}else if(usage_value_per > tr.getUpTrigger()) {
 				sval.isHigh = true;
+			} else {
+				sval = null;
 			}
-			sval.valuePer = usage_value_per;
-			sval.value    = (double)curValue;
+			
+			if(sval != null) {
+				sval.valuePer = usage_value_per;
+				sval.value    = (double)curValue;
+			}
 		}else if(requestValue != null) {
 			sval = new ScalingValue();
 			usage_value_per = ((double)curValue / requestValue) * 100; //%
@@ -490,9 +540,13 @@ public class PodWorker extends Thread {
 				sval.isHigh = false;
 			}else if(usage_value_per > tr.getUpTrigger()) {
 				sval.isHigh = true;
+			}else {
+				sval = null;
 			}
-			sval.valuePer = usage_value_per;
-			sval.value    = (double)curValue;
+			if(sval != null) {
+				sval.valuePer = usage_value_per;
+				sval.value    = (double)curValue;
+			}
 		}
 		
 		return sval;
@@ -501,8 +555,8 @@ public class PodWorker extends Thread {
 	/*
 	 * 최근 지속시간 동안의 데이터를 조회하기
 	 * */
-	 private Map<String, List<PromMetricPod>> collectRecentPodMetrics(BlockingDeque<PromMetricPods> blockingQ, int periodMinutes) {
-		long periodSeconds = periodMinutes * 60000L;
+	 private Map<String, List<PromMetricPod>> collectRecentPodMetrics(BlockingDeque<PromMetricPods> blockingQ, int periodMinutes, TriggerType triggerType) {
+		long periodSeconds = periodMinutes * 60000;
         Map<String, List<PromMetricPod>> podHistory = new HashMap<>();
         long currentTime = System.currentTimeMillis(); // 현재 시간
         
@@ -511,35 +565,44 @@ public class PodWorker extends Thread {
         List<WorkloadTaskWrapper> taskWrappers;
         
         if(log.isDebugEnabled())
-        	log.debug("Q size:{}================================================", blockingQ.size() );
+        	log.debug("Q({}) size:{}================================================",triggerType, blockingQ.size() );
 //        WorkloadTaskWrapper taskWrapper;
 
         //최신 데이터부터 확인 (뒤쪽부터 순회)
         //BlockingDeque를 입력할때 addFirst 함수를 통해서 데이터를 입력하므로 iterator를 적용하면 처음부터 찾아서 조회하면 된다.
         //                       addLast  함수를 적용하면 blockingQ.descendingIterator()를 사용하여야 한다.
         Iterator<PromMetricPods> iterator = blockingQ.iterator();
+        HashSet<String> excludeSet = new HashSet<String>();
+        
         while (iterator.hasNext()) {
             PromMetricPods podList = iterator.next();
             long timestamp = podList.getTimemillisecond(); // PromMetricPods가 가진 수집 시간
             
-            if(log.isDebugEnabled()){
-            	String timestampString = null;
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss");
-                timestampString = sdf.format(new Date(timestamp));
-                log.debug("");
-            	log.debug("PromMetricPods size:{}, time:{}", podList.getPodsMap().size(), timestampString );
-            }
-            
-
             // 시간분이 넘은 데이터는 탐색 종료
-            if (currentTime - timestamp > periodSeconds) {
+            long diff = currentTime - timestamp;
+            if(diff > periodSeconds) {
+            	if(log.isDebugEnabled()){
+                	String timestampString = null;
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss");
+                    timestampString = sdf.format(new Date(timestamp));
+                    log.debug("");
+                	log.debug("history map({}): 지속시간:{}, 시간차:{}({}), 대상시간:{}, 현시간:{}"
+                			, triggerType
+                			, periodSeconds, diff,  (diff - periodSeconds)
+                			, timestampString,  sdf.format(new Date(currentTime)) );
+                }
                 break;
             }
-
             // PromMetricPods 내부의 Pod Map 조회
+            PromMetricPod podData = null;
             for (Map.Entry<String, PromMetricPod> entry : podList.getPodsMap().entrySet()) {
                 String key = entry.getKey(); //cluid_podUid
-                PromMetricPod podData = entry.getValue();
+                
+                if(excludeSet.contains(key)) {
+                	continue;
+                }
+                
+                podData = entry.getValue();
                 
                 mlId   = podData.getMlId();
                 if(mlId == null || this.requestQ.getWorkloadRequest(mlId) == null) {
@@ -548,6 +611,7 @@ public class PodWorker extends Thread {
                 
                 //if(!"RUNNING".equals(podData.getStatusPhase().toString())){  //모든 상태가 running 상태일때만 처리
                 if(StringConstant.PodStatusPhase.RUNNING != podData.getStatusPhase()) {
+                	excludeSet.add(key);
                 	List<PromMetricPod> rmData = podHistory.remove(key);
                 	if(rmData != null)
                 		rmData.clear();
@@ -567,7 +631,6 @@ public class PodWorker extends Thread {
 	                }
                 }
                 //}}
-                
               
                 if(log.isDebugEnabled()) {
                 	log.debug("mlId중 {}:{}:{}",isRedeploy, mlId, podData.getPod());
@@ -577,17 +640,31 @@ public class PodWorker extends Thread {
 	                // 해당 파드의 데이터 리스트 생성 또는 추가
 	                podHistory.computeIfAbsent(key, k -> new ArrayList<>()).add(podData);
                 }else{
+                	excludeSet.add(key);
                 	List<PromMetricPod> rmData = podHistory.remove(key);
                 	if(rmData != null)
                 		rmData.clear();
                 	continue;
-                }
-                
+                }                
             }
         }
         
+        podHistory.entrySet().removeIf(entry -> {
+            int size = entry.getValue().size();
+            if (size < periodMinutes) {
+                log.debug("Removing key: {}, list size: {} ", entry.getKey(), size);
+                return true;
+            }else {
+            	log.debug("Targeting key: {}, list size: {} ", entry.getKey(), size);
+            }
+            return false;
+        });
+        
+
         if(log.isDebugEnabled())
-        	log.debug("Q End================================================\n");
+        	log.debug("Q({}) End================================================\n", triggerType);
+        
+        excludeSet.clear();
         return podHistory;
     }
 	 
@@ -607,6 +684,12 @@ public class PodWorker extends Thread {
 		long totalExpectedSeconds = Duration.between(startTime, expectedEndTime).getSeconds();
 		// 경과 시간(초) 계산
 		long elapsedSeconds = Duration.between(startTime, currentTime).getSeconds();
+		
+		// 시작 5분은 체크하지 않음 warm-up time
+	    if (elapsedSeconds < 300) {
+	        return false;
+	    }
+		
 		// 진행률 (%) 계산
 		double progressPercent = ((double) elapsedSeconds / totalExpectedSeconds) * 100.0;
 
@@ -623,7 +706,12 @@ public class PodWorker extends Thread {
 		System.out.println("Current Progress (%): " + progressPercent);
 		System.out.println("Threshold (%): " + threshold);
 */
-		return progressPercent < threshold;
+		
+		
+		if(isTest)
+			return true; //테스트
+		else
+			return progressPercent < threshold;
 	}
 	 
 	 private void removeSendedOldEntries() {

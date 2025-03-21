@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -139,12 +140,29 @@ public class ScalingInfoService {
     	
     }
     
+    final long MEBIBYTE = 1024L * 1024L; // 1,048,576
+    private Long bytesToMi(Long bytes) {
+        long val =  bytes / MEBIBYTE;
+        return (long)(Math.ceil(val /10.0) * 10);
+    }
+    
     private String getNumberString(Object number) {
     	if(number != null)
     		return number.toString();
     	else return null;
     }
-    public void requestScalingApiCall(PodScalingInfo psInfo, WorkloadRequest workloadRequest) {   
+    
+    
+    private String getFormmatCpu(Long val) {
+    	if(val != null) {
+    		Long rs = (long)(Math.ceil(val/10.0) * 10);
+    		return rs.toString();
+    	}
+    	else return null;
+    }
+    
+    
+    public void requestPodScalingApiCall(PodScalingInfo psInfo, WorkloadRequest workloadRequest) {   
     	PodScalingRequet psRequest = new PodScalingRequet();
 
     	PromMetricPod promPod = psInfo.promMetricPod;
@@ -158,77 +176,173 @@ public class ScalingInfoService {
         List<PodScalingRequet.Container> psContainers = new ArrayList<>();        
         List<Container> wlReqContainers = workloadRequest.getRequest().getContainers();
         for(WorkloadRequest.Container wlC : wlReqContainers) {
-        	
+        	//원래 나오면 안되는데 가끔 나오는 경우가 있네.
+        	if(mlContainerNameIdx == null) {
+        		if(promPod.getPod().contains(wlC.getName())) {
+        			mlContainerNameIdx = wlC.getNameIdx();
+        			promPod.setMlContainerNameIdx(mlContainerNameIdx);
+        		}
+        	}
         	
         	WorkloadRequest.ResourceDetail wlLimits   = wlC.getResources().getLimits();
         	WorkloadRequest.ResourceDetail wlRequests = wlC.getResources().getRequests();
         	
         	PodScalingRequet.Container psC = new PodScalingRequet.Container();
+        	psC.setName(wlC.getName());
+        	
+        	
+        	//psInfo.promMetricPod.getPodUid()
         	
         	 // Resources 객체 생성
             PodScalingRequet.Resources psRes = new PodScalingRequet.Resources();
 
-            String temp; 
+            String temp = null; 
             // requests(요청 스펙) 생성 스펙에는 모두 규정이 되어 있어서 숫자로만 보낸다.
             PodScalingRequet.ResourceDetail psRequests = new PodScalingRequet.ResourceDetail();
-            if(wlC.getNameIdx() == mlContainerNameIdx) {
-            	mlContainerName = wlC.getName(); //최최 요청 컨테이너 이름
-            	Map<String, Long> map = psInfo.getNewRequestsMap();
-            	
-            	temp = this.getNumberString(map.get(PodWorker.POD_CPU));
-	            psRequests.setCpu(temp);               // CPU 밀리코어 
-	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_MEMORY));
-	            psRequests.setMemory(temp);           // 메모리 MiB
-	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_GPU));
-	            psRequests.setGpu(temp);                 // GPU 1개
-	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_DISK));
-	            psRequests.setEphemeralStorage(temp); // 스토리지
-            }else {
-	            temp = this.getNumberString(wlRequests.getCpu());
-	            psRequests.setCpu(temp);               // CPU 밀리코어 
-	            
-	            temp = this.getNumberString(wlRequests.getMemory());
-	            psRequests.setMemory(temp);           // 메모리 MiB
-	            
-	            temp = this.getNumberString(wlRequests.getGpu());
-	            psRequests.setGpu(temp);                 // GPU 1개
-	            
-	            temp = this.getNumberString(wlRequests.getEphemeralStorage());
-	            psRequests.setEphemeralStorage(temp); // 임시 스토리지 1Gi 정도 가정
-            }
-
-            // limits(최대 스펙) 생성
+            
+         // limits(최대 스펙) 생성
             PodScalingRequet.ResourceDetail psLimits = new PodScalingRequet.ResourceDetail();
             
             if(wlC.getNameIdx() == mlContainerNameIdx) {
-            	Map<String, Long> map = psInfo.getNewLimitsMap();
+            	mlContainerName = wlC.getName(); //최최 요청 컨테이너 이름
+            	psInfo.pod_name = mlContainerName; 
+            	Map<String, Long> rmap = psInfo.getNewRequestsMap();
             	
-            	temp = this.getNumberString(map.get(PodWorker.POD_CPU));
-            	psLimits.setCpu(temp);               // CPU 밀리코어 
+            	
+            	// ========================= requests ==============================
+            	Long obj = rmap.get(PodWorker.POD_CPU);
+            	if(obj != null) {
+            		temp = this.getFormmatCpu(obj);
+	            	psRequests.setCpu(temp + "m");               // CPU 밀리코어
+            	}else {
+            		if(wlRequests.getCpu() != 0) {
+    		            temp = this.getFormmatCpu((long)wlRequests.getCpu());
+    		            psRequests.setCpu(temp + "m");               // CPU 밀리코어
+                	}
+            	}
+            	
+	            obj = rmap.get(PodWorker.POD_MEMORY);
+	            if(obj != null) {
+	            	temp = this.getNumberString(bytesToMi(obj));
+	            	psRequests.setMemory(temp + "Mi");           // 메모리 MiB
+            	}else {
+            		if(wlRequests.getMemory() != 0) {
+    		            temp = this.getNumberString(bytesToMi(wlRequests.getMemory()));
+    		            psRequests.setMemory(temp + "Mi");           // 메모리 MiB
+    	            }
+            	}
 	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_MEMORY));
-	            psLimits.setMemory(temp);           // 메모리 MiB
+	            obj = rmap.get(PodWorker.POD_GPU);
+	            if(obj != null) {
+	            	temp = this.getNumberString(obj);
+	            	psRequests.setGpu(temp);                 // GPU 1개
+            	}else {
+            		if(wlRequests.getGpu() != 0) {
+    		            temp = this.getNumberString(wlRequests.getGpu());
+    		            psRequests.setGpu(temp);                 // GPU 1개
+    	            }
+            	}
 	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_GPU));
-	            psLimits.setGpu(temp);                 // GPU 1개
+	            obj = rmap.get(PodWorker.POD_DISK);
+	            if(obj != null) {
+	            	temp = this.getNumberString(obj);
+	            	psRequests.setEphemeralStorage(temp); // 스토리지
+            	}else {
+    	            if(wlRequests.getEphemeralStorage() != 0) {
+    		            temp = this.getNumberString(wlRequests.getEphemeralStorage());
+    		            psRequests.setEphemeralStorage(temp); // 임시 스토리지 1Gi 정도 가정
+    	            }            		
+            	}
 	            
-	            temp = this.getNumberString(map.get(PodWorker.POD_DISK));
-	            psLimits.setEphemeralStorage(temp); // 스토리지 
+	            // ========================= limits ==============================
+	            Map<String, Long> lmap = psInfo.getNewLimitsMap();
+            	
+	            obj = lmap.get(PodWorker.POD_CPU);
+	            if(obj != null) {
+	            	temp = this.getFormmatCpu(obj);
+	            	psLimits.setCpu(temp + "m");               // CPU 밀리코어 
+            	}else {
+            		if(wlLimits.getCpu() != 0) {
+    		            temp = this.getFormmatCpu((long)wlLimits.getCpu());
+    		            psLimits.setCpu(temp + "m");               // CPU 밀리코어
+    	            }
+            	}
+	            
+	            obj = lmap.get(PodWorker.POD_MEMORY);
+	            if(obj != null) {
+	            	temp = this.getNumberString(bytesToMi(obj));
+	            	psLimits.setMemory(temp + "Mi");           // 메모리 MiB
+            	}else {
+            		if(wlLimits.getMemory() != 0) {
+    		            temp = this.getNumberString(bytesToMi(wlLimits.getMemory()));
+    		            psLimits.setMemory(temp + "Mi");           // 메모리 MIB
+    	            }
+            	}
+	            
+	            obj = lmap.get(PodWorker.POD_GPU);
+	            if(obj != null) {
+	            	temp = this.getNumberString(obj);
+	            	psLimits.setGpu(temp);                 // GPU 1개
+            	}else {
+            		if(wlLimits.getGpu() != 0) {
+    		            temp = this.getNumberString(wlLimits.getGpu());
+    		            psLimits.setGpu(temp);                 // GPU 1
+    	            }
+            	}
+	            
+	            obj = lmap.get(PodWorker.POD_DISK);
+	            if(obj != null) {
+	            	temp = this.getNumberString(obj);
+	            	psRequests.setEphemeralStorage(temp); // 스토리지
+            	}else {
+            		if(wlLimits.getEphemeralStorage() != 0) {
+    	            	temp = this.getNumberString(wlLimits.getEphemeralStorage());
+    	            	psLimits.setEphemeralStorage(temp); // 임시 스토리지 MIB
+    	            }
+            	}
+	            
             }else {
-	            temp = this.getNumberString(wlLimits.getCpu());
-	            psLimits.setCpu(temp);               // CPU 밀리코어
+            	if(wlRequests.getCpu() != 0) {
+		            temp = this.getFormmatCpu((long)wlRequests.getCpu());
+		            psRequests.setCpu(temp + "m");               // CPU 밀리코어 => core
+            	}
 	            
-	            temp = this.getNumberString(wlLimits.getMemory());
-	            psLimits.setMemory(temp);           // 메모리 MIB
+	            if(wlRequests.getMemory() != 0) {
+		            temp = this.getNumberString(bytesToMi(wlRequests.getMemory()));
+		            psRequests.setMemory(temp + "Mi");           // 메모리 MiB
+	            }
 	            
-	            temp = this.getNumberString(wlLimits.getGpu());
-	            psLimits.setGpu(temp);                 // GPU 1
+	            if(wlRequests.getGpu() != 0) {
+		            temp = this.getNumberString(wlRequests.getGpu());
+		            psRequests.setGpu(temp);                 // GPU 1개
+	            }
 	            
-	            temp = this.getNumberString(wlLimits.getEphemeralStorage());
-	            psLimits.setEphemeralStorage(temp); // 임시 스토리지 MIB
+	            if(wlRequests.getEphemeralStorage() != 0) {
+		            temp = this.getNumberString(wlRequests.getEphemeralStorage());
+		            psRequests.setEphemeralStorage(temp); // 임시 스토리지 1Gi 정도 가정
+	            }
+	            
+	            // ========================= limits ==============================
+	            
+	            if(wlLimits.getCpu() != 0) {
+		            temp = this.getFormmatCpu((long)wlLimits.getCpu());
+		            psLimits.setCpu(temp + "m");               // CPU 밀리코어 => core
+	            }
+	            
+	            if(wlLimits.getMemory() != 0) {
+		            temp = this.getNumberString(bytesToMi(wlLimits.getMemory()));
+		            psLimits.setMemory(temp + "Mi");           // 메모리 MIB
+	            }
+	            
+	            if(wlLimits.getGpu() != 0) {
+		            temp = this.getNumberString(wlLimits.getGpu());
+		            psLimits.setGpu(temp);                 // GPU 1
+	            }
+	            
+	            if(wlLimits.getEphemeralStorage() != 0) {
+	            	temp = this.getNumberString(wlLimits.getEphemeralStorage());
+	            	psLimits.setEphemeralStorage(temp); // 임시 스토리지 MIB
+	            }
             }
             
             // resources에 요청(requests), 제한(limits) 설정
@@ -264,40 +378,38 @@ public class ScalingInfoService {
 			
 			String responseString = "";
 			
-			ResponseEntity<String> response = restTemplateUtil.post( url, jsonString, this.reDeployHeaders, String.class, ScalingInfoService.log);
-			responseString = response.getBody();
+			try {			
+				ResponseEntity<String> response = restTemplateUtil.post( url, jsonString, this.reDeployHeaders, String.class, ScalingInfoService.log);
+				responseString = response.getBody();
+			}catch(HttpServerErrorException  e) {
+				log.error("Pod API call error:", e);
+				responseString = e.getResponseBodyAsString();
+			}
 			
 			if(log.isInfoEnabled()) {
 				log.info("Pod Scaling Request:{}, response:{}", jsonString, responseString);
 			}
+			
 			//요청 정보 저장
 			ScalingInfo sinfo = new ScalingInfo();
 			sinfo.setScalingType(StringConstant.SCALING_TYPE_POD);
 			sinfo.setDocType(StringConstant.SCALING_DOC_TYPE_REQUEST);
 			sinfo.setDocBody(jsonString);
 			sinfo.setDocDesc(psInfo.toStringJson());
+			sinfo.setDocResponse(responseString);
 			dao.insertScalingInfo(sinfo);
-			
-			//응답정보 저장
-			ScalingInfo sinfo2 = new ScalingInfo();
-			sinfo2.setScalingType(StringConstant.SCALING_TYPE_POD);
-			sinfo2.setDocType(StringConstant.SCALING_DOC_TYPE_RESPONSE);
-			sinfo2.setDocBody(responseString);
-			//sinfo2.setDocDesc(psInfo.toStringJson());
-			dao.insertScalingInfo(sinfo2);
-			
 			//
 			
 			//결과를 원본에 반영해야하나????????????????????????????
 			//일단은 초기값을 또 추적해야 하므로 여기에 저장된 내용으로 확인하자.
 			//이벤트 DB 등록
 			comService.createEvent("파드 스케일링 요청", "PodScaleR"
-					, "파드의 리소스를 조정을 위한 재배포 요청.\n" 
-					+ "  워크로드:" + promPod.getMlId() 
-					+ "  클러스터:" + promPod.getClUid() 
-					+ ", 노드:"    + promPod.getNode() 
-					+ ", 대상 파드:"    + promPod.getPod()
-					+ ", 대상 컨테이너:" + mlContainerName
+					, "파드의 리소스를 조정을 위한 재배포 요청." 
+					+ StringConstant.STR_lineFeed + "  워크로드: "     + promPod.getMlId() 
+					+ StringConstant.STR_lineFeed + "  클러스터: "     + promPod.getClUid() 
+					+ StringConstant.STR_lineFeed + ", 노드: "        + promPod.getNode() 
+					+ StringConstant.STR_lineFeed + ", 대상 파드: "    + promPod.getPod()
+					+ StringConstant.STR_lineFeed + ", 대상 컨테이너: " + mlContainerName
 			);
 		}catch(Exception e) {
 			log.error("POD Scaling 요청 에러:{}", jsonString, e);
@@ -309,7 +421,7 @@ public class ScalingInfoService {
     /**
      * 클러스터 어드민 통합 포탈에 노드 스케일링 요청
      */
-    public void processNodeScaling(List<NodeScalingInfo> nodeScalingInfos) {
+    public void requestNodeScalingApiCall(List<NodeScalingInfo> nodeScalingInfos) {
     	NodeScalingInfo nsInfo = nodeScalingInfos.get(0);
     	
     	String reason;
@@ -367,6 +479,7 @@ public class ScalingInfoService {
 			sinfo.setDocType(StringConstant.SCALING_DOC_TYPE_REQUEST);
 			sinfo.setDocBody(jsonString);
 			sinfo.setDocDesc(desc_json_string);
+			sinfo.setDocResponse(responseString);
 			dao.insertScalingInfo(sinfo);
 			
 			comService.createEvent("노드 스케일 요청", "NodeScaleR"
@@ -390,7 +503,7 @@ public class ScalingInfoService {
 		sinfo.setScalingType(StringConstant.SCALING_TYPE_NODE);
 		sinfo.setDocType(StringConstant.SCALING_DOC_TYPE_RESPONSE);
 		sinfo.setDocBody(msg);
-		//sinfo.setDocDesc();
+		sinfo.setDocDesc("callback 수신");
 		dao.insertScalingInfo(sinfo);
 	}    
 }

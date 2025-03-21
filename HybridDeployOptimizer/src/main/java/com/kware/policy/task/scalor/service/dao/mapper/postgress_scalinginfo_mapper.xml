@@ -9,29 +9,30 @@
     <insert id="insertScalingInfo" useGeneratedKeys="true"  keyProperty="uid" 
             parameterType="com.kware.policy.task.scalor.service.vo.ScalingInfo" >
         INSERT INTO k_hybrid.mo_scaling_info (
-            scaling_type,
-            doc_type,
-            doc_body,
-            doc_desc,
-            reg_dt
+              scaling_type
+            , doc_type
+            , doc_body
+            , doc_desc
+            , doc_response
         )
         VALUES (
-            #{scalingType},
-            #{docType},
-            #{docBody},
-            #{docDesc},
-            #{regDt}
+              #{scalingType}
+            , #{docType}
+            , #{docBody}::jsonb
+            , #{docDesc}::jsonb
+            , #{docResponse}::jsonb
         )
     </insert>
     
         <!-- Select all -->
     <select id="selectAllScalingInfo" resultType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
-        SELECT uid,
-            scaling_type,
-            doc_type,
-            doc_body,
-            doc_desc,
-            reg_dt
+        SELECT uid
+            , scaling_type
+            , doc_type
+            , doc_body::TEXT
+            , doc_desc::TEXT
+            , doc_response::TEXT
+            , reg_dt
         FROM k_hybrid.mo_scaling_info 
         WHERE 1 =1 
           AND reg_dt >= CURRENT_TIMESTAMP - INTERVAL '1 day'
@@ -47,12 +48,13 @@
     <!-- SELECT by uid -->
     <select id="selectScalingInfoByUid" parameterType="long"  resultType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
         SELECT
-            uid,
-            scaling_type,
-            doc_type,
-            doc_body,
-            doc_desc,
-            reg_dt
+              uid
+            , scaling_type
+            , doc_type
+            , doc_body::TEXT
+            , doc_desc::TEXT
+            , doc_response::TEXT
+            , reg_dt
         FROM
             k_hybrid.mo_scaling_info
         WHERE
@@ -63,11 +65,11 @@
     <update id="updateScalingInfo" parameterType="com.kware.policy.task.scalor.service.vo.ScalingInfo">
         UPDATE k_hybrid.mo_scaling_info
         SET
-            scaling_type = #{scalingType},
-            doc_type     = #{docType},
-            doc_body     = #{docBody},
-            doc_desc     = #{docDesc},
-            reg_dt       = #{regDt}
+              scaling_type = #{scalingType}
+            , doc_type     = #{docType}
+            , doc_body     = #{docBody}::jsonb
+            , doc_desc     = #{docDesc}::jsonb
+            , doc_response = #{docResponse}::jsonb
         WHERE
             uid = #{uid}
     </update>
