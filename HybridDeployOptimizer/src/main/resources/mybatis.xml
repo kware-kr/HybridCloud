@@ -4,6 +4,26 @@
     "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
+<!--
+문자열 및 기본형
+string     → java.lang.String
+byte       → java.lang.Byte
+short      → java.lang.Short
+int 또는 integer → java.lang.Integer
+long       → java.lang.Long
+float      → java.lang.Float
+double     → java.lang.Double
+boolean    → java.lang.Boolean
+숫자 및 날짜
+decimal    → java.math.BigDecimal
+biginteger → java.math.BigInteger
+date       → java.util.Date
+컬렉션 타입
+map        → java.util.HashMap
+hashmap    → java.util.HashMap
+list       → java.util.ArrayList
+arraylist  → java.util.ArrayList 
+ -->
 
     <settings>
         <!-- 설정에서 각 mapper 에 설정된 캐시를 전역적으로 사용할지 말지에 대한 여부 | true -->

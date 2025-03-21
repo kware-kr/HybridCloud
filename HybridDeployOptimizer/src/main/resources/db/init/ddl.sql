@@ -340,21 +340,25 @@ COMMENT ON COLUMN k_hybrid.mo_user_response.reg_dt IS '등록일시';
 -- DROP TABLE k_hybrid.mo_scaling_info;
 
 CREATE TABLE k_hybrid.mo_scaling_info (
-    uid bigserial NOT NULL,                        -- 각 스케일링 기록의 고유 식별자
-    scaling_type varchar(10) NOT NULL,             -- 스케일링 유형 (POD, NODE)
-    doc_type varchar(10) NOT NULL,                 -- 문서 유형 (REQUEST, RESPONSE)
-    doc_body jsonb,                                -- 요청 또는 응답 본문의 JSON 데이터
-    doc_desc jsonb,                                -- 설명(JSON 형식)
-    reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL, -- 등록 시각
-    PRIMARY KEY (uid)
+	uid bigserial NOT NULL, -- 고유 아이디
+	scaling_type varchar(10) NOT NULL, -- 스케일링 유형 (POD|NODE)
+	doc_type varchar(10) NOT NULL, -- 문서 유형 (REQUEST|RESPONSE)
+	doc_body jsonb NULL, -- 문서 본문
+	doc_desc jsonb NULL, -- 문서 설명(원인 등)
+	doc_response jsonb NULL, -- 문서 설명(원인 등)
+	reg_dt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL, -- 등록 시각
+	 PRIMARY KEY (uid)
 );
-
 COMMENT ON TABLE k_hybrid.mo_scaling_info IS '스케일링 정보';
+
+-- Column comments
+
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.uid IS '고유 아이디';
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.scaling_type IS '스케일링 유형 (POD|NODE)';
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_type IS '문서 유형 (REQUEST|RESPONSE)';
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_body IS '문서 본문';
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_desc IS '문서 설명(원인 등)';
+COMMENT ON COLUMN k_hybrid.mo_scaling_info.doc_response IS '응답';
 COMMENT ON COLUMN k_hybrid.mo_scaling_info.reg_dt IS '등록 시각';
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
