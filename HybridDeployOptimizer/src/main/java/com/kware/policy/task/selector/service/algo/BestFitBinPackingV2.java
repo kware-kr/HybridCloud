@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
+import com.kware.common.util.StringUtil;
 import com.kware.policy.task.collector.service.vo.Cluster;
 import com.kware.policy.task.collector.service.vo.PromMetricNode;
 import com.kware.policy.task.common.constant.ResourceConstant;
@@ -77,7 +78,7 @@ public class BestFitBinPackingV2 {
 		}
 		
 		public String toStringCause() {
-			return "order=" + wrapper.getOrder() + ", nodeScore=" + nodeScore;
+			return "order=" + wrapper.getOrder() + ", nodeScore=" + nodeScore + ", eStart=" + StringUtil.getDateStringFromLocalDateTime(starttime,0);
 		}
 		
     }

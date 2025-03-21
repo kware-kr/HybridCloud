@@ -103,5 +103,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE a.noti_dt IS NOT NULL
 			AND a.complete_dt IS NULL
 	</select>
+	
+	<select id="selectWorkloadRequestContainerCount" resultType="int" parameterType="string">
+	  	SELECT jsonb_array_length(request_json -> 'request' -> 'containers') cnt
+		FROM k_hybrid.mo_user_request
+		WHERE ml_id = #{value}
+	</select>
+  
 </mapper>
 

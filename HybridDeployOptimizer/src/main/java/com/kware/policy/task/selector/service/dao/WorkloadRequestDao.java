@@ -61,4 +61,9 @@ public class WorkloadRequestDao {
 		return sqlSessionTemplate.selectList("mlRequetResponseMapper.selectOldWorkloadRequest");
 	}
 	
+	public int selectWorkloadRequestContainerCount(String mlId) {
+		return sqlSessionTemplate.selectOne("mlRequetResponseMapper.selectWorkloadRequestContainerCount", mlId);
+	}
+	
+	
 }

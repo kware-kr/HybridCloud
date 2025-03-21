@@ -1,9 +1,11 @@
 package com.kware.policy.task.selector.service.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
 
 @Data
 public class PodScalingRequet {
@@ -25,12 +27,17 @@ public class PodScalingRequet {
 
     @Data
     public static class ResourceDetail {
+    	@JsonInclude(JsonInclude.Include.NON_NULL)
         private String cpu;
+    	
+    	@JsonInclude(JsonInclude.Include.NON_NULL)
         private String memory;
         
+    	@JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonProperty("gpu")
         private String gpu;
 
+    	@JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonProperty("ephemeral-storage")
         private String ephemeralStorage;
     }

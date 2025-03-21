@@ -80,19 +80,20 @@ public class WorkloadRequestService {
 		return dao.insertMoUserResponse(vo);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@PostConstruct
 	private void init_getDBWorkloadrequest() {
 		List<Map> wlist = dao.selectOldWorkloadRequest();
 		
 		WorkloadRequest wlRequest = null;
-		WorkloadResponse wlResponse = null;
+//		WorkloadResponse wlResponse = null;
 		for(Map map : wlist) {
 			String reqString = (String)map.get("req");
 			Integer clUid    = (Integer)map.get("cluid");
-			String resString = (String)map.get("res");
+//			String resString = (String)map.get("res");
 			try {
 				wlRequest = JSONUtil.fromJsonToEmptyFromNull(reqString , WorkloadRequest.class);
-				wlResponse = JSONUtil.fromJsonToEmptyFromNull(resString, WorkloadResponse.class);
+//				wlResponse = JSONUtil.fromJsonToEmptyFromNull(resString, WorkloadResponse.class);
 				if(log.isDebugEnabled())
 					log.debug("load mlId: {}", wlRequest.getRequest().getMlId());
 				
@@ -103,6 +104,7 @@ public class WorkloadRequestService {
 				continue;
 			}
 		}
+		requestQ.setWrWervice(this);
 	}
 	//}}db 관련 서비스
 	
@@ -142,33 +144,25 @@ public class WorkloadRequestService {
 		List<PromMetricNode> targetNodes = null;
 		String priorityClass = null;
 		String preemptionPolicy = null;
-		StringBuffer strBuf = new StringBuffer();
+		StringBuffer strBuf = null;
 		WorkloadFeature wlFeature = this.getWorkloadFeatureFromWorkloadRequest(wlRequest);
+		
 		
 		boolean isUnmodifiable = false;
 		if(wlFeature == null) {
 			targetNodes = nodes;
 			isUnmodifiable = true;
-			//선점 비선점 정책 넣어볼까? checkpoint도 점검하고, 일단
+			//{{선점 비선점 정책 넣어볼까? checkpoint도 점검하고, 일단
+			
+			//}}
+			
+			//워크로드특성 로그 생성
+			strBuf = getWorkloadFeatureLogging(null, null);
 		}else {
 			targetNodes = getNodeWithWorkloadFeatuerFilter(wlRequest, wlFeature, nodes);
 			
-			//{{원인 내용 생성
-			
-			strBuf.append("Request Workload Feature Filter");
-			strBuf.append(StringConstant.STR_lineFeed);
-			strBuf.append(StringConstant.STR_tab1);
-			strBuf.append(wlFeature.toString2());
-			strBuf.append(StringConstant.STR_lineFeed);
-			strBuf.append(StringConstant.STR_tab1 + "Filtering Nodes:");
-			strBuf.append(StringConstant.STR_lineFeed);
-			strBuf.append(StringConstant.STR_tab2);
-			for(PromMetricNode n : targetNodes) {
-				strBuf.append("[clUid:" + n.getClUid() + ", node:" + n.getNode() + "] ");
-			}
-			
-			strBuf.append(StringConstant.STR_lineFeed);
-			//}}
+			//워크로드특성 로그 생성
+			strBuf = getWorkloadFeatureLogging(wlFeature, targetNodes);
 			
 			if(targetNodes.isEmpty()) {
 				isOK = false;
@@ -383,6 +377,40 @@ public class WorkloadRequestService {
    		//큐에 등록
    		requestQ.setWorkloadRequest(wlRequest);
 	}
-		//}}
+	//}}
+	
+	/**
+	 * 워크로드특성관련 로그를 생성하기 위함		
+	 * @param _wlFeature  특성
+	 * @param _targetNodes 필터링된 노드
+	 * @return
+	 */
+	private StringBuffer getWorkloadFeatureLogging(WorkloadFeature _wlFeature, List<PromMetricNode> _targetNodes) {
+		StringBuffer strBuf = new StringBuffer();
+		strBuf.append("Request Workload Feature Filter");
+		strBuf.append(StringConstant.STR_lineFeed);
+		strBuf.append(StringConstant.STR_tab1);
+		if(_wlFeature == null) {
+			strBuf.append("No workload feature information available.");
+		}else {
+			//{{원인 내용 생성
+			strBuf.append(_wlFeature.toString2());
+			strBuf.append(StringConstant.STR_lineFeed);
+			strBuf.append(StringConstant.STR_tab1 + "Filtering Nodes:");
+			strBuf.append(StringConstant.STR_lineFeed);
+			strBuf.append(StringConstant.STR_tab2);
+			for(PromMetricNode n : _targetNodes) {
+				strBuf.append("[clUid:" + n.getClUid() + ", node:" + n.getNode() + "] ");
+			}			
+			//}}
+		}
+		strBuf.append(StringConstant.STR_lineFeed);
+		
+		return strBuf;
+	}
+	
+	public int getWorkloadRequestContainerCount(String mlId) {
+		return dao.selectWorkloadRequestContainerCount(mlId);
+	}
 	
 }

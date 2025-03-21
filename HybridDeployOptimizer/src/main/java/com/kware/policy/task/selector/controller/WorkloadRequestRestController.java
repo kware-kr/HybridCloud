@@ -7,10 +7,13 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +29,6 @@ import com.kware.common.openapi.vo.APIResponse;
 import com.kware.common.openapi.vo.APIResponseCode;
 import com.kware.common.util.JSONUtil;
 import com.kware.common.util.StringUtil;
-import com.kware.common.util.YAMLUtil;
 import com.kware.policy.task.common.QueueManager;
 import com.kware.policy.task.common.queue.PromQueue;
 import com.kware.policy.task.common.queue.RequestQueue;
@@ -101,7 +103,39 @@ public class WorkloadRequestRestController {
 			return null;
 		}
 	}
-
+	
+	// GET 방식의 testselect 엔드포인트: 요청 후 5초 후에 종료하는 샘플
+    @GetMapping("/do/schedule/testselect")
+    public ResponseEntity<String> doTestSelect() {
+        try {
+            // 5초 대기 (시뮬레이션)
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return ResponseEntity.ok("Test selection processed after 5 seconds.");
+    }
+    
+    @Autowired
+	private SimpMessagingTemplate messagingTemplate;
+    
+ // GET 방식의 testselect 엔드포인트: 요청 후 5초 후에 종료하는 샘플
+    @GetMapping("/do/schedule/testwebsocketWorkload")
+    public ResponseEntity<String> testwebsocketWorkload() {
+        
+    	messagingTemplate.convertAndSend("/topic/nodeSelectRequests", 1);
+    	messagingTemplate.convertAndSend("/topic/newClusterWorkload", "kware-e36a5b34-aa71-43e1-b11a-b39822e87fc5");
+    	/*
+    	SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create();
+        headerAccessor.setContentType(org.springframework.util.MimeTypeUtils.TEXT_PLAIN);
+        messagingTemplate.convertAndSend("/topic/newClusterWorkload",
+                "kware-e36a5b34-aa71-43e1-b11a-b39822e87fc5",
+                headerAccessor.getMessageHeaders());
+    	*/
+    	
+        return ResponseEntity.ok("Test newClusterWorkload.");
+    }
+	
 	/**
 	 * 배포가능한 최적의 노드를 조회(BestFitBinPacking)
 	 * 
@@ -125,8 +159,9 @@ public class WorkloadRequestRestController {
 			errorMessage = extractErrorMessage(e);
 			if (errorMessage != null)
 				log.error("Parser Error: {}", errorMessage, e);
-			else
+			else {
 				throw e;
+			}
 		}
 		if (wlRequest == null) {
 			status = APIResponseCode.INPUT_ERROR;
